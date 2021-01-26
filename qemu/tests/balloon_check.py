@@ -12,6 +12,7 @@ from virttest import error_context
 from virttest.utils_test.qemu import MemoryBaseTest
 
 
+# pylint: disable=E1111
 class BallooningTest(MemoryBaseTest):
 
     """

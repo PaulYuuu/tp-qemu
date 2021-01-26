@@ -8,6 +8,7 @@ from virttest import utils_misc
 from qemu.tests.balloon_check import BallooningTest
 
 
+# pylint: disable=E1111
 class BallooningTestPause(BallooningTest):
 
     """

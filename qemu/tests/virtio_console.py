@@ -411,7 +411,7 @@ def run(test, params, env):
         try:
             guest_worker.cmd("virt.recv('%s', 10, 1024, False)"
                              % port.name, 10)
-        except qemu_virtio_port.VirtioPortException as details:
+        except qemu_virtio_port.VirtioPortException as details:  # pylint: disable=E1135
             if '[Errno 11] Resource temporarily unavailable' in details:
                 # Give the VM second chance
                 time.sleep(0.01)

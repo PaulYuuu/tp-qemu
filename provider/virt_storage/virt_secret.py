@@ -48,6 +48,7 @@ class StorageSecret(object):
         return dev
 
 
+# pylint: disable=E1136
 class StorageSecretAdmin(object):
     __secrets = list()
 
