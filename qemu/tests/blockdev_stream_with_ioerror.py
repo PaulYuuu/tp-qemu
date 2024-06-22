@@ -1,5 +1,4 @@
 from aexpect import ShellTimeoutError
-
 from virttest import error_context
 
 from provider.blockdev_stream_base import BlockDevStreamTest
@@ -12,14 +11,15 @@ class BlockdevStreamWithIoerror(BlockDevStreamTest):
         """Generate temp data file in guest"""
         self.session = self.main_vm.wait_for_login()
         self.file_info = self.files_info[0]
-        ori_file_path = "%s/%s" % (root_dir, ori_filename)
-        tar_file_path = "%s/%s" % (root_dir, tar_filename)
+        ori_file_path = f"{root_dir}/{ori_filename}"
+        tar_file_path = f"{root_dir}/{tar_filename}"
         dd_cmd = self.main_vm.params.get(
-            "dd_cmd", "dd if=%s of=%s bs=1M count=60 oflag=direct")
+            "dd_cmd", "dd if=%s of=%s bs=1M count=60 oflag=direct"
+        )
         mk_file_cmd = dd_cmd % (ori_file_path, tar_file_path)
         try:
             self.session.cmd(mk_file_cmd, timeout=timeout)
-        except ShellTimeoutError as e:
+        except ShellTimeoutError:
             self.main_vm.verify_status("io-error")
             self.file_info.append(tar_filename)
         else:
@@ -34,11 +34,11 @@ class BlockdevStreamWithIoerror(BlockDevStreamTest):
     def md5_io_error_file(self):
         if not self.session:
             self.session = self.main_vm.wait_for_login()
-        output = self.session.cmd_output('\n', timeout=120)
+        output = self.session.cmd_output("\n", timeout=120)
         if self.params["dd_done"] not in output:
             self.test.fail("dd not continue to run after vm resume")
-        tar_file_path = "%s/%s" % (self.file_info[0], self.file_info[2])
-        md5_cmd = "md5sum %s > %s.md5 && sync" % (tar_file_path, tar_file_path)
+        tar_file_path = f"{self.file_info[0]}/{self.file_info[2]}"
+        md5_cmd = f"md5sum {tar_file_path} > {tar_file_path}.md5 && sync"
         self.session.cmd(md5_cmd, timeout=120)
 
     def verify_data_file(self):
@@ -46,14 +46,14 @@ class BlockdevStreamWithIoerror(BlockDevStreamTest):
             self.session = self.main_vm.wait_for_login()
         ori_file_md5 = ""
         for info in [self.file_info[1], self.file_info[2]]:
-            file_path = "%s/%s" % (self.file_info[0], info)
-            cat_cmd = "cat %s.md5" % file_path
+            file_path = f"{self.file_info[0]}/{info}"
+            cat_cmd = f"cat {file_path}.md5"
             output = self.session.cmd_output(cat_cmd, timeout=120).split()[0]
             if not ori_file_md5:
                 ori_file_md5 = output
         if ori_file_md5 != output:
-            msg = "file ('%s' '%s') md5 mismatch" % (ori_file_md5, output)
-            msg += "with value ('%s', '%s')" % (ori_file_md5, output)
+            msg = f"file ('{ori_file_md5}' '{output}') md5 mismatch"
+            msg += f"with value ('{ori_file_md5}', '{output}')"
             self.test.fail(msg)
 
     def op_after_stream(self):

@@ -2,10 +2,7 @@ import re
 import time
 
 from avocado.utils import process
-from virttest import utils_net
-from virttest import utils_misc
-from virttest import utils_test
-from virttest import error_context
+from virttest import error_context, utils_misc, utils_net, utils_test
 
 
 @error_context.context_aware
@@ -24,6 +21,7 @@ def run(test, params, env):
     :param params: Dictionary with the test parameters.
     :param env: Dictionary with test environment.
     """
+
     def get_virtio_queues_irq(session):
         """
         Return multi queues input irq list
@@ -38,7 +36,7 @@ def run(test, params, env):
         """
         Return the cpu affinity_hint of irq_number
         """
-        cmd_get_cpu_affinity = r"cat /proc/irq/%s/affinity_hint" % irq_number
+        cmd_get_cpu_affinity = rf"cat /proc/irq/{irq_number}/affinity_hint"
         return session.cmd_output(cmd_get_cpu_affinity).strip()
 
     def get_cpu_index(cpu_id):
@@ -66,7 +64,7 @@ def run(test, params, env):
         Get guest interrupts statistics
         """
         online_cpu_number_cmd = r"cat /proc/interrupts | head -n 1 | wc -w"
-        cmd = r"cat /proc/interrupts | sed -n '/^\s*%s:/p'" % irq_number
+        cmd = rf"cat /proc/interrupts | sed -n '/^\s*{irq_number}:/p'"
         online_cpu_number = int(session.cmd_output_safe(online_cpu_number_cmd))
         irq_statics = session.cmd_output(cmd)
         irq_statics_list = list(map(int, irq_statics.split()[1:online_cpu_number]))
@@ -90,25 +88,22 @@ def run(test, params, env):
         vm.verify_alive()
         session = vm.wait_for_login(timeout=login_timeout)
         for i, nic in enumerate(vm.virtnet):
-            if "virtio" in nic['nic_model']:
-                ifname = utils_net.get_linux_ifname(session,
-                                                    vm.get_mac_address(i))
-                session.cmd_output("ethtool -L %s combined %d" % (ifname,
-                                                                  queues))
-                o = session.cmd_output("ethtool -l %s" % ifname)
+            if "virtio" in nic["nic_model"]:
+                ifname = utils_net.get_linux_ifname(session, vm.get_mac_address(i))
+                session.cmd_output("ethtool -L %s combined %d" % (ifname, queues))
+                o = session.cmd_output(f"ethtool -l {ifname}")
                 if len(re.findall(r"Combined:\s+%d\s" % queues, o)) != 2:
-                    test.error("Fail to enable MQ feature of (%s)" %
-                               nic.nic_name)
+                    test.error(f"Fail to enable MQ feature of ({nic.nic_name})")
                 test.log.info("MQ feature of (%s) is enabled", nic.nic_name)
 
         taskset_cpu = params.get("netperf_taskset_cpu")
         if taskset_cpu:
-            taskset_cmd = "taskset -c %s " % " ".join(taskset_cpu)
+            taskset_cmd = "taskset -c {} ".format(" ".join(taskset_cpu))
             params["netperf_cmd_prefix"] = taskset_cmd
 
-        check_cpu_affinity = params.get("check_cpu_affinity", 'no')
-        check_vhost = params.get("check_vhost_threads", 'yes')
-        if check_cpu_affinity == 'yes' and (vm.cpuinfo.smp == queues):
+        check_cpu_affinity = params.get("check_cpu_affinity", "no")
+        check_vhost = params.get("check_vhost_threads", "yes")
+        if check_cpu_affinity == "yes" and (vm.cpuinfo.smp == queues):
             process.system("systemctl stop irqbalance.service")
             session.cmd("systemctl stop irqbalance.service")
             set_cpu_affinity(session)
@@ -117,36 +112,40 @@ def run(test, params, env):
         n_instance = int(params.get("netperf_para_sessions", queues))
         try:
             if bg_sub_test:
-                error_context.context("Run test %s background" % bg_sub_test,
-                                      test.log.info)
+                error_context.context(
+                    f"Run test {bg_sub_test} background", test.log.info
+                )
 
                 # Set flag, when the sub test really running, will change this
                 # flag to True
                 stress_thread = utils_misc.InterruptedThread(
-                    utils_test.run_virt_sub_test, (test, params, env),
-                    {"sub_type": bg_sub_test})
+                    utils_test.run_virt_sub_test,
+                    (test, params, env),
+                    {"sub_type": bg_sub_test},
+                )
                 stress_thread.start()
 
-            if params.get("vhost") == 'vhost=on' and check_vhost == 'yes':
-                vhost_thread_pattern = params.get("vhost_thread_pattern",
-                                                  r"\w+\s+(\d+)\s.*\[vhost-%s\]")
+            if params.get("vhost") == "vhost=on" and check_vhost == "yes":
+                vhost_thread_pattern = params.get(
+                    "vhost_thread_pattern", r"\w+\s+(\d+)\s.*\[vhost-%s\]"
+                )
                 vhost_threads = vm.get_vhost_threads(vhost_thread_pattern)
                 time.sleep(120)
-                error_context.context("Check vhost threads on host",
-                                      test.log.info)
-                top_cmd = (r'top -n 1 -bis | tail -n +7 | grep -E "^ *%s "'
-                           % ' |^ *'.join(map(str, vhost_threads)))
+                error_context.context("Check vhost threads on host", test.log.info)
+                top_cmd = r'top -n 1 -bis | tail -n +7 | grep -E "^ *{} "'.format(
+                    " |^ *".join(map(str, vhost_threads))
+                )
                 top_info = None
                 while session.cmd_status("ps -C netperf") == 0:
-                    top_info = process.system_output(top_cmd, ignore_status=True,
-                                                     shell=True).decode()
+                    top_info = process.system_output(
+                        top_cmd, ignore_status=True, shell=True
+                    ).decode()
                     if top_info:
                         break
                 test.log.info(top_info)
                 vhost_re = re.compile(r"(0:00.\d{2}).*vhost-\d+[\d|+]")
                 invalid_vhost_thread = len(vhost_re.findall(top_info, re.I))
-                running_threads = (len(top_info.splitlines()) -
-                                   int(invalid_vhost_thread))
+                running_threads = len(top_info.splitlines()) - int(invalid_vhost_thread)
 
                 n_instance = min(n_instance, int(queues), int(vm.cpuinfo.smp))
                 if running_threads != n_instance:
@@ -154,7 +153,7 @@ def run(test, params, env):
                     test.fail(err_msg % (n_instance, running_threads))
 
             # check cpu affinity
-            if check_cpu_affinity == 'yes' and (vm.cpuinfo.smp == queues):
+            if check_cpu_affinity == "yes" and (vm.cpuinfo.smp == queues):
                 error_context.context("Check cpu affinity", test.log.info)
                 vectors = params.get("vectors", None)
                 enable_msix_vectors = params.get("enable_msix_vectors")
@@ -168,7 +167,7 @@ def run(test, params, env):
                         cpu_index = get_cpu_index(cpu_id)
                         if cpu_index:
                             for cpu in cpu_index:
-                                cpu_irq_affinity["%s" % cpu] = irq
+                                cpu_irq_affinity[f"{cpu}"] = irq
                         else:
                             test.error("Can not get the cpu")
 
@@ -196,5 +195,5 @@ def run(test, params, env):
         finally:
             if session:
                 session.close()
-            if check_cpu_affinity == 'yes' and (vm.cpuinfo.smp == queues):
+            if check_cpu_affinity == "yes" and (vm.cpuinfo.smp == queues):
                 process.system("systemctl start irqbalance.service")

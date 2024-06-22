@@ -1,26 +1,22 @@
+import logging
 import os
 import re
-import logging
 import time
 
 import aexpect
-
 from avocado.utils import process
+from virttest import data_dir, error_context, utils_misc
 
-from virttest import error_context
-from virttest import utils_misc
-from virttest import data_dir
-
-LOG_JOB = logging.getLogger('avocado.test')
+LOG_JOB = logging.getLogger("avocado.test")
 
 
-class QemuIOConfig(object):
-
+class QemuIOConfig:
     """
     Performs setup for the test qemu_io. This is a borg class, similar to a
     singleton. The idea is to keep state in memory for when we call cleanup()
     on postprocessing.
     """
+
     __shared_state = {}
 
     def __init__(self, test, params):
@@ -28,16 +24,16 @@ class QemuIOConfig(object):
         self.tmpdir = test.tmpdir
         self.qemu_img_binary = utils_misc.get_qemu_img_binary(params)
         self.raw_files = ["stg1.raw", "stg2.raw"]
-        self.raw_files = list(map(lambda f: os.path.join(self.tmpdir, f),
-                                  self.raw_files))
+        self.raw_files = list(
+            map(lambda f: os.path.join(self.tmpdir, f), self.raw_files)
+        )
         # Here we're trying to choose fairly explanatory names so it's less
         # likely that we run in conflict with other devices in the system
         self.vgtest_name = params.get("vgtest_name", "vg_kvm_test_qemu_io")
         self.lvtest_name = params.get("lvtest_name", "lv_kvm_test_qemu_io")
-        self.lvtest_device = "/dev/%s/%s" % (
-            self.vgtest_name, self.lvtest_name)
+        self.lvtest_device = f"/dev/{self.vgtest_name}/{self.lvtest_name}"
         try:
-            getattr(self, 'loopback')
+            getattr(self, "loopback")
         except AttributeError:
             self.loopback = []
 
@@ -49,23 +45,21 @@ class QemuIOConfig(object):
         self.cleanup()
         try:
             for f in self.raw_files:
-                process.run("%s create -f raw %s 10G" %
-                            (self.qemu_img_binary, f))
+                process.run(f"{self.qemu_img_binary} create -f raw {f} 10G")
                 # Associate a loopback device with the raw file.
                 # Subject to race conditions, that's why try here to associate
                 # it with the raw file as quickly as possible
                 l_result = process.run("losetup -f")
-                process.run("losetup -f %s" % f)
+                process.run(f"losetup -f {f}")
                 loopback = l_result.stdout.strip()
                 self.loopback.append(loopback)
                 # Add the loopback device configured to the list of pvs
                 # recognized by LVM
-                process.run("pvcreate %s" % loopback)
+                process.run(f"pvcreate {loopback}")
             loopbacks = " ".join(self.loopback)
-            process.run("vgcreate %s %s" % (self.vgtest_name, loopbacks))
+            process.run(f"vgcreate {self.vgtest_name} {loopbacks}")
             # Create an lv inside the vg with starting size of 200M
-            process.run("lvcreate -L 19G -n %s %s" %
-                        (self.lvtest_name, self.vgtest_name))
+            process.run(f"lvcreate -L 19G -n {self.lvtest_name} {self.vgtest_name}")
         except Exception:
             try:
                 self.cleanup()
@@ -77,28 +71,29 @@ class QemuIOConfig(object):
     def cleanup(self):
         error_context.context("performing qemu_io cleanup", LOG_JOB.debug)
         if os.path.isfile(self.lvtest_device):
-            process.run("fuser -k %s" % self.lvtest_device)
+            process.run(f"fuser -k {self.lvtest_device}")
             time.sleep(2)
         l_result = process.run("lvdisplay")
         # Let's remove all volumes inside the volume group created
         if self.lvtest_name in l_result.stdout:
-            process.run("lvremove -f %s" % self.lvtest_device)
+            process.run(f"lvremove -f {self.lvtest_device}")
         # Now, removing the volume group itself
         v_result = process.run("vgdisplay")
         if self.vgtest_name in v_result.stdout:
-            process.run("vgremove -f %s" % self.vgtest_name)
+            process.run(f"vgremove -f {self.vgtest_name}")
         # Now, if we can, let's remove the physical volume from lvm list
         p_result = process.run("pvdisplay")
-        l_result = process.run('losetup -a')
+        l_result = process.run("losetup -a")
         for l in self.loopback:
             if l in p_result.stdout:
-                process.run("pvremove -f %s" % l)
+                process.run(f"pvremove -f {l}")
             if l in l_result.stdout:
                 try:
-                    process.run("losetup -d %s" % l)
+                    process.run(f"losetup -d {l}")
                 except process.CmdError as e:
-                    LOG_JOB.error("Failed to liberate loopback %s, "
-                                  "error msg: '%s'", l, e)
+                    LOG_JOB.error(
+                        "Failed to liberate loopback %s, " "error msg: '%s'", l, e
+                    )
 
         for f in self.raw_files:
             if os.path.isfile(f):
@@ -122,15 +117,12 @@ def run(test, params, env):
         qemu_io_config = QemuIOConfig(test, params)
         qemu_io_config.setup()
 
-    test_script = os.path.join(data_dir.get_shared_dir(),
-                               'scripts/qemu_iotests.sh')
-    test_image = params.get("test_image",
-                            os.path.join(test.tmpdir, "test.qcow2"))
-    test.log.info("Run script(%s) with image(%s)",
-                  test_script, test_image)
-    s, test_result = aexpect.run_fg("sh %s %s" % (test_script,
-                                                  test_image),
-                                    test.log.debug, timeout=1800)
+    test_script = os.path.join(data_dir.get_shared_dir(), "scripts/qemu_iotests.sh")
+    test_image = params.get("test_image", os.path.join(test.tmpdir, "test.qcow2"))
+    test.log.info("Run script(%s) with image(%s)", test_script, test_image)
+    s, test_result = aexpect.run_fg(
+        f"sh {test_script} {test_image}", test.log.debug, timeout=1800
+    )
 
     err_string = {
         "err_nums": r"\d errors were found on the image.",

@@ -1,14 +1,12 @@
-import re
 import logging
+import re
 
 from aexpect import ShellTimeoutError
-
-from virttest import error_context
-from virttest import utils_misc
-from virttest.utils_windows import virtio_win, wmic
+from virttest import error_context, utils_misc
 from virttest.utils_test.qemu import windrv_verify_running
+from virttest.utils_windows import virtio_win, wmic
 
-LOG_JOB = logging.getLogger('avocado.test')
+LOG_JOB = logging.getLogger("avocado.test")
 
 
 QUERY_TIMEOUT = 360
@@ -34,9 +32,12 @@ def _add_cert(session, cert_path, store):
 
 
 def _pnpdrv_info(session, name_pattern, props=None):
-    cmd = wmic.make_query("path win32_pnpsigneddriver",
-                          "DeviceName like '%s'" % name_pattern,
-                          props=props, get_swch=wmic.FMT_TYPE_LIST)
+    cmd = wmic.make_query(
+        "path win32_pnpsigneddriver",
+        f"DeviceName like '{name_pattern}'",
+        props=props,
+        get_swch=wmic.FMT_TYPE_LIST,
+    )
     return wmic.parse_list(session.cmd(cmd, timeout=QUERY_TIMEOUT))
 
 
@@ -74,22 +75,22 @@ def run(test, params, env):
 
     # wait for cdroms having driver installed in case that
     # they are new appeared in this test
-    utils_misc.wait_for(lambda: utils_misc.get_winutils_vol(session),
-                        timeout=OPERATION_TIMEOUT, step=10)
+    utils_misc.wait_for(
+        lambda: utils_misc.get_winutils_vol(session), timeout=OPERATION_TIMEOUT, step=10
+    )
 
-    devcon_path = utils_misc.set_winutils_letter(session,
-                                                 params["devcon_path"])
-    status, output = session.cmd_status_output("dir %s" % devcon_path,
-                                               timeout=OPERATION_TIMEOUT)
+    devcon_path = utils_misc.set_winutils_letter(session, params["devcon_path"])
+    status, output = session.cmd_status_output(
+        f"dir {devcon_path}", timeout=OPERATION_TIMEOUT
+    )
     if status:
-        test.error("Not found devcon.exe, details: %s" % output)
+        test.error(f"Not found devcon.exe, details: {output}")
 
     media_type = params["virtio_win_media_type"]
     try:
-        get_drive_letter = getattr(virtio_win, "drive_letter_%s" % media_type)
-        get_product_dirname = getattr(virtio_win,
-                                      "product_dirname_%s" % media_type)
-        get_arch_dirname = getattr(virtio_win, "arch_dirname_%s" % media_type)
+        get_drive_letter = getattr(virtio_win, f"drive_letter_{media_type}")
+        get_product_dirname = getattr(virtio_win, f"product_dirname_{media_type}")
+        get_arch_dirname = getattr(virtio_win, f"arch_dirname_{media_type}")
     except AttributeError:
         test.error("Not supported virtio win media type '%s'", media_type)
     viowin_ltr = get_drive_letter(session)
@@ -102,45 +103,46 @@ def run(test, params, env):
     if not guest_arch:
         test.error("Could not get architecture dirname of the vm")
 
-    inf_middle_path = ("{name}\\{arch}" if media_type == "iso"
-                       else "{arch}\\{name}").format(name=guest_name,
-                                                     arch=guest_arch)
+    inf_middle_path = (
+        "{name}\\{arch}" if media_type == "iso" else "{arch}\\{name}"
+    ).format(name=guest_name, arch=guest_arch)
     inf_find_cmd = 'dir /b /s %s\\%s.inf | findstr "\\%s\\\\"'
     inf_find_cmd %= (viowin_ltr, driver_name, inf_middle_path)
     inf_path = session.cmd(inf_find_cmd, timeout=OPERATION_TIMEOUT).strip()
     test.log.info("Found inf file '%s'", inf_path)
 
     # `findstr` cannot handle unicode so calling `type` makes it work
-    expected_ver = session.cmd("type %s | findstr /i /r DriverVer.*=" %
-                               inf_path, timeout=OPERATION_TIMEOUT)
+    expected_ver = session.cmd(
+        f"type {inf_path} | findstr /i /r DriverVer.*=", timeout=OPERATION_TIMEOUT
+    )
     expected_ver = expected_ver.strip().split(",", 1)[-1]
     if not expected_ver:
         test.error("Failed to find driver version from inf file")
     test.log.info("Target version is '%s'", expected_ver)
 
     if params.get("need_uninstall", "no") == "yes":
-        error_context.context("Uninstalling previous installed driver",
-                              test.log.info)
+        error_context.context("Uninstalling previous installed driver", test.log.info)
         for inf_name in _pnpdrv_info(session, device_name, ["InfName"]):
             pnp_cmd = "pnputil /delete-driver %s /uninstall /force"
-            uninst_store_cmd = params.get("uninst_store_cmd",
-                                          pnp_cmd) % inf_name
-            status, output = session.cmd_status_output(uninst_store_cmd,
-                                                       inst_timeout)
+            uninst_store_cmd = params.get("uninst_store_cmd", pnp_cmd) % inf_name
+            status, output = session.cmd_status_output(uninst_store_cmd, inst_timeout)
             if status not in (0, 3010):
                 # for viostor and vioscsi, they need system reboot
                 # acceptable status: OK(0), REBOOT(3010)
-                test.error("Failed to uninstall driver '%s' from store, "
-                           "details:\n%s" % (driver_name, output))
+                test.error(
+                    f"Failed to uninstall driver '{driver_name}' from store, "
+                    f"details:\n{output}"
+                )
 
-        uninst_cmd = "%s remove %s" % (devcon_path, device_hwid)
+        uninst_cmd = f"{devcon_path} remove {device_hwid}"
         status, output = session.cmd_status_output(uninst_cmd, inst_timeout)
         # acceptable status: OK(0), REBOOT(1)
         if status > 1:
-            test.error("Failed to uninstall driver '%s', details:\n"
-                       "%s" % (driver_name, output))
+            test.error(
+                f"Failed to uninstall driver '{driver_name}', details:\n" f"{output}"
+            )
 
-        if params.get_boolean('need_destroy'):
+        if params.get_boolean("need_destroy"):
             vm.destroy()
             vm.create()
             vm = env.get_vm(params["main_vm"])
@@ -149,8 +151,7 @@ def run(test, params, env):
             session = vm.reboot(session)
 
     error_context.context("Installing certificates", test.log.info)
-    cert_files = utils_misc.set_winutils_letter(session,
-                                                params.get("cert_files", ""))
+    cert_files = utils_misc.set_winutils_letter(session, params.get("cert_files", ""))
     cert_files = [cert.split("=", 1) for cert in cert_files.split()]
     for store, cert in cert_files:
         _chk_cert(session, cert)
@@ -159,24 +160,24 @@ def run(test, params, env):
     error_context.context("Installing target driver", test.log.info)
     installed_any = False
     for hwid in device_hwid.split():
-        output = session.cmd_output("%s find %s" % (devcon_path, hwid))
+        output = session.cmd_output(f"{devcon_path} find {hwid}")
         if re.search("No matching devices found", output, re.I):
             continue
         # workaround for install driver without signture
-        inst_cmd = "%s update %s %s" % (devcon_path, inf_path, hwid)
+        inst_cmd = f"{devcon_path} update {inf_path} {hwid}"
         key_to_install_driver = params.get("key_to_install_driver").split(";")
         try:
             session.cmd_status_output(inst_cmd, timeout=30)
         except ShellTimeoutError:
             send_key(vm, key_to_install_driver)
-        if not utils_misc.wait_for(lambda: not session.cmd_status(chk_cmd),
-                                   600, 60, 10):
-            test.fail("Failed to install driver '%s'" % driver_name)
+        if not utils_misc.wait_for(
+            lambda: not session.cmd_status(chk_cmd), 600, 60, 10
+        ):
+            test.fail(f"Failed to install driver '{driver_name}'")
 
         installed_any |= True
     if not installed_any:
-        test.error("Failed to find target devices "
-                   "by hwids: '%s'" % device_hwid)
+        test.error("Failed to find target devices " f"by hwids: '{device_hwid}'")
 
     error_context.context("Verifying target driver", test.log.info)
     session = vm.reboot(session)
@@ -184,6 +185,8 @@ def run(test, params, env):
 
     ver_list = _pnpdrv_info(session, device_name, ["DriverVersion"])
     if expected_ver not in ver_list:
-        test.fail("The expected driver version is '%s', but "
-                  "found '%s'" % (expected_ver, ver_list))
+        test.fail(
+            f"The expected driver version is '{expected_ver}', but "
+            f"found '{ver_list}'"
+        )
     session.close()

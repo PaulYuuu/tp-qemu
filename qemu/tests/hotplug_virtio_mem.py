@@ -1,10 +1,10 @@
 import time
 
 from virttest import error_context
-
 from virttest.qemu_monitor import QMPCmdError
 from virttest.utils_misc import normalize_data_size
 from virttest.utils_test.qemu import MemoryHotplugTest
+
 from provider import virtio_mem_utils
 
 
@@ -35,35 +35,38 @@ def run(test, params, env):
     _, vmem_dev = hotplug_test.hotplug_memory(vm, target_mem)
 
     device_id = vmem_dev.get_qid()
-    requested_size_vmem_test = params.get("requested-size_test_%s" % target_mem)
+    requested_size_vmem_test = params.get(f"requested-size_test_{target_mem}")
 
-    node_id = int(vmem_dev.get_param('node'))
-    req_size = vmem_dev.get_param('requested-size')
-    initial_req_size = str(int(float(normalize_data_size(req_size, 'B'))))
+    node_id = int(vmem_dev.get_param("node"))
+    req_size = vmem_dev.get_param("requested-size")
+    initial_req_size = str(int(float(normalize_data_size(req_size, "B"))))
 
-    virtio_mem_utils.check_memory_devices(device_id, initial_req_size,
-                                          threshold, vm, test)
-    virtio_mem_utils.check_numa_plugged_mem(node_id, initial_req_size,
-                                            threshold, vm, test)
+    virtio_mem_utils.check_memory_devices(
+        device_id, initial_req_size, threshold, vm, test
+    )
+    virtio_mem_utils.check_numa_plugged_mem(
+        node_id, initial_req_size, threshold, vm, test
+    )
     for requested_size in requested_size_vmem_test.split():
-        req_size_normalized = int(float(normalize_data_size(requested_size,
-                                  'B')))
-        vm.monitor.qom_set(device_id, "requested-size",
-                           req_size_normalized)
+        req_size_normalized = int(float(normalize_data_size(requested_size, "B")))
+        vm.monitor.qom_set(device_id, "requested-size", req_size_normalized)
         time.sleep(30)
-        virtio_mem_utils.check_memory_devices(device_id, requested_size,
-                                              threshold, vm, test)
-        virtio_mem_utils.check_numa_plugged_mem(node_id, requested_size,
-                                                threshold, vm, test)
+        virtio_mem_utils.check_memory_devices(
+            device_id, requested_size, threshold, vm, test
+        )
+        virtio_mem_utils.check_numa_plugged_mem(
+            node_id, requested_size, threshold, vm, test
+        )
     try:
         hotplug_test.unplug_memory(vm, target_mem)
     except QMPCmdError as e:
         if error_msg not in str(e.data):
-            test.fail("Unexpected error message: %s" % str(e.data))
+            test.fail(f"Unexpected error message: {str(e.data)}")
         test.log.info(error_msg)
     else:
-        test.fail("%s shouldn't have been unplugged! 'size' is greater than 0"
-                  % target_mem)
+        test.fail(
+            f"{target_mem} shouldn't have been unplugged! 'size' is greater than 0"
+        )
 
     vm.monitor.qom_set(device_id, "requested-size", 0)
     time.sleep(10)

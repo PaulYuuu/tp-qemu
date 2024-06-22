@@ -1,13 +1,12 @@
-import re
 import logging
+import re
 
 from avocado.utils import process
-
 from virttest import utils_misc
-from virttest.utils_test import VMStress, StressError
+from virttest.utils_test import StressError, VMStress
 from virttest.utils_version import VersionInterval
 
-LOG_JOB = logging.getLogger('avocado.test')
+LOG_JOB = logging.getLogger("avocado.test")
 
 
 class VMStressBinding(VMStress):
@@ -16,8 +15,7 @@ class VMStressBinding(VMStress):
     """
 
     def __init__(self, vm, params, stress_args=""):
-        super(VMStressBinding, self).__init__(vm, "stress", params,
-                                              stress_args=stress_args)
+        super().__init__(vm, "stress", params, stress_args=stress_args)
         self.install()
 
     def load_stress_tool(self, cpu_id):
@@ -26,16 +24,17 @@ class VMStressBinding(VMStress):
 
         :param cpu_id: CPU id you want to bind
         """
-        cmd = "setsid taskset -c {} {} {} > /dev/null".format(cpu_id,
-                                                              self.stress_cmds,
-                                                              self.stress_args)
+        cmd = f"setsid taskset -c {cpu_id} {self.stress_cmds} {self.stress_args} > /dev/null"
         LOG_JOB.info("Launch stress with command: %s", cmd)
         self.cmd_launch(cmd)
         # wait for stress to start and then check, if not raise StressError
-        if not utils_misc.wait_for(self.app_running,
-                                   self.stress_wait_for_timeout,
-                                   first=2.0, step=1.0,
-                                   text="wait for stress app to start"):
+        if not utils_misc.wait_for(
+            self.app_running,
+            self.stress_wait_for_timeout,
+            first=2.0,
+            step=1.0,
+            text="wait for stress app to start",
+        ):
             raise StressError("Stress does not running as expected.")
 
 
@@ -53,8 +52,7 @@ def get_guest_cpu_ids(session, os_type):
         return set()
     cmd = "grep processor /proc/cpuinfo"
     output = session.cmd_output(cmd)
-    return set(map(int, re.findall(r"processor\s+(?::\s)?(\d+)",
-                                   output, re.M)))
+    return set(map(int, re.findall(r"processor\s+(?::\s)?(\d+)", output, re.M)))
 
 
 def check_if_vm_vcpu_topology_match(session, os_type, cpuinfo, test, devices=None):
@@ -71,7 +69,7 @@ def check_if_vm_vcpu_topology_match(session, os_type, cpuinfo, test, devices=Non
     if os_type == "linux":
         out = session.cmd_output_safe("lscpu")
         cpu_info = dict(re.findall(r"([A-Z].+):\s+(.+)", out, re.M))
-        if str(cpu_info["Architecture"]) == 's390x':
+        if str(cpu_info["Architecture"]) == "s390x":
             sockets = int(cpu_info["Socket(s) per book"])
         else:
             sockets = int(cpu_info["Socket(s)"])
@@ -79,30 +77,42 @@ def check_if_vm_vcpu_topology_match(session, os_type, cpuinfo, test, devices=Non
         threads = int(cpu_info["Thread(s) per core"])
         threads_matched = cpuinfo.threads == threads
     else:
-        cmd = ('powershell "Get-WmiObject Win32_processor | Format-List '
-               'NumberOfCores,ThreadCount"')
+        cmd = (
+            'powershell "Get-WmiObject Win32_processor | Format-List '
+            'NumberOfCores,ThreadCount"'
+        )
         out = session.cmd_output_safe(cmd).strip()
         try:
-            cpu_info = [dict(re.findall(r"(\w+)\s+:\s(\d+)", cpu_out, re.M))
-                        for cpu_out in out.split("\n\n")]
+            cpu_info = [
+                dict(re.findall(r"(\w+)\s+:\s(\d+)", cpu_out, re.M))
+                for cpu_out in out.split("\n\n")
+            ]
             sockets = len(cpu_info)
             cores = int(cpu_info[0]["NumberOfCores"])
             threads = int(cpu_info[0]["ThreadCount"])
         except KeyError:
-            LOG_JOB.warning("Attempt to get output via 'powershell' failed, "
-                            "output returned by guest:\n%s", out)
+            LOG_JOB.warning(
+                "Attempt to get output via 'powershell' failed, "
+                "output returned by guest:\n%s",
+                out,
+            )
             LOG_JOB.info("Try again via 'wmic'")
-            cmd = 'wmic CPU get NumberOfCores,ThreadCount /Format:list'
+            cmd = "wmic CPU get NumberOfCores,ThreadCount /Format:list"
             out = session.cmd_output_safe(cmd).strip()
             try:
-                cpu_info = [dict(re.findall(r"(\w+)=(\d+)", cpu_out, re.M))
-                            for cpu_out in out.split("\n\n")]
+                cpu_info = [
+                    dict(re.findall(r"(\w+)=(\d+)", cpu_out, re.M))
+                    for cpu_out in out.split("\n\n")
+                ]
                 sockets = len(cpu_info)
                 cores = int(cpu_info[0]["NumberOfCores"])
                 threads = int(cpu_info[0]["ThreadCount"])
             except KeyError:
-                LOG_JOB.error("Attempt to get output via 'wmic' failed, output"
-                              " returned by guest:\n%s", out)
+                LOG_JOB.error(
+                    "Attempt to get output via 'wmic' failed, output"
+                    " returned by guest:\n%s",
+                    out,
+                )
                 return False
         if devices:
             # Until QEMU 8.1 there was a different behaviour for thread count in case
@@ -113,12 +123,13 @@ def check_if_vm_vcpu_topology_match(session, os_type, cpuinfo, test, devices=Non
                 LOG_JOB.warning("ThreadCount is disabled for Windows guests")
                 threads_matched = True
             else:
-                threads_matched = threads//cores == cpuinfo.threads
+                threads_matched = threads // cores == cpuinfo.threads
         else:
             test.fail("Variable 'devices' must be defined for Windows guest.")
 
-    is_matched = (cpuinfo.sockets == sockets and cpuinfo.cores == cores and
-                  threads_matched)  # pylint: disable=E0606
+    is_matched = (
+        cpuinfo.sockets == sockets and cpuinfo.cores == cores and threads_matched
+    )  # pylint: disable=E0606
 
     if not is_matched:
         LOG_JOB.debug("CPU infomation of guest:\n%s", out)
@@ -143,16 +154,16 @@ def check_cpu_flags(params, flags, test, session=None):
     if session:
         LOG_JOB.info("Check cpu flags inside guest")
         if missing:
-            test.fail("Flag %s not in guest" % missing)
+            test.fail(f"Flag {missing} not in guest")
         no_flags = params.get("no_flags")
         if no_flags:
             err_flags = [f for f in no_flags.split() if f in out]
             if err_flags:
-                test.fail("Flag %s should not be present in guest" % err_flags)
+                test.fail(f"Flag {err_flags} should not be present in guest")
     else:
         LOG_JOB.info("Check cpu flags on host")
         if missing:
-            test.cancel("This host doesn't support flag %s" % missing)
+            test.cancel(f"This host doesn't support flag {missing}")
 
 
 # Copied from unstable module "virttest/cpu.py"
@@ -169,8 +180,11 @@ def check_if_vm_vcpu_match(vcpu_desire, vm):
     if isinstance(vcpu_desire, str) and vcpu_desire.isdigit():
         vcpu_desire = int(vcpu_desire)
     if vcpu_desire != vcpu_actual:
-        LOG_JOB.debug("CPU quantity mismatched !!! guest said it got %s "
-                      "but we assigned %s", vcpu_actual, vcpu_desire)
+        LOG_JOB.debug(
+            "CPU quantity mismatched !!! guest said it got %s " "but we assigned %s",
+            vcpu_actual,
+            vcpu_desire,
+        )
         return False
     LOG_JOB.info("CPU quantity matched: %s", vcpu_actual)
     return True

@@ -1,7 +1,6 @@
 import time
 
-from virttest import utils_test
-from virttest import error_context
+from virttest import error_context, utils_test
 
 
 @error_context.context_aware
@@ -28,9 +27,9 @@ def run(test, params, env):
     boot_option_added = params.get("boot_option_added")
     boot_option_removed = params.get("boot_option_removed")
     if boot_option_added or boot_option_removed:
-        utils_test.update_boot_option(vm,
-                                      args_removed=boot_option_removed,
-                                      args_added=boot_option_added)
+        utils_test.update_boot_option(
+            vm, args_removed=boot_option_removed, args_added=boot_option_added
+        )
 
     session = vm.wait_for_login(timeout=login_timeout)
 
@@ -51,14 +50,14 @@ def run(test, params, env):
         # Get time before set cpu offline
         # (ht stands for host time, gt stands for guest time)
         error_context.context("get time before set cpu offline")
-        (ht0, gt0) = utils_test.get_time(session, time_command,
-                                         time_filter_re, time_format)
+        (ht0, gt0) = utils_test.get_time(
+            session, time_command, time_filter_re, time_format
+        )
         # Check cpu number
         error_context.context("check guest cpu number")
         smp = int(params.get("smp"))
         if smp < 2:
-            test.error("The guest only has %d vcpu,"
-                       "unsupport cpu offline" % smp)
+            test.error("The guest only has %d vcpu," "unsupport cpu offline" % smp)
 
         # Set cpu offline
         error_context.context("set cpu offline ")
@@ -73,8 +72,9 @@ def run(test, params, env):
 
         # Get time after set cpu offline
         error_context.context("get time after set cpu offline")
-        (ht1, gt1) = utils_test.get_time(session, time_command,
-                                         time_filter_re, time_format)
+        (ht1, gt1) = utils_test.get_time(
+            session, time_command, time_filter_re, time_format
+        )
         # Report results
         host_delta = ht1 - ht0
         guest_delta = gt1 - gt0
@@ -83,7 +83,7 @@ def run(test, params, env):
         test.log.info("Guest duration: %.2f", guest_delta)
         test.log.info("Drift: %.2f%%", drift)
         if abs(drift) > drift_threshold:
-            test.fail("Time drift too large: %.2f%%" % drift)
+            test.fail(f"Time drift too large: {drift:.2f}%")
 
         # Set cpu online again
         error_context.context("set cpu online")
@@ -97,8 +97,9 @@ def run(test, params, env):
         start_time = time.time()
         while (time.time() - start_time) < test_duration:
             # Get time delta after set cpu online
-            (ht1, gt1) = utils_test.get_time(session, time_command,
-                                             time_filter_re, time_format)
+            (ht1, gt1) = utils_test.get_time(
+                session, time_command, time_filter_re, time_format
+            )
 
             # Report results
             host_delta = ht1 - ht0
@@ -109,11 +110,11 @@ def run(test, params, env):
             test.log.info("Drift: %.2f%%", drift)
             time.sleep(interval_gettime)
         if abs(drift) > drift_threshold:
-            test.fail("Time drift too large: %.2f%%" % drift)
+            test.fail(f"Time drift too large: {drift:.2f}%")
     finally:
         session.close()
         # remove flags add for this test.
         if boot_option_added or boot_option_removed:
-            utils_test.update_boot_option(vm,
-                                          args_removed=boot_option_added,
-                                          args_added=boot_option_removed)
+            utils_test.update_boot_option(
+                vm, args_removed=boot_option_added, args_added=boot_option_removed
+            )

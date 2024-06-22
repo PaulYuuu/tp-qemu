@@ -1,11 +1,12 @@
-import time
 import random
+import time
+
 from virttest import error_context
+
 from qemu.tests import blk_stream
 
 
 class BlockStreamReboot(blk_stream.BlockStream):
-
     @error_context.context_aware
     def reboot(self):
         """
@@ -13,7 +14,7 @@ class BlockStreamReboot(blk_stream.BlockStream):
         """
         params = self.parser_test_args()
         method = params.get("reboot_method", "system_reset")
-        super(BlockStreamReboot, self).reboot(method=method)
+        super().reboot(method=method)
         time.sleep(random.randint(0, 20))
 
 

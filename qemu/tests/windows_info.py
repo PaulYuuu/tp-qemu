@@ -29,8 +29,7 @@ def run(test, params, env):
     output = output.strip().split()[-1]
     test.log.info("Windows name: %s", output)
 
-    error_context.context("Get driver version information in guest.",
-                          test.log.info)
+    error_context.context("Get driver version information in guest.", test.log.info)
     system_drivers = session.cmd("wmic sysdriver get DisplayName,PathName")
     test.log.debug("Drivers exist in the system:\n %s", system_drivers)
     for i in system_drivers.splitlines():
@@ -40,9 +39,9 @@ def run(test, params, env):
             path = driver_info[-1]
             path = re.sub(r"\\", "\\\\\\\\", path)
             driver_ver_cmd = "wmic datafile where name="
-            driver_ver_cmd += "'%s' get version" % path
+            driver_ver_cmd += f"'{path}' get version"
             output = session.cmd(driver_ver_cmd)
-            msg = "Driver %s" % driver_name
-            msg += " version is %s" % output.strip().split()[-1]
+            msg = f"Driver {driver_name}"
+            msg += f" version is {output.strip().split()[-1]}"
             test.log.info(msg)
     session.close()

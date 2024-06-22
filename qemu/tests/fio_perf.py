@@ -1,20 +1,23 @@
+import logging
 import os
 import re
-import six
-import time
 import threading
-import logging
+import time
 
+import six
 from avocado.utils import process
-
-from virttest import utils_misc, utils_test, utils_numeric
-from virttest import data_dir
-from virttest import utils_disk
-from virttest import error_context
+from virttest import (
+    data_dir,
+    error_context,
+    utils_disk,
+    utils_misc,
+    utils_numeric,
+    utils_test,
+)
 
 from provider.storage_benchmark import generate_instance
 
-LOG_JOB = logging.getLogger('avocado.test')
+LOG_JOB = logging.getLogger("avocado.test")
 
 
 def format_result(result, base="12", fbase="2"):
@@ -52,14 +55,22 @@ def check_disk_status(session, timeout, num):
     while time.time() < end_time:
         disks_str = session.cmd_output_safe(disk_status_cmd)
         LOG_JOB.info("disks_str is %s", disks_str)
-        disks = re.findall("Disk %s.*\n" % num, disks_str)
+        disks = re.findall(f"Disk {num}.*\n", disks_str)
         if not disks:
             continue
         return disks
 
 
-def get_version(session, result_file, kvm_ver_chk_cmd,
-                guest_ver_cmd, type, driver_format, vfsd_ver_chk_cmd, timeout):
+def get_version(
+    session,
+    result_file,
+    kvm_ver_chk_cmd,
+    guest_ver_cmd,
+    type,
+    driver_format,
+    vfsd_ver_chk_cmd,
+    timeout,
+):
     """
     collect qemu, kernel, virtiofsd version if needed and driver version info
     and write them info results file
@@ -75,28 +86,27 @@ def get_version(session, result_file, kvm_ver_chk_cmd,
     kvm_ver = process.system_output(kvm_ver_chk_cmd, shell=True).decode()
     host_ver = os.uname()[2]
 
-    result_file.write("### kvm-userspace-ver : %s\n" % kvm_ver)
-    result_file.write("### kvm_version : %s\n" % host_ver)
+    result_file.write(f"### kvm-userspace-ver : {kvm_ver}\n")
+    result_file.write(f"### kvm_version : {host_ver}\n")
 
     if driver_format != "ide":
         result = session.cmd_output(guest_ver_cmd, timeout)
         if type == "windows":
-            guest_ver = re.findall(r".*?(\d{2}\.\d{2}\.\d{3}\.\d{4}).*?",
-                                   result)
+            guest_ver = re.findall(r".*?(\d{2}\.\d{2}\.\d{3}\.\d{4}).*?", result)
             result_file.write(
-                "### guest-kernel-ver :Microsoft Windows [Version %s]\n" %
-                guest_ver[0])
+                f"### guest-kernel-ver :Microsoft Windows [Version {guest_ver[0]}]\n"
+            )
         else:
-            result_file.write("### guest-kernel-ver :%s" % result)
+            result_file.write(f"### guest-kernel-ver :{result}")
     else:
-        result_file.write("### guest-kernel-ver : Microsoft Windows "
-                          "[Version ide driver format]\n")
+        result_file.write(
+            "### guest-kernel-ver : Microsoft Windows " "[Version ide driver format]\n"
+        )
 
     if vfsd_ver_chk_cmd:
         LOG_JOB.info("Check virtiofsd version on host.")
-        virtiofsd_ver = process.system_output(vfsd_ver_chk_cmd,
-                                              shell=True).decode()
-        result_file.write("### virtiofsd_version : %s\n" % virtiofsd_ver)
+        virtiofsd_ver = process.system_output(vfsd_ver_chk_cmd, shell=True).decode()
+        result_file.write(f"### virtiofsd_version : {virtiofsd_ver}\n")
 
 
 @error_context.context_aware
@@ -120,7 +130,7 @@ def run(test, params, env):
         run fio command in guest
         """
         # generate instance with fio
-        fio = generate_instance(params, vm, 'fio')
+        fio = generate_instance(params, vm, "fio")
         try:
             fio.run(run_fio_options)
         finally:
@@ -136,9 +146,9 @@ def run(test, params, env):
         :param timeout: Timeout in seconds
         """
         if os_type == "linux":
-            session.cmd("rm -rf %s" % guest_result_file, timeout)
+            session.cmd(f"rm -rf {guest_result_file}", timeout)
         elif os_type == "windows":
-            session.cmd("del /f/s/q %s" % guest_result_file, timeout)
+            session.cmd(f"del /f/s/q {guest_result_file}", timeout)
 
     def _pin_vm_threads(node):
         """
@@ -183,13 +193,20 @@ def run(test, params, env):
     vfsd_ver_chk_cmd = params.get("vfsd_ver_chk_cmd")
     delete_test_file = params.get("delete_test_file", "no")
 
-    result_path = utils_misc.get_path(test.resultsdir,
-                                      "fio_result.RHS")
+    result_path = utils_misc.get_path(test.resultsdir, "fio_result.RHS")
     result_file = open(result_path, "w")
 
     # scratch host and windows guest version info
-    get_version(session, result_file, kvm_ver_chk_cmd, guest_ver_cmd, os_type,
-                driver_format, vfsd_ver_chk_cmd, cmd_timeout)
+    get_version(
+        session,
+        result_file,
+        kvm_ver_chk_cmd,
+        guest_ver_cmd,
+        os_type,
+        driver_format,
+        vfsd_ver_chk_cmd,
+        cmd_timeout,
+    )
 
     if os_type == "windows":
         # turn off driver verifier
@@ -208,22 +225,25 @@ def run(test, params, env):
             if diskstatus == "Offline":
                 online_disk_cmd = params.get("online_disk_cmd")
                 online_disk_run = online_disk_cmd % num
-                (s, o) = session.cmd_status_output(online_disk_run,
-                                                   timeout=cmd_timeout)
+                (s, o) = session.cmd_status_output(online_disk_run, timeout=cmd_timeout)
                 if s:
-                    test.fail("Failed to online disk: %s" % o)
+                    test.fail(f"Failed to online disk: {o}")
     for fs in params.objects("filesystems"):
         fs_params = params.object_params(fs)
         fs_target = fs_params.get("fs_target")
         fs_dest = fs_params.get("fs_dest")
-        fs_source = fs_params.get("fs_source_dir")
-        error_context.context("Create a destination directory %s "
-                              "inside guest." % fs_dest, test.log.info)
+        fs_params.get("fs_source_dir")
+        error_context.context(
+            f"Create a destination directory {fs_dest} " "inside guest.",
+            test.log.info,
+        )
         utils_misc.make_dirs(fs_dest, session)
-        error_context.context("Mount virtiofs target %s to %s inside"
-                              " guest." % (fs_target, fs_dest), test.log.info)
-        if not utils_disk.mount(fs_target, fs_dest, 'virtiofs', session=session):
-            test.fail('Mount virtiofs target failed.')
+        error_context.context(
+            f"Mount virtiofs target {fs_target} to {fs_dest} inside" " guest.",
+            test.log.info,
+        )
+        if not utils_disk.mount(fs_target, fs_dest, "virtiofs", session=session):
+            test.fail("Mount virtiofs target failed.")
     # format disk
     if format == "True":
         session.cmd(pre_cmd, cmd_timeout)
@@ -231,98 +251,119 @@ def run(test, params, env):
     # get order_list
     order_line = ""
     for order in order_list.split():
-        order_line += "%s|" % format_result(order)
+        order_line += f"{format_result(order)}|"
 
     # get result tested by each scenario
     for io_pattern in rw.split():
-        result_file.write("Category:%s\n" % io_pattern)
-        result_file.write("%s\n" % order_line.rstrip("|"))
+        result_file.write(f"Category:{io_pattern}\n")
+        result_file.write("{}\n".format(order_line.rstrip("|")))
         for bs in block_size.split():
             for io_depth in iodepth.split():
                 for numjobs in threads.split():
                     line = ""
-                    line += "%s|" % format_result(bs[:-1])
-                    line += "%s|" % format_result(io_depth)
-                    line += "%s|" % format_result(numjobs)
+                    line += f"{format_result(bs[:-1])}|"
+                    line += f"{format_result(io_depth)}|"
+                    line += f"{format_result(numjobs)}|"
                     file_name = None
                     if format == "True" or params.objects("filesystems"):
                         file_name = io_pattern + "_" + bs + "_" + io_depth
                         run_fio_options = fio_options % (
-                            io_pattern, bs, io_depth, file_name, numjobs)
+                            io_pattern,
+                            bs,
+                            io_depth,
+                            file_name,
+                            numjobs,
+                        )
                     else:
                         run_fio_options = fio_options % (
-                            io_pattern, bs, io_depth, numjobs)
+                            io_pattern,
+                            bs,
+                            io_depth,
+                            numjobs,
+                        )
 
                     test.log.info("run_fio_options are: %s", run_fio_options)
                     if os_type == "linux":
-                        (s, o) = session.cmd_status_output(drop_cache,
-                                                           timeout=cmd_timeout)
+                        (s, o) = session.cmd_status_output(
+                            drop_cache, timeout=cmd_timeout
+                        )
                         if s:
-                            test.fail("Failed to free memory: %s" % o)
+                            test.fail(f"Failed to free memory: {o}")
                     cpu_file = os.path.join(data_dir.get_tmp_dir(), "cpus")
-                    io_exits_b = int(process.system_output(
-                        "cat /sys/kernel/debug/kvm/exits"))
+                    io_exits_b = int(
+                        process.system_output("cat /sys/kernel/debug/kvm/exits")
+                    )
                     fio_t = threading.Thread(target=fio_thread)
                     fio_t.start()
-                    process.system_output("mpstat 1 60 > %s" % cpu_file,
-                                          shell=True)
+                    process.system_output(f"mpstat 1 60 > {cpu_file}", shell=True)
                     fio_t.join()
                     if file_name and delete_test_file == "yes":
                         test.log.info("Ready delete: %s", file_name)
-                        session.cmd("rm -rf /mnt/%s" % file_name)
+                        session.cmd(f"rm -rf /mnt/{file_name}")
 
-                    io_exits_a = int(process.system_output(
-                        "cat /sys/kernel/debug/kvm/exits"))
-                    vm.copy_files_from(guest_result_file,
-                                       data_dir.get_tmp_dir())
-                    fio_result_file = os.path.join(data_dir.get_tmp_dir(),
-                                                   "fio_result")
-                    o = process.system_output("egrep '(read|write)' %s" %
-                                              fio_result_file).decode()
+                    io_exits_a = int(
+                        process.system_output("cat /sys/kernel/debug/kvm/exits")
+                    )
+                    vm.copy_files_from(guest_result_file, data_dir.get_tmp_dir())
+                    fio_result_file = os.path.join(data_dir.get_tmp_dir(), "fio_result")
+                    o = process.system_output(
+                        f"egrep '(read|write)' {fio_result_file}"
+                    ).decode()
                     results = re.findall(pattern, o)
-                    o = process.system_output("egrep 'lat' %s" %
-                                              fio_result_file).decode()
+                    o = process.system_output(f"egrep 'lat' {fio_result_file}").decode()
                     laten = re.findall(
-                        r"\s{5}lat\s\((\wsec)\).*?avg=[\s]?(\d+(?:[\.][\d]+)?).*?", o)
+                        r"\s{5}lat\s\((\wsec)\).*?avg=[\s]?(\d+(?:[\.][\d]+)?).*?", o
+                    )
                     bw = float(utils_numeric.normalize_data_size(results[0][1]))
-                    iops = float(utils_numeric.normalize_data_size(
-                        results[0][0], order_magnitude="B", factor=1000))
+                    iops = float(
+                        utils_numeric.normalize_data_size(
+                            results[0][0], order_magnitude="B", factor=1000
+                        )
+                    )
                     if os_type == "linux" and not params.objects("filesystems"):
-                        o = process.system_output("egrep 'util' %s" %
-                                                  fio_result_file).decode()
-                        util = float(re.findall(r".*?util=(\d+(?:[\.][\d]+))%",
-                                                o)[0])
+                        o = process.system_output(
+                            f"egrep 'util' {fio_result_file}"
+                        ).decode()
+                        util = float(re.findall(r".*?util=(\d+(?:[\.][\d]+))%", o)[0])
 
-                    lat = float(laten[0][1]) / 1000 if laten[0][0] == "usec" \
+                    lat = (
+                        float(laten[0][1]) / 1000
+                        if laten[0][0] == "usec"
                         else float(laten[0][1])
+                    )
                     if re.findall("rw", io_pattern):
                         bw = bw + float(
-                            utils_numeric.normalize_data_size(results[1][1]))
+                            utils_numeric.normalize_data_size(results[1][1])
+                        )
                         iops = iops + float(
                             utils_numeric.normalize_data_size(
-                                results[1][0], order_magnitude="B",
-                                factor=1000))
-                        lat1 = float(laten[1][1]) / 1000 \
-                            if laten[1][0] == "usec" else float(laten[1][1])
+                                results[1][0], order_magnitude="B", factor=1000
+                            )
+                        )
+                        lat1 = (
+                            float(laten[1][1]) / 1000
+                            if laten[1][0] == "usec"
+                            else float(laten[1][1])
+                        )
                         lat = lat + lat1
 
-                    ret = process.system_output("tail -n 1 %s" % cpu_file)
+                    ret = process.system_output(f"tail -n 1 {cpu_file}")
                     idle = float(ret.split()[-1])
                     iowait = float(ret.split()[5])
                     cpu = 100 - idle - iowait
                     normal = bw / cpu
                     io_exits = io_exits_a - io_exits_b
                     for result in bw, iops, lat, cpu, normal:
-                        line += "%s|" % format_result(result)
+                        line += f"{format_result(result)}|"
                     if os_type == "windows":
-                        line += "%s" % format_result(io_exits)
+                        line += f"{format_result(io_exits)}"
                     if os_type == "linux":
                         if not params.objects("filesystems"):
-                            line += "%s|" % format_result(io_exits)
-                            line += "%s" % format_result(util)  # pylint: disable=E0606
+                            line += f"{format_result(io_exits)}|"
+                            line += f"{format_result(util)}"  # pylint: disable=E0606
                         else:
-                            line += "%s" % format_result(io_exits)
-                    result_file.write("%s\n" % line)
+                            line += f"{format_result(io_exits)}"
+                    result_file.write(f"{line}\n")
 
     # del temporary files in guest os
     clean_tmp_files(session, os_type, guest_result_file, cmd_timeout)
@@ -332,6 +373,6 @@ def run(test, params, env):
         fs_params = params.object_params(fs)
         fs_target = fs_params.get("fs_target")
         fs_dest = fs_params.get("fs_dest")
-        utils_disk.umount(fs_target, fs_dest, 'virtiofs', session=session)
+        utils_disk.umount(fs_target, fs_dest, "virtiofs", session=session)
         utils_misc.safe_rmdir(fs_dest, session=session)
     session.close()

@@ -14,18 +14,25 @@ def run(test, params, env):
     """
 
     def verify_iommu_group():
-        """ Verify whether the iommu group is seperated correctly. """
+        """Verify whether the iommu group is seperated correctly."""
         error_context.context(
-            'Verify whether the iommu group is seperated correctly.', test.log.info)
-        device_id = session.cmd(
-            "lspci | grep 'PCIe\\|Virtio\\|USB\\|VGA\\|PCI' | awk '{print $1}'").strip().split()
+            "Verify whether the iommu group is seperated correctly.", test.log.info
+        )
+        device_id = (
+            session.cmd(
+                "lspci | grep 'PCIe\\|Virtio\\|USB\\|VGA\\|PCI' | awk '{print $1}'"
+            )
+            .strip()
+            .split()
+        )
         group_id = []
         for id in device_id:
             g_id = session.cmd(
                 """dmesg | grep "iommu group" | grep '%s' | awk -F " " '{print $NF}'"""
-                % ("0000:" + id)).strip()
+                % ("0000:" + id)
+            ).strip()
             if g_id == "":
-                test.fail("Device ID: '%s' didn't in iommu group" % id)
+                test.fail(f"Device ID: '{id}' didn't in iommu group")
             else:
                 group_id.append(g_id)
             test.log.info("Group ID of %s: %s", id, g_id)

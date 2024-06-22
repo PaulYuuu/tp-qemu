@@ -17,7 +17,7 @@ class BlockdevStreamStressTest(BlockDevStreamTest):
             self.test.fail("stress stopped unexpectedly")
 
     def pre_test(self):
-        super(BlockdevStreamStressTest, self).pre_test()
+        super().pre_test()
         self._run_stress_test()
 
     def do_test(self):

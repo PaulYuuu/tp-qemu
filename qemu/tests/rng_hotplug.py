@@ -1,9 +1,9 @@
 import time
 
-from virttest import error_context
-from virttest.qemu_devices import qdevices
-from virttest import utils_test
 from avocado.core import exceptions
+from virttest import error_context, utils_test
+from virttest.qemu_devices import qdevices
+
 from provider import win_driver_utils
 
 
@@ -36,7 +36,7 @@ def run(test, params, env):
         return device_list
 
     def hotplug_rng(vm, dev):
-        error_context.context("Hotplug %s" % dev, test.log.info)
+        error_context.context(f"Hotplug {dev}", test.log.info)
         out, ver_out = vm.devices.simple_hotplug(dev, vm.monitor)
         if not ver_out:
             msg = "no % device in qtree after hotplug" % dev
@@ -44,10 +44,10 @@ def run(test, params, env):
         test.log.info("%s is hotpluged successfully", dev)
 
     def unplug_rng(vm, dev):
-        error_context.context("Hot-unplug %s" % dev, test.log.info)
+        error_context.context(f"Hot-unplug {dev}", test.log.info)
         out, ver_out = vm.devices.simple_unplug(dev, vm.monitor)
         if not ver_out:
-            msg = "Still get %s in qtree after unplug" % dev
+            msg = f"Still get {dev} in qtree after unplug"
             raise exceptions.TestFail(msg)
         time.sleep(15)
         test.log.info("%s is unpluged successfully", dev)
@@ -64,8 +64,7 @@ def run(test, params, env):
     def stop_rngd(vm):
         if params.get("stop_rngd"):
             session = vm.wait_for_login()
-            error_context.context("Disable rngd service before unplug",
-                                  test.log.info)
+            error_context.context("Disable rngd service before unplug", test.log.info)
             status, output = session.cmd_status_output(params.get("stop_rngd"))
             if status != 0:
                 raise exceptions.TestError(output)
@@ -76,7 +75,7 @@ def run(test, params, env):
         Run subtest(e.g. rng_bat,reboot,shutdown) when it's not None
         :param sub_test: subtest name
         """
-        error_context.context("Run %s subtest" % sub_test)
+        error_context.context(f"Run {sub_test} subtest")
         utils_test.run_virt_sub_test(test, params, env, sub_test)
 
     login_timeout = int(params.get("login_timeout", 360))
@@ -106,13 +105,13 @@ def run(test, params, env):
 
     for i in range(repeat_times):
         dev_list = []
-        error_context.context("Hotplug/unplug rng devices the %s time"
-                              % (i+1), test.log.info)
+        error_context.context(
+            "Hotplug/unplug rng devices the %s time" % (i + 1), test.log.info
+        )
 
         for num in range(rng_num):
             vm.devices.set_dirty()
-            new_dev = qdevices.QDevice(rng_driver,
-                                       {'id': '%s-%d' % (rng_driver, num)})
+            new_dev = qdevices.QDevice(rng_driver, {"id": "%s-%d" % (rng_driver, num)})
             hotplug_rng(vm, new_dev)
             dev_list.append(new_dev)
 

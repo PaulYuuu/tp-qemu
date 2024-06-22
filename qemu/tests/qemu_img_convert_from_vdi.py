@@ -1,6 +1,5 @@
 from avocado import fail_on
 from avocado.utils import process
-
 from virttest import data_dir
 from virttest.qemu_storage import QemuImg
 
@@ -22,7 +21,7 @@ def run(test, params, env):
     img_dir = data_dir.get_data_dir()
 
     vdi_image_url = params["vdi_image_address"]
-    vdi_image_download_cmd = "wget -P %s/images %s" % (img_dir, vdi_image_url)
+    vdi_image_download_cmd = f"wget -P {img_dir}/images {vdi_image_url}"
     process.system(vdi_image_download_cmd)
 
     for format in ("qcow2", "raw"):

@@ -1,5 +1,4 @@
-from virttest import error_context
-from virttest import utils_net
+from virttest import error_context, utils_net
 
 
 @error_context.context_aware
@@ -30,20 +29,20 @@ def run(test, params, env):
     guest_nic = vm.virtnet
     device_id = guest_nic[0].device_id
     test.log.info("Consumed the rx-filter of the nic")
-    vm.monitor.cmd("query-rx-filter", args={'name': device_id})
+    vm.monitor.cmd("query-rx-filter", args={"name": device_id})
     test.log.info("Changed the mac address inside guest")
     session_serial.cmd_output_safe(change_cmd % (new_mac, interface))
     test.log.info("Check qemu if sent a NIC_RX_FILTER_CHANGED event")
     event_name = params.get("event_name")
     if vm.monitor.get_event(event_name):
-        test.log.info("Received qmp %s event notification" % event_name)
+        test.log.info(f"Received qmp {event_name} event notification")
     else:
-        test.fail("Can not got %s event notification" % event_name)
+        test.fail(f"Can not got {event_name} event notification")
     vm.monitor.clear_event(event_name)
     test.log.info("Changed the mac address again inside guest")
     session_serial.cmd_output_safe(change_cmd % (old_mac, interface))
     if vm.monitor.get_event(event_name):
-        test.fail("Oops, Received qmp %s event notification again" % event_name)
+        test.fail(f"Oops, Received qmp {event_name} event notification again")
     else:
         test.log.info("Test pass, there is no any event notification")
     session_serial.close()

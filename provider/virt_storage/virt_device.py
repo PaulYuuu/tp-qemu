@@ -1,5 +1,4 @@
-class HostAdapter(object):
-
+class HostAdapter:
     def __init__(self):
         self.name = None
         self.type = None
@@ -24,8 +23,7 @@ class HostAdapter(object):
         return inst
 
 
-class StorageDevice(object):
-
+class StorageDevice:
     def __init__(self, path):
         self.path = path
 
@@ -34,8 +32,7 @@ class StorageDevice(object):
         return cls(params.get("device_path"))
 
 
-class StorageHost(object):
-
+class StorageHost:
     def __init__(self, hostname, port=None):
         self.hostname = hostname
         self.port = port

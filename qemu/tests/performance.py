@@ -1,24 +1,21 @@
 import os
 import re
-import shutil
 import shelve
-import six
+import shutil
 import threading
+
+import six
+
 try:
     from queue import Queue
 except ImportError:
     from Queue import Queue
 
-from avocado.utils import download
-from avocado.utils import process
-
-from virttest import utils_test
-from virttest import utils_misc
-from virttest import data_dir
+from avocado.utils import download, process
+from virttest import data_dir, utils_misc, utils_test
 
 
-def cmd_runner_monitor(test, vm, monitor_cmd, test_cmd,
-                       guest_path, timeout=300):
+def cmd_runner_monitor(test, vm, monitor_cmd, test_cmd, guest_path, timeout=300):
     """
     For record the env information such as cpu utilization, meminfo while
     run guest test in guest.
@@ -29,14 +26,15 @@ def cmd_runner_monitor(test, vm, monitor_cmd, test_cmd,
     @timeout: longest time for monitor running
     Return: tag the suffix of the results
     """
+
     def thread_kill(cmd, p_file):
         fd = shelve.open(p_file)
-        o = process.system_output("pstree -p %s" % fd["pid"], verbose=False,
-                                  ignore_status=True)
+        o = process.system_output(
+            "pstree -p {}".format(fd["pid"]), verbose=False, ignore_status=True
+        )
         tmp = re.split(r"\s+", cmd)[0]
-        pid = re.findall(r"%s.(\d+)" % tmp, o)[0]
-        cmd_result = process.run("kill -9 %s" % pid, verbose=False,
-                                 ignore_status=True)
+        pid = re.findall(rf"{tmp}.(\d+)", o)[0]
+        cmd_result = process.run(f"kill -9 {pid}", verbose=False, ignore_status=True)
         fd.close()
         return (cmd_result.exit_status, cmd_result.stdout)
 
@@ -44,13 +42,13 @@ def cmd_runner_monitor(test, vm, monitor_cmd, test_cmd,
         fd = shelve.open(p_file)
         fd["pid"] = os.getpid()
         fd.close()
-        os.system("%s &> %s" % (m_cmd, r_file))
+        os.system(f"{m_cmd} &> {r_file}")
 
     def test_thread(session, m_cmd, t_cmd, p_file, flag, timeout):
         flag.put(True)
         s, o = session.cmd_status_output(t_cmd, timeout)
         if s != 0:
-            test.fail("Test failed or timeout: %s" % o)
+            test.fail(f"Test failed or timeout: {o}")
         if not flag.empty():
             flag.get()
             thread_kill(m_cmd, p_file)
@@ -58,14 +56,16 @@ def cmd_runner_monitor(test, vm, monitor_cmd, test_cmd,
     kill_thread_flag = Queue(1)
     session = vm.wait_for_login(timeout=300)
     tag = vm.instance
-    pid_file = "/tmp/monitor_pid_%s" % tag
-    result_file = "/tmp/host_monitor_result_%s" % tag
+    pid_file = f"/tmp/monitor_pid_{tag}"
+    result_file = f"/tmp/host_monitor_result_{tag}"
 
-    monitor = threading.Thread(target=monitor_thread, args=(monitor_cmd,
-                                                            pid_file, result_file))
-    test_runner = threading.Thread(target=test_thread, args=(session,
-                                                             monitor_cmd, test_cmd, pid_file,
-                                                             kill_thread_flag, timeout))
+    monitor = threading.Thread(
+        target=monitor_thread, args=(monitor_cmd, pid_file, result_file)
+    )
+    test_runner = threading.Thread(
+        target=test_thread,
+        args=(session, monitor_cmd, test_cmd, pid_file, kill_thread_flag, timeout),
+    )
     monitor.start()
     test_runner.start()
     monitor.join(int(timeout))
@@ -74,10 +74,10 @@ def cmd_runner_monitor(test, vm, monitor_cmd, test_cmd,
         thread_kill(monitor_cmd, pid_file)
         thread_kill("sh", pid_file)
 
-    guest_result_file = "/tmp/guest_result_%s" % tag
-    guest_monitor_result_file = "/tmp/guest_monitor_result_%s" % tag
+    guest_result_file = f"/tmp/guest_result_{tag}"
+    guest_monitor_result_file = f"/tmp/guest_monitor_result_{tag}"
     vm.copy_files_from(guest_path, guest_result_file)
-    vm.copy_files_from("%s_monitor" % guest_path, guest_monitor_result_file)
+    vm.copy_files_from(f"{guest_path}_monitor", guest_monitor_result_file)
     return tag
 
 
@@ -107,7 +107,7 @@ def run(test, params, env):
     # Prepare test environment in guest
     session = vm.wait_for_login(timeout=login_timeout)
 
-    prefix = test.outputdir.split(".performance.")[0]
+    test.outputdir.split(".performance.")[0]
     summary_results = params.get("summary_results")
     guest_ver = session.cmd_output("uname -r").strip()
 
@@ -128,7 +128,7 @@ def run(test, params, env):
 
     session.cmd("rm -rf /tmp/src*")
     session.cmd("mkdir -p /tmp/src_tmp")
-    session.cmd("tar -xf /tmp/%s -C %s" % (tar_name, "/tmp/src_tmp"))
+    session.cmd("tar -xf /tmp/{} -C {}".format(tar_name, "/tmp/src_tmp"))
 
     # Find the newest file in src tmp directory
     cmd = "ls -rt /tmp/src_tmp"
@@ -137,17 +137,18 @@ def run(test, params, env):
         new_file = re.findall("(.*)\n", o)[-1]
     else:
         test.error("Can not decompress test file in guest")
-    session.cmd("mv /tmp/src_tmp/%s /tmp/src" % new_file)   # pylint: disable=E0606
+    session.cmd(f"mv /tmp/src_tmp/{new_file} /tmp/src")  # pylint: disable=E0606
 
     if test_patch:
-        test_patch_path = os.path.join(data_dir.get_deps_dir(), 'performance',
-                                       test_patch)
+        test_patch_path = os.path.join(
+            data_dir.get_deps_dir(), "performance", test_patch
+        )
         vm.copy_files_to(test_patch_path, "/tmp/src")
-        session.cmd("cd /tmp/src && patch -p1 < /tmp/src/%s" % test_patch)
+        session.cmd(f"cd /tmp/src && patch -p1 < /tmp/src/{test_patch}")
 
     compile_cmd = params.get("compile_cmd")
     if compile_cmd:
-        session.cmd("cd /tmp/src && %s" % compile_cmd)
+        session.cmd(f"cd /tmp/src && {compile_cmd}")
 
     prepare_cmd = params.get("prepare_cmd")
     if prepare_cmd:
@@ -155,20 +156,23 @@ def run(test, params, env):
         if s != 0:
             test.error("Fail to prepare test env in guest")
 
-    cmd = "cd /tmp/src && python /tmp/cmd_runner.py \"%s &> " % monitor_cmd
-    cmd += "/tmp/guest_result_monitor\"  \"/tmp/src/%s" % test_cmd
-    cmd += " &> %s \" \"/tmp/guest_result\""
-    cmd += " %s" % int(test_timeout)
+    cmd = f'cd /tmp/src && python /tmp/cmd_runner.py "{monitor_cmd} &> '
+    cmd += f'/tmp/guest_result_monitor"  "/tmp/src/{test_cmd}'
+    cmd += ' &> %s " "/tmp/guest_result"'
+    cmd += f" {int(test_timeout)}"
 
     test_cmd = cmd
     # Run guest test with monitor
-    tag = cmd_runner_monitor(test, vm, monitor_cmd, test_cmd,
-                             guest_path, timeout=test_timeout)
+    tag = cmd_runner_monitor(
+        test, vm, monitor_cmd, test_cmd, guest_path, timeout=test_timeout
+    )
 
     # Result collecting
-    result_list = ["/tmp/guest_result_%s" % tag,
-                   "/tmp/host_monitor_result_%s" % tag,
-                   "/tmp/guest_monitor_result_%s" % tag]
+    result_list = [
+        f"/tmp/guest_result_{tag}",
+        f"/tmp/host_monitor_result_{tag}",
+        f"/tmp/guest_monitor_result_{tag}",
+    ]
     guest_results_dir = os.path.join(test.outputdir, "guest_results")
     if not os.path.exists(guest_results_dir):
         os.mkdir(guest_results_dir)
@@ -177,24 +181,25 @@ def run(test, params, env):
     row_pattern = params.get("row_pattern")
     for i in result_list:
         if re.findall("monitor_result", i):
-            result = utils_test.summary_up_result(i, ignore_pattern,
-                                                  head_pattern, row_pattern)
-            fd = open("%s.sum" % i, "w")
+            result = utils_test.summary_up_result(
+                i, ignore_pattern, head_pattern, row_pattern
+            )
+            fd = open(f"{i}.sum", "w")
             sum_info = {}
             head_line = ""
             for keys in result:
-                head_line += "\t%s" % keys
+                head_line += f"\t{keys}"
                 for col in result[keys]:
-                    col_sum = "line %s" % col
+                    col_sum = f"line {col}"
                     if col_sum in sum_info:
-                        sum_info[col_sum] += "\t%s" % result[keys][col]
+                        sum_info[col_sum] += f"\t{result[keys][col]}"
                     else:
-                        sum_info[col_sum] = "%s\t%s" % (col, result[keys][col])
-            fd.write("%s\n" % head_line)
+                        sum_info[col_sum] = f"{col}\t{result[keys][col]}"
+            fd.write(f"{head_line}\n")
             for keys in sum_info:
-                fd.write("%s\n" % sum_info[keys])
+                fd.write(f"{sum_info[keys]}\n")
             fd.close()
-            shutil.copy("%s.sum" % i, guest_results_dir)
+            shutil.copy(f"{i}.sum", guest_results_dir)
         shutil.copy(i, guest_results_dir)
 
     session.cmd("rm -rf /tmp/src")
@@ -209,7 +214,7 @@ def mpstat_ana(filename):
 
     :param filename: filename of the mpstat summary file
     """
-    mpstat_result = open(filename, 'r')
+    mpstat_result = open(filename)
     key_value = "%idle"
     index = 0
     result = {}
@@ -221,7 +226,7 @@ def mpstat_ana(filename):
             if data[0] == "all":
                 vcpu = "all"
             else:
-                vcpu = "vcpu%s" % data[0]
+                vcpu = f"vcpu{data[0]}"
             cpu_use = "%20.2f" % (100 - utils_misc.aton(data[index]))
             result[vcpu] = cpu_use
     return result
@@ -290,17 +295,21 @@ def result_sum(topdir, params, guest_ver, resultsdir, test):
     category_key = re.split(case_type, category_key)[0]
     category_key = re.sub(r"\.repeat\d+", "", category_key)
 
-    kvm_ver = process.system_output(params.get('ver_cmd', "rpm -q qemu-kvm"),
-                                    shell=True)
+    kvm_ver = process.system_output(
+        params.get("ver_cmd", "rpm -q qemu-kvm"), shell=True
+    )
     host_ver = os.uname()[2]
-    test.write_test_keyval({'kvm-userspace-ver': kvm_ver})
-    test.write_test_keyval({'host-kernel-ver': host_ver})
-    test.write_test_keyval({'guest-kernel-ver': guest_ver})
+    test.write_test_keyval({"kvm-userspace-ver": kvm_ver})
+    test.write_test_keyval({"host-kernel-ver": host_ver})
+    test.write_test_keyval({"guest-kernel-ver": guest_ver})
     # Find the results files
 
     results_files = {}
-    file_list = ['guest_result', 'guest_monitor_result.*sum',
-                 'host_monitor_result.*sum']
+    file_list = [
+        "guest_result",
+        "guest_monitor_result.*sum",
+        "host_monitor_result.*sum",
+    ]
     if params.get("file_list"):
         file_list = params.get("file_list").split()
 
@@ -314,13 +323,16 @@ def result_sum(topdir, params, guest_ver, resultsdir, test):
                 if jump_flag:
                     continue
                 file_dir_norpt = re.sub(r"\.repeat\d+", "", files[0])
-                if (repeatn in files[0] and
-                        category_key in file_dir_norpt and
-                        case_type in files[0]):
+                if (
+                    repeatn in files[0]
+                    and category_key in file_dir_norpt
+                    and case_type in files[0]
+                ):
                     for i, pattern in enumerate(file_list):
                         if re.findall(pattern, file):
-                            prefix = re.findall(r"%s\.[\d\w_\.]+" % case_type,
-                                                file_dir_norpt)[0]
+                            prefix = re.findall(
+                                rf"{case_type}\.[\d\w_\.]+", file_dir_norpt
+                            )[0]
                             prefix = re.sub(r"\.|_", "--", prefix)
                             if prefix not in results_files.keys():
                                 results_files[prefix] = []
@@ -361,8 +373,7 @@ def result_sum(topdir, params, guest_ver, resultsdir, test):
             category = "-".join(case_infos)
         if refresh_order_list:
             order_list = []
-        if (category not in results_matrix.keys() and
-                category not in no_table_list):
+        if category not in results_matrix.keys() and category not in no_table_list:
             results_matrix[category] = {}
         if threads:
             if threads not in results_matrix[category].keys():
@@ -372,7 +383,7 @@ def result_sum(topdir, params, guest_ver, resultsdir, test):
         elif category not in no_table_list:
             tmp_dic = results_matrix[category]
 
-        result_context_file = open(results_files[prefix][0], 'r')
+        result_context_file = open(results_files[prefix][0])
         result_context = result_context_file.read()
         result_context_file.close()
         for mark in marks:
@@ -392,17 +403,18 @@ def result_sum(topdir, params, guest_ver, resultsdir, test):
                     no_table_results[mark_tag] = utils_misc.aton(data)
                     perf_value = no_table_results[mark_tag]
                 else:
-                    tmp_dic[mark_tag] = utils_misc.aton(data)   # pylint: disable=E0606
+                    tmp_dic[mark_tag] = utils_misc.aton(data)  # pylint: disable=E0606
                     perf_value = tmp_dic[mark_tag]
             else:
-                test.error("Can not get the right data from result."
-                           "Please check the debug file.")
+                test.error(
+                    "Can not get the right data from result."
+                    "Please check the debug file."
+                )
             if mark_tag not in no_table_list and mark_tag not in order_list:
                 order_list.append(mark_tag)
-            test.write_perf_keyval({'%s-%s' % (prefix_perf, mark_tag):
-                                    perf_value})    # pylint: disable=E0606
+            test.write_perf_keyval({f"{prefix_perf}-{mark_tag}": perf_value})  # pylint: disable=E0606
         # start analyze the mpstat results
-        if params.get('mpstat') == "yes":
+        if params.get("mpstat") == "yes":
             guest_cpu_infos = mpstat_ana(results_files[prefix][1])
             for vcpu in guest_cpu_infos:
                 if vcpu != "all":
@@ -413,8 +425,7 @@ def result_sum(topdir, params, guest_ver, resultsdir, test):
             order_list.append("Hostcpu")
         # Add some special key for cases
         if case_type == "ffsb":
-            tmp_dic["MBps_per_Hostcpu"] = (tmp_dic["Thro-MBps"] /
-                                           tmp_dic["Hostcpu"])
+            tmp_dic["MBps_per_Hostcpu"] = tmp_dic["Thro-MBps"] / tmp_dic["Hostcpu"]
             order_list.append("MBps_per_Hostcpu")
         elif case_type == "iozone":
             sum_kbps = 0
@@ -433,22 +444,21 @@ def result_sum(topdir, params, guest_ver, resultsdir, test):
     else:
         headline = ""
     for index, tag in enumerate(order_list):
-        headline += "%s|" % format_result(tag)
+        headline += f"{format_result(tag)}|"
         order_line += "DATA%d|" % index
     headline = headline.rstrip("|")
     order_line = order_line.rstrip("|")
 
-    result_path = utils_misc.get_path(resultsdir,
-                                      "%s-result.RHS" % case_type)
+    result_path = utils_misc.get_path(resultsdir, f"{case_type}-result.RHS")
     if os.path.isfile(result_path):
         result_file = open(result_path, "r+")
     else:
         result_file = open(result_path, "w")
-        result_file.write("### kvm-userspace-version : %s\n" % kvm_ver)
-        result_file.write("### kvm-version : %s\n" % host_ver)
-        result_file.write("### guest-kernel-version :%s\n" % guest_ver)
+        result_file.write(f"### kvm-userspace-version : {kvm_ver}\n")
+        result_file.write(f"### kvm-version : {host_ver}\n")
+        result_file.write(f"### guest-kernel-version :{guest_ver}\n")
 
-    test.write_test_keyval({'category': headline})
+    test.write_test_keyval({"category": headline})
     result_file.write("Category:ALL\n")
     matrix_order = params.get("matrix_order", "").split()
     if not matrix_order:
@@ -456,38 +466,38 @@ def result_sum(topdir, params, guest_ver, resultsdir, test):
         matrix_order.sort()
     for category in matrix_order:
         out_loop_line = order_line
-        result_file.write("%s\n" % category)
+        result_file.write(f"{category}\n")
         line = ""
         write_out_loop = True
-        result_file.write("%s\n" % headline)
+        result_file.write(f"{headline}\n")
         for item in results_matrix[category]:
             if isinstance(results_matrix[category][item], dict):
                 tmp_dic = results_matrix[category][item]
-                line = "%s|" % format_result(item)
+                line = f"{format_result(item)}|"
                 for tag in order_list:
-                    line += "%s|" % format_result(tmp_dic[tag])
+                    line += f"{format_result(tmp_dic[tag])}|"
                     if tag in sum_marks:
-                        sum_matrix = get_sum_result(sum_matrix, tmp_dic[tag],
-                                                    tag)
-                result_file.write("%s\n" % line.rstrip("|"))
+                        sum_matrix = get_sum_result(sum_matrix, tmp_dic[tag], tag)
+                result_file.write("{}\n".format(line.rstrip("|")))
                 write_out_loop = False
             else:
-                #line += "%s|" % format_result(results_matrix[category][item])
-                re_data = "DATA%s" % order_list.index(item)
-                out_loop_line = re.sub(re_data,
-                                       format_result(
-                                           results_matrix[category][item]),
-                                       out_loop_line)
+                # line += "%s|" % format_result(results_matrix[category][item])
+                re_data = f"DATA{order_list.index(item)}"
+                out_loop_line = re.sub(
+                    re_data,
+                    format_result(results_matrix[category][item]),
+                    out_loop_line,
+                )
                 if tag in sum_marks:
-                    sum_matrix = get_sum_result(sum_matrix, tmp_dic[tag],
-                                                tag)
+                    sum_matrix = get_sum_result(sum_matrix, tmp_dic[tag], tag)
         if write_out_loop:
-            result_file.write("%s\n" % out_loop_line)
+            result_file.write(f"{out_loop_line}\n")
 
     if sum_matrix:
         if case_type == "ffsb":
-            sum_matrix["MBps_per_Hostcpu"] = (sum_matrix["Thro-MBps"] /
-                                              sum_matrix["Hostcpu"])
+            sum_matrix["MBps_per_Hostcpu"] = (
+                sum_matrix["Thro-MBps"] / sum_matrix["Hostcpu"]
+            )
             sum_marks.append("MBps_per_Hostcpu")
         result_file.write("Category:SUM\n")
         headline = ""
@@ -498,10 +508,10 @@ def result_sum(topdir, params, guest_ver, resultsdir, test):
                 line += "%20d|" % 0
         for tag in sum_marks:
             headline += "%20s|" % tag
-            line += "%s|" % format_result(sum_matrix[tag])
+            line += f"{format_result(sum_matrix[tag])}|"
 
-        result_file.write("%s\n" % headline.rstrip("|"))
-        result_file.write("%s\n" % line.rstrip("|"))
+        result_file.write("{}\n".format(headline.rstrip("|")))
+        result_file.write("{}\n".format(line.rstrip("|")))
 
     if no_table_results:
         no_table_order = params.get("no_table_order", "").split()
@@ -509,6 +519,6 @@ def result_sum(topdir, params, guest_ver, resultsdir, test):
             no_table_order = no_table_results.keys()
             no_table_order.sort()
         for item in no_table_order:
-            result_file.write("%s: %s\n" % (item, no_table_results[item]))
+            result_file.write(f"{item}: {no_table_results[item]}\n")
 
     result_file.close()

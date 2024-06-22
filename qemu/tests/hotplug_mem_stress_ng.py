@@ -1,5 +1,4 @@
-from virttest import utils_test
-from virttest import error_context
+from virttest import error_context, utils_test
 from virttest.utils_test.qemu import MemoryHotplugTest
 
 
@@ -35,7 +34,7 @@ def run(test, params, env):
             cmd = run_stress % arg
             status, output = session.cmd_status_output(cmd, timeout=1500)
             if status:
-                test.fail("Stress_ng cmd '%s' failed with '%s'" % (cmd, output))
+                test.fail(f"Stress_ng cmd '{cmd}' failed with '{output}'")
         hotplug_test.unplug_memory(vm, mem_name)
         hotplug_test.check_memory(vm)
         hotplug_test.hotplug_memory(vm, mem_name)
@@ -45,5 +44,5 @@ def run(test, params, env):
         hotplug_test.check_memory(vm)
     finally:
         if session:
-            session.cmd_output_safe("rm -rf %s" % params["stress_ng_dir"])
+            session.cmd_output_safe("rm -rf {}".format(params["stress_ng_dir"]))
             session.close()

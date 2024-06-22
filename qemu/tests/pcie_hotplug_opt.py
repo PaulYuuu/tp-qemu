@@ -34,16 +34,16 @@ def run(test, params, env):
         Hot-plug virtio-scsi-pci
         """
         pci_add_cmd = "device_add driver=virtio-scsi-pci, id=plug"
-        pci_add_cmd += ",bus=%s" % free_root_port_id
+        pci_add_cmd += f",bus={free_root_port_id}"
         vm.monitor.send_args_cmd(pci_add_cmd)
 
     def hotplug_nic():
         """
         Hot-plug virtio-net-pci
         """
-        nic_name = 'plug'
+        nic_name = "plug"
         nic_params = params.object_params(nic_name)
-        nic_params["nic_model"] = 'virtio-net-pci'
+        nic_params["nic_model"] = "virtio-net-pci"
         nic_params["nic_name"] = nic_name
         vm.hotplug_nic(**nic_params)
 
@@ -53,21 +53,26 @@ def run(test, params, env):
 
         :param device: QDevice object
         """
-        parent_bus = device.get_param('bus')
-        driver = device.get_param('driver')
-        device_id = device.get_param('id')
-        error_context.context("Hot-unplug %s" % driver, test.log.info)
+        parent_bus = device.get_param("bus")
+        driver = device.get_param("driver")
+        device.get_param("id")
+        error_context.context(f"Hot-unplug {driver}", test.log.info)
         error_pattern = unplug_error_pattern % (parent_bus, parent_bus)
         try:
             device.unplug(vm.monitor)
         except QMPCmdError as e:
             if not re.search(error_pattern, e.data["desc"]):
-                test.fail("Hot-unplug failed but '%s' isn't the expected error"
-                          % e.data["desc"])
-            error_context.context("Hot-unplug %s failed as expected: %s"
-                                  % (driver, e.data["desc"]), test.log.info)
+                test.fail(
+                    "Hot-unplug failed but '{}' isn't the expected error".format(
+                        e.data["desc"]
+                    )
+                )
+            error_context.context(
+                "Hot-unplug {} failed as expected: {}".format(driver, e.data["desc"]),
+                test.log.info,
+            )
         else:
-            test.fail("Hot-unplug %s should not success" % driver)
+            test.fail(f"Hot-unplug {driver} should not success")
 
     def plug_device(driver):
         """
@@ -75,24 +80,29 @@ def run(test, params, env):
 
         :param driver: the driver name
         """
-        error_context.context("Hot-plug %s" % driver, test.log.info)
+        error_context.context(f"Hot-plug {driver}", test.log.info)
         error_pattern = hotplug_error_pattern % (free_root_port_id, free_root_port_id)
         try:
             callback[driver]()
         except QMPCmdError as e:
             if not re.search(error_pattern, e.data["desc"]):
-                test.fail("Hot-plug failed but '%s' isn't the expected error"
-                          % e.data["desc"])
-            error_context.context("Hot-plug %s failed as expected: %s"
-                                  % (driver, e.data["desc"]), test.log.info)
+                test.fail(
+                    "Hot-plug failed but '{}' isn't the expected error".format(
+                        e.data["desc"]
+                    )
+                )
+            error_context.context(
+                "Hot-plug {} failed as expected: {}".format(driver, e.data["desc"]),
+                test.log.info,
+            )
         else:
-            test.fail("Hot-plug %s should not success" % driver)
+            test.fail(f"Hot-plug {driver} should not success")
 
     vm = env.get_vm(params["main_vm"])
     vm.wait_for_login()
-    images = params.objects('images')
-    hotplug_error_pattern = params.get('hotplug_error_pattern')
-    unplug_error_pattern = params.get('unplug_error_pattern')
+    images = params.objects("images")
+    hotplug_error_pattern = params.get("hotplug_error_pattern")
+    unplug_error_pattern = params.get("unplug_error_pattern")
     unplug_devs = []
 
     blk_image = images[1]
@@ -101,7 +111,7 @@ def run(test, params, env):
 
     # In this case only one virtio-scsi-pci device, and the drive name is
     # fixed 'virtio-scsi-pci' for q35
-    scsi_pci_dev = vm.devices.get_by_params({'driver': 'virtio-scsi-pci'})[0]
+    scsi_pci_dev = vm.devices.get_by_params({"driver": "virtio-scsi-pci"})[0]
     unplug_devs.append(scsi_pci_dev)
 
     nic_id = vm.virtnet[0].device_id
@@ -113,21 +123,25 @@ def run(test, params, env):
     # TODO: eject device in windows guest
 
     # one free root port is enough, use the default one provided by framework
-    bus = vm.devices.get_buses({'aobject': 'pci.0'})[0]
+    bus = vm.devices.get_buses({"aobject": "pci.0"})[0]
     free_root_port_dev = bus.get_free_root_port()
     free_root_port_id = free_root_port_dev.child_bus[0].busid
     plug_image = images[-1]
     plug_image_params = params.object_params(plug_image)
-    image_devs = vm.devices.images_define_by_params(plug_image,
-                                                    plug_image_params,
-                                                    'disk')
-    error_context.context("Hot-plug the Drive/BlockdevNode first, "
-                          "will be used by virtio-blk-pci", test.log.info)
+    image_devs = vm.devices.images_define_by_params(
+        plug_image, plug_image_params, "disk"
+    )
+    error_context.context(
+        "Hot-plug the Drive/BlockdevNode first, " "will be used by virtio-blk-pci",
+        test.log.info,
+    )
     for image_dev in image_devs[:-1]:
         vm.devices.simple_hotplug(image_dev, vm.monitor)
 
-    callback = {"virtio-blk-pci": hotplug_blk,
-                "virtio-scsi-pci": hotplug_scsi,
-                "virtio-net-pci": hotplug_nic}
-    for driver in ['virtio-blk-pci', 'virtio-scsi-pci', 'virtio-net-pci']:
+    callback = {
+        "virtio-blk-pci": hotplug_blk,
+        "virtio-scsi-pci": hotplug_scsi,
+        "virtio-net-pci": hotplug_nic,
+    }
+    for driver in ["virtio-blk-pci", "virtio-scsi-pci", "virtio-net-pci"]:
         plug_device(driver)

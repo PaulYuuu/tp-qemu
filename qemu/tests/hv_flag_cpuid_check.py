@@ -1,7 +1,7 @@
 import re
 import time
-from virttest import error_context
-from virttest import env_process
+
+from virttest import env_process, error_context
 
 
 @error_context.context_aware
@@ -43,10 +43,12 @@ def run(test, params, env):
         Param check_bit: Check bit in cpu register, like 14 bit in EAX register.
 
         """
-        error_context.context("Check the corresponding CPUID entries with "
-                              "the flag %s" % hv_flag, test.log.info)
+        error_context.context(
+            "Check the corresponding CPUID entries with " f"the flag {hv_flag}",
+            test.log.info,
+        )
         output = session.cmd_output(check_cpuid_entry_cmd)
-        match = re.search(r'%s=0x([0-9a-fA-F]+)' % check_register, output)
+        match = re.search(rf"{check_register}=0x([0-9a-fA-F]+)", output)
         value = int(match.group(1), 16)
         bit_result = (value >> check_bit) & 0x01
         return bit_result
@@ -81,22 +83,22 @@ def run(test, params, env):
     cpu_model_flags = params["cpu_model_flags"]
     hv_flags_to_ignore = params["hv_flags_to_ignore"].split()
 
-    error_context.context("Boot the guest with %s flag" % hv_flag, test.log.info)
+    error_context.context(f"Boot the guest with {hv_flag} flag", test.log.info)
     vm, session = _boot_guest_with_cpu_flag(cpu_model_flags)
     status = session.cmd_status(cpuid_chk_cmd)
     if status:
         install_epel_repo()
-        status = session.cmd_status("yum -y install %s" % cpuid_pkg)
+        status = session.cmd_status(f"yum -y install {cpuid_pkg}")
         if status:
             test.error("Fail to install target cpuid")
     if not run_cpuid_check(check_register, check_bit):
-        test.fail('CPUID %s BIT(%s) does not set' % (check_register, check_bit))
+        test.fail(f"CPUID {check_register} BIT({check_bit}) does not set")
     vm.graceful_shutdown(timeout=timeout)
 
-    error_context.context("Boot the guest without %s flag" % hv_flag, test.log.info)
-    without_hv_flag = ','.join(
-        [_ for _ in cpu_model_flags.split(',')
-            if _ not in hv_flags_to_ignore])
+    error_context.context(f"Boot the guest without {hv_flag} flag", test.log.info)
+    without_hv_flag = ",".join(
+        [_ for _ in cpu_model_flags.split(",") if _ not in hv_flags_to_ignore]
+    )
     vm, session = _boot_guest_with_cpu_flag(without_hv_flag)
     if run_cpuid_check(check_register, check_bit):
-        test.fail('CPUID %s BIT(%s) was set' % (check_register, check_bit))
+        test.fail(f"CPUID {check_register} BIT({check_bit}) was set")

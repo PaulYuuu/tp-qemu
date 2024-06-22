@@ -1,8 +1,7 @@
-import time
 import re
+import time
 
 from avocado.utils import process
-
 from virttest import utils_test
 from virttest.staging import utils_memory
 
@@ -84,7 +83,7 @@ def run(test, params, env):
         guest_mem_free = int(guest_mem_free) / 1024 / 1024
 
     file_size = min(1024, int(guest_mem_free / 2))
-    cmd = "mount -t tmpfs -o size=%sM none /mnt" % file_size
+    cmd = f"mount -t tmpfs -o size={file_size}M none /mnt"
     s, o = session.cmd_status_output(cmd)
     if nr_hugetlbfs:
         with open(hugetlbfs_path, "w") as hugepage_cfg:
@@ -98,7 +97,7 @@ def run(test, params, env):
 
     while bg.is_alive():
         count = file_size / 2
-        cmd = "dd if=/dev/urandom of=/mnt/test bs=2M count=%s" % count
+        cmd = f"dd if=/dev/urandom of=/mnt/test bs=2M count={count}"
         s, o = session.cmd_status_output(cmd, dd_timeout)
 
     if bg:
@@ -122,8 +121,7 @@ def run(test, params, env):
     test.log.debug("The total mem_increase: %d", mem_increase)
     if mem_increase < file_size * 0.5:
         test.error(
-            "Hugepages allocated can not reach a half: %s/%s"
-            % (mem_increase, file_size)
+            f"Hugepages allocated can not reach a half: {mem_increase}/{file_size}"
         )
     session.close()
     test.log.info("Relocated test succeed")

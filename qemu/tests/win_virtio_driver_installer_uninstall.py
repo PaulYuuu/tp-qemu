@@ -1,16 +1,17 @@
-import time
 import re
+import time
 
-from virttest import error_context
-from virttest import utils_misc
+from virttest import error_context, utils_misc
 
-from provider.win_driver_installer_test import (install_gagent,
-                                                uninstall_gagent,
-                                                win_uninstall_all_drivers,
-                                                win_installer_test,
-                                                check_gagent_version,
-                                                driver_check,
-                                                run_installer_with_interaction)
+from provider.win_driver_installer_test import (
+    check_gagent_version,
+    driver_check,
+    install_gagent,
+    run_installer_with_interaction,
+    uninstall_gagent,
+    win_installer_test,
+    win_uninstall_all_drivers,
+)
 
 
 @error_context.context_aware
@@ -48,57 +49,58 @@ def run(test, params, env):
     vm = env.get_vm(params["main_vm"])
     session = vm.wait_for_login()
 
-    expected_gagent_version = install_gagent(session, test,
-                                             qemu_ga_pkg,
-                                             gagent_install_cmd,
-                                             gagent_pkg_info_cmd)
+    expected_gagent_version = install_gagent(
+        session, test, qemu_ga_pkg, gagent_install_cmd, gagent_pkg_info_cmd
+    )
     uninstall_gagent(session, test, gagent_uninstall_cmd)
 
     win_uninstall_all_drivers(session, test, params)
     session = vm.reboot(session)
 
-    session = run_installer_with_interaction(vm, session, test, params,
-                                             run_install_cmd,
-                                             copy_files_params=params)
+    session = run_installer_with_interaction(
+        vm, session, test, params, run_install_cmd, copy_files_params=params
+    )
 
     win_installer_test(session, test, params)
-    check_gagent_version(session, test, gagent_pkg_info_cmd,
-                         expected_gagent_version)
+    check_gagent_version(session, test, gagent_pkg_info_cmd, expected_gagent_version)
     driver_check(session, test, params)
 
-    uninstall_method = params.get('uninstall_method', 'installer')
-    error_context.context("Run uninstall test via %s" % uninstall_method,
-                          test.log.info)
-    vm.send_key('meta_l-d')
+    uninstall_method = params.get("uninstall_method", "installer")
+    error_context.context(f"Run uninstall test via {uninstall_method}", test.log.info)
+    vm.send_key("meta_l-d")
     time.sleep(30)
 
     if uninstall_method == "msi":
-        run_uninstall_cmd = utils_misc.set_winutils_letter(
-            session, run_uninstall_cmd
-        )
+        run_uninstall_cmd = utils_misc.set_winutils_letter(session, run_uninstall_cmd)
         session.cmd(run_uninstall_cmd)
         time.sleep(30)
         check_warning_file = params["check_warning_file"]
         output = session.cmd_output(check_warning_file)
         if params["warning_message"] not in output:
-            test.fail("Not found expected warning message, the output is %s" % output)
+            test.fail(f"Not found expected warning message, the output is {output}")
     else:
-        session = run_installer_with_interaction(vm, session,
-                                                 test, params,
-                                                 run_uninstall_cmd)
+        session = run_installer_with_interaction(
+            vm, session, test, params, run_uninstall_cmd
+        )
         s_check, o_check = session.cmd_status_output(installer_pkg_check_cmd)
         if s_check == 0:
-            test.fail("Could not uninstall Virtio-win-guest-tools package "
-                      "in guest', detail: '%s'" % o_check)
+            test.fail(
+                "Could not uninstall Virtio-win-guest-tools package "
+                f"in guest', detail: '{o_check}'"
+            )
 
-        error_context.context("Check if all drivers are uninstalled.",
-                              test.log.info)
+        error_context.context("Check if all drivers are uninstalled.", test.log.info)
         uninstalled_device = []
-        device_name_list = ['VirtIO RNG Device', 'VirtIO Serial Driver',
-                            'VirtIO Balloon Driver', 'QEMU PVPanic Device',
-                            'VirtIO Input Driver',
-                            'Red Hat VirtIO Ethernet Adapter',
-                            'VirtIO FS Device', 'QEMU FwCfg Device']
+        device_name_list = [
+            "VirtIO RNG Device",
+            "VirtIO Serial Driver",
+            "VirtIO Balloon Driver",
+            "QEMU PVPanic Device",
+            "VirtIO Input Driver",
+            "Red Hat VirtIO Ethernet Adapter",
+            "VirtIO FS Device",
+            "QEMU FwCfg Device",
+        ]
         # viostor and vioscsi drivers can not uninstalled by installer
         for device_name in device_name_list:
             chk_cmd = params["vio_driver_chk_cmd"] % device_name[0:30]
@@ -107,7 +109,7 @@ def run(test, params, env):
             if inf_name:
                 uninstalled_device.append(device_name)
         if uninstalled_device:
-            test.fail("%s uninstall failed" % uninstalled_device)
+            test.fail(f"{uninstalled_device} uninstall failed")
 
         error_context.context("Check qemu-ga service.", test.log.info)
         gagent_status_cmd = 'sc query qemu-ga |findstr "RUNNING" '

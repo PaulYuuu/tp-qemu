@@ -1,15 +1,11 @@
-import time
-import random
 import os
+import random
 import re
+import time
 
 import aexpect
-
 from avocado.utils import process
-
-from virttest import data_dir
-from virttest import error_context
-from virttest import utils_misc
+from virttest import data_dir, error_context, utils_misc
 
 TMPFS_OVERHEAD = 0.0022
 
@@ -26,6 +22,7 @@ def run(test, params, env):
     :param params: Dictionary with test parameters.
     :param env: Dictionary with the test environment.
     """
+
     def _start_allocator(vm, session, timeout):
         """
         Execute guest script and wait until it is initialized.
@@ -36,14 +33,13 @@ def run(test, params, env):
                 started properly.
         """
         test.log.debug("Starting guest script on guest %s", vm.name)
-        session.sendline("$(command -v python python3 | head -1) "
-                         "/tmp/ksm_overcommit_guest.py")
+        session.sendline(
+            "$(command -v python python3 | head -1) " "/tmp/ksm_overcommit_guest.py"
+        )
         try:
-            _ = session.read_until_last_line_matches(["PASS:", "FAIL:"],
-                                                     timeout)
+            _ = session.read_until_last_line_matches(["PASS:", "FAIL:"], timeout)
         except aexpect.ExpectProcessTerminatedError as exc:
-            test.fail("Command guest script on vm '%s' failed: %s" %
-                      (vm.name, str(exc)))
+            test.fail(f"Command guest script on vm '{vm.name}' failed: {str(exc)}")
 
     def _execute_allocator(command, vm, session, timeout):
         """
@@ -57,16 +53,22 @@ def run(test, params, env):
 
         :return: Tuple (match index, data)
         """
-        test.log.debug("Executing '%s' on guest script loop, vm: %s, timeout: "
-                       "%s", command, vm.name, timeout)
+        test.log.debug(
+            "Executing '%s' on guest script loop, vm: %s, timeout: " "%s",
+            command,
+            vm.name,
+            timeout,
+        )
         session.sendline(command)
         try:
             (match, data) = session.read_until_last_line_matches(
-                ["PASS:", "FAIL:"],
-                timeout)
+                ["PASS:", "FAIL:"], timeout
+            )
         except aexpect.ExpectProcessTerminatedError as exc:
-            e_str = ("Failed to execute command '%s' on guest script, "
-                     "vm '%s': %s" % (command, vm.name, str(exc)))
+            e_str = (
+                f"Failed to execute command '{command}' on guest script, "
+                f"vm '{vm.name}': {str(exc)}"
+            )
             test.fail(e_str)
         return (match, data)
 
@@ -79,13 +81,13 @@ def run(test, params, env):
     # Prepare work in guest
     error_context.context("Turn off swap in guest", test.log.info)
     session.cmd_status_output("swapoff -a")
-    script_file_path = os.path.join(data_dir.get_root_dir(),
-                                    "shared/scripts/ksm_overcommit_guest.py")
+    script_file_path = os.path.join(
+        data_dir.get_root_dir(), "shared/scripts/ksm_overcommit_guest.py"
+    )
     vm.copy_files_to(script_file_path, "/tmp")
     test_type = params.get("test_type")
     shared_mem = int(params["shared_mem"])
-    get_free_mem_cmd = params.get("get_free_mem_cmd",
-                                  "grep MemFree /proc/meminfo")
+    get_free_mem_cmd = params.get("get_free_mem_cmd", "grep MemFree /proc/meminfo")
     free_mem = vm.get_memory_size(get_free_mem_cmd)
     max_mem = int(free_mem / (1 + TMPFS_OVERHEAD) - guest_script_overhead)
 
@@ -100,44 +102,42 @@ def run(test, params, env):
 
     query_cmd = re.sub("QEMU_PID", str(vm.process.get_pid()), query_cmd)
 
-    sharing_page_0 = process.run(query_cmd,
-                                 verbose=False,
-                                 ignore_status=True,
-                                 shell=True).stdout_text
+    sharing_page_0 = process.run(
+        query_cmd, verbose=False, ignore_status=True, shell=True
+    ).stdout_text
     if query_regex:
         sharing_page_0 = re.findall(query_regex, sharing_page_0)[0]
 
     error_context.context("Start to allocate pages inside guest", test.log.info)
     _start_allocator(vm, session, 60)
     error_context.context("Start to fill memory in guest", test.log.info)
-    mem_fill = "mem = MemFill(%s, 0, %s)" % (shared_mem, seed)
+    mem_fill = f"mem = MemFill({shared_mem}, 0, {seed})"
     _execute_allocator(mem_fill, vm, session, fill_timeout)
     cmd = "mem.value_fill()"
     _execute_allocator(cmd, vm, session, fill_timeout)
     time.sleep(120)
 
-    sharing_page_1 = process.run(query_cmd,
-                                 verbose=False,
-                                 ignore_status=True,
-                                 shell=True).stdout_text
+    sharing_page_1 = process.run(
+        query_cmd, verbose=False, ignore_status=True, shell=True
+    ).stdout_text
     if query_regex:
         sharing_page_1 = re.findall(query_regex, sharing_page_1)[0]
 
-    error_context.context("Start to fill memory with random value in guest",
-                          test.log.info)
+    error_context.context(
+        "Start to fill memory with random value in guest", test.log.info
+    )
     split = params.get("split")
     if split == "yes":
         if test_type == "negative":
-            cmd = "mem.static_random_fill(%s)" % random_bits
+            cmd = f"mem.static_random_fill({random_bits})"
         else:
             cmd = "mem.static_random_fill()"
     _execute_allocator(cmd, vm, session, fill_timeout)
     time.sleep(120)
 
-    sharing_page_2 = process.run(query_cmd,
-                                 verbose=False,
-                                 ignore_status=True,
-                                 shell=True).stdout_text
+    sharing_page_2 = process.run(
+        query_cmd, verbose=False, ignore_status=True, shell=True
+    ).stdout_text
     if query_regex:
         sharing_page_2 = re.findall(query_regex, sharing_page_2)[0]
 
@@ -168,17 +168,20 @@ def run(test, params, env):
         if int(sharing_page[1]) <= int(sharing_page[2]):
             fail_type += 4
 
-    fail = ["Sharing page increased abnormally",
-            "Sharing page didn't increase", "Sharing page didn't split"]
+    fail = [
+        "Sharing page increased abnormally",
+        "Sharing page didn't increase",
+        "Sharing page didn't split",
+    ]
 
     if fail_type != 0:
         turns = 0
-        while (fail_type > 0):
+        while fail_type > 0:
             if fail_type % 2 == 1:
                 test.log.error(fail[turns])
             fail_type = fail_type / 2
             turns += 1
-        test.fail("KSM test failed: %s %s %s" %
-                  (sharing_page_0, sharing_page_1,
-                   sharing_page_2))
+        test.fail(
+            f"KSM test failed: {sharing_page_0} {sharing_page_1} {sharing_page_2}"
+        )
     session.close()

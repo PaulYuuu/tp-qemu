@@ -13,14 +13,15 @@ def run(test, params, env):
     :param params: Dictionary with the test parameters
     :param env: Dictionary with test environmen.
     """
+
     def execute_command(command, timeout=60, omit=False):
         """
         Execute command and return the output
         """
-        test.log.info("Sending command: %s" % command)
+        test.log.info(f"Sending command: {command}")
         status, output = session.cmd_status_output(command, timeout)
         if status != 0 and omit is False:
-            test.error("execute command fail: %s" % output)
+            test.error(f"execute command fail: {output}")
         return output
 
     vm = env.get_vm(params["main_vm"])
@@ -30,10 +31,11 @@ def run(test, params, env):
     speedtest_host_path = data_dir.get_deps_dir("speedtest")
     dst_path = params["dst_path"]
     test.log.info("Copy Speedtest to guest.")
-    s, o = session.cmd_status_output("mkdir %s" % dst_path)
+    s, o = session.cmd_status_output(f"mkdir {dst_path}")
     if s and "already exists" not in o:
-        test.error("Could not create Speedtest directory in "
-                   "VM '%s', detail: '%s'" % (vm.name, o))
+        test.error(
+            "Could not create Speedtest directory in " f"VM '{vm.name}', detail: '{o}'"
+        )
     vm.copy_files_to(speedtest_host_path, dst_path)
 
     # set up adapterrss in guest

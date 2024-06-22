@@ -5,17 +5,11 @@ import logging
 import os
 import re
 
-from avocado import TestCancel
-from avocado import TestFail
+from avocado import TestCancel, TestFail
+from avocado.utils import cpu, path, process
+from virttest import data_dir, utils_misc
 
-from avocado.utils import cpu
-from avocado.utils import path
-from avocado.utils import process
-
-from virttest import data_dir
-from virttest import utils_misc
-
-LOG_JOB = logging.getLogger('avocado.test')
+LOG_JOB = logging.getLogger("avocado.test")
 
 
 def which(cmd):
@@ -29,11 +23,13 @@ def which(cmd):
 
 def coroutine(func):
     """Start coroutine."""
+
     @functools.wraps(func)
     def start(*args, **kargs):
         cr = func(*args, **kargs)
         cr.send(None)
         return cr
+
     return start
 
 
@@ -52,7 +48,7 @@ def get_qemu_version(params, target):
     """Get installed QEMU version."""
     LOG_JOB.debug("check QEMU version")
     qemu_binary = utils_misc.get_qemu_binary(params)
-    cmd = "%s --version" % qemu_binary
+    cmd = f"{qemu_binary} --version"
     line = process.run(cmd).stdout_text.splitlines()[0]
     version = line.split()[-1].strip("()")
     LOG_JOB.debug("QEMU version: %s", version)
@@ -64,14 +60,13 @@ def brew_download_build(target):
     """Download source rpm."""
     while True:
         version = yield
-        filename = "%s.src.rpm" % version
+        filename = f"{version}.src.rpm"
         root_dir = data_dir.get_data_dir()
         save_path = os.path.join(root_dir, filename)
         LOG_JOB.debug("download source rpm to %s", save_path)
         if not os.path.isfile(save_path):
             with chcwd(root_dir):
-                cmd = "brew download-build -q --rpm {filename}".format(
-                    filename=filename)
+                cmd = f"brew download-build -q --rpm {filename}"
                 process.run(cmd)
         target.send(save_path)
 
@@ -82,10 +77,10 @@ def unpack_source(target):
     while True:
         path = yield
         LOG_JOB.debug("unpack source rpm")
-        process.run("rpm -ivhf {path}".format(path=path))
+        process.run(f"rpm -ivhf {path}")
         process.run("rpmbuild -bp /root/rpmbuild/SPECS/qemu-kvm.spec --nodeps")
         version = re.search(r"\d+.\d+.\d+", path).group()
-        src_path = glob.glob("/root/rpmbuild/BUILD/qemu*%s" % version)[0]
+        src_path = glob.glob(f"/root/rpmbuild/BUILD/qemu*{version}")[0]
         target.send(src_path)
 
 
@@ -99,8 +94,7 @@ def run_aio_tests(target):
             process.run("./configure")
             cpu_count = cpu.online_count()
             aio_path = "tests/test-aio"
-            make_cmd = "make {aio_path} -j{cpu_count}".format(
-                aio_path=aio_path, cpu_count=cpu_count)
+            make_cmd = f"make {aio_path} -j{cpu_count}"
             process.run(make_cmd)
             LOG_JOB.debug("run aio tests")
             result = process.run(aio_path)
@@ -137,8 +131,6 @@ def run(test, params, env):
     # check if command brew and rpmbuild is presented
     which("brew")
     which("rpmbuild")
-    get_qemu_version(params,
-                     brew_download_build(
-                         unpack_source(
-                             run_aio_tests(
-                                 parse_result()))))
+    get_qemu_version(
+        params, brew_download_build(unpack_source(run_aio_tests(parse_result())))
+    )

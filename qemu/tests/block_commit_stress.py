@@ -1,11 +1,9 @@
-from virttest import utils_misc
-from virttest import utils_test
+from virttest import utils_misc, utils_test
 
 from qemu.tests import blk_commit
 
 
 class BlockCommitStress(blk_commit.BlockCommit):
-
     def load_stress(self):
         """
         load IO/CPU/Memoery stress in guest
@@ -23,6 +21,7 @@ class BlockCommitStress(blk_commit.BlockCommit):
         """
         stop stress app
         """
+
         def _unload_stress():
             session = self.get_session()
             cmd = self.params.get("stop_cmd")
@@ -31,9 +30,13 @@ class BlockCommitStress(blk_commit.BlockCommit):
             return self.app_running()
 
         self.test.log.info("stop stress app in guest")
-        stopped = utils_misc.wait_for(_unload_stress, first=2.0,
-                                      text="wait stress app quit", step=1.0,
-                                      timeout=self.params["wait_timeout"])
+        stopped = utils_misc.wait_for(
+            _unload_stress,
+            first=2.0,
+            text="wait stress app quit",
+            step=1.0,
+            timeout=self.params["wait_timeout"],
+        )
         if not stopped:
             self.test.log.warn("stress app is still running")
 
@@ -54,17 +57,23 @@ class BlockCommitStress(blk_commit.BlockCommit):
         self.test.log.info("Check image backing-file")
         exp_img_file = self.params["expected_image_file"]
         exp_img_file = utils_misc.get_path(self.data_dir, exp_img_file)
-        self.test.log.debug("Expected image file read from config file is '%s'", exp_img_file)
+        self.test.log.debug(
+            "Expected image file read from config file is '%s'", exp_img_file
+        )
 
         backingfile = self.get_backingfile("monitor")
         if backingfile:
-            self.test.log.info("Got backing-file: #{0}# by 'info/query block' in #{1}# "
-                               "monitor".format(backingfile, self.vm.monitor.protocol))
+            self.test.log.info(
+                f"Got backing-file: #{backingfile}# by 'info/query block' in #{self.vm.monitor.protocol}# "
+                "monitor"
+            )
         if exp_img_file == backingfile:
             self.test.log.info("check backing file with monitor passed")
         else:
-            self.test.fail("backing file is different with the expected one. "
-                           "expecting: %s, actual: %s" % (exp_img_file, backingfile))
+            self.test.fail(
+                "backing file is different with the expected one. "
+                f"expecting: {exp_img_file}, actual: {backingfile}"
+            )
 
 
 def run(test, params, env):

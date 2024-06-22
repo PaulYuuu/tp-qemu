@@ -5,29 +5,24 @@ import re
 
 from avocado import fail_on
 from avocado.utils import process
-
-from virttest import data_dir
-from virttest import qemu_storage
-from virttest import utils_libguestfs
-from virttest import utils_numeric
-from virttest import utils_misc
-from virttest import utils_disk
+from virttest import (
+    data_dir,
+    qemu_storage,
+    utils_disk,
+    utils_libguestfs,
+    utils_misc,
+    utils_numeric,
+)
 
 from provider import block_dirty_bitmap as block_bitmap
-from provider.virt_storage.storage_admin import sp_admin
 from provider import job_utils
+from provider.virt_storage.storage_admin import sp_admin
 
 
 def generate_log2_value(start, end, step=1, blacklist=None):
     if blacklist is None:
         blacklist = list()
-    outlist = list(
-        filter(
-            lambda x: math.log2(x).is_integer(),
-            range(
-                start,
-                end,
-                step)))
+    outlist = list(filter(lambda x: math.log2(x).is_integer(), range(start, end, step)))
     pool = set(outlist) - set(blacklist)
     return random.choice(list(pool))
 
@@ -77,20 +72,19 @@ def generate_tempfile(vm, root_dir, filename, size="10M", timeout=720):
     """Generate temp data file in VM"""
     session = vm.wait_for_login()
     if vm.params["os_type"] == "windows":
-        file_path = "%s\\%s" % (root_dir, filename)
-        mk_file_cmd = "fsutil file createnew %s %s" % (file_path, size)
-        md5_cmd = "certutil -hashfile %s MD5 > %s.md5" % (file_path, file_path)
+        file_path = f"{root_dir}\\{filename}"
+        mk_file_cmd = f"fsutil file createnew {file_path} {size}"
+        md5_cmd = f"certutil -hashfile {file_path} MD5 > {file_path}.md5"
     else:
-        file_path = "%s/%s" % (root_dir, filename)
+        file_path = f"{root_dir}/{filename}"
         count = int(
-            utils_numeric.normalize_data_size(
-                size,
-                order_magnitude="M",
-                factor=1024))
+            utils_numeric.normalize_data_size(size, order_magnitude="M", factor=1024)
+        )
         dd_cmd = vm.params.get(
-            "dd_cmd", "dd if=/dev/urandom of=%s bs=1M count=%s oflag=direct")
+            "dd_cmd", "dd if=/dev/urandom of=%s bs=1M count=%s oflag=direct"
+        )
         mk_file_cmd = dd_cmd % (file_path, count)
-        md5_cmd = "md5sum %s > %s.md5 && sync" % (file_path, file_path)
+        md5_cmd = f"md5sum {file_path} > {file_path}.md5 && sync"
     try:
         session.cmd(mk_file_cmd, timeout=timeout)
         session.cmd(md5_cmd, timeout=timeout)
@@ -101,34 +95,29 @@ def generate_tempfile(vm, root_dir, filename, size="10M", timeout=720):
 @fail_on
 def verify_file_md5(vm, root_dir, filename, timeout=720):
     if vm.params["os_type"] == "windows":
-        file_path = "%s\\%s" % (root_dir, filename)
-        md5_cmd = "certutil -hashfile %s MD5" % file_path
-        cat_cmd = "type %s.md5" % file_path
+        file_path = f"{root_dir}\\{filename}"
+        md5_cmd = f"certutil -hashfile {file_path} MD5"
+        cat_cmd = f"type {file_path}.md5"
     else:
-        file_path = "%s/%s" % (root_dir, filename)
-        md5_cmd = "md5sum %s" % file_path
-        cat_cmd = "cat %s.md5" % file_path
+        file_path = f"{root_dir}/{filename}"
+        md5_cmd = f"md5sum {file_path}"
+        cat_cmd = f"cat {file_path}.md5"
 
     session = vm.wait_for_login()
     try:
         status1, output1 = session.cmd_status_output(md5_cmd, timeout=timeout)
         now = output1.strip()
-        assert status1 == 0, "Get file ('%s') MD5 with error: %s" % (
-            filename, output1)
+        assert status1 == 0, f"Get file ('{filename}') MD5 with error: {output1}"
         status2, output2 = session.cmd_status_output(cat_cmd, timeout=timeout)
         saved = output2.strip()
-        assert status2 == 0, "Read file ('%s') MD5 file with error: %s" % (
-            filename, output2)
-        assert now == saved, "File's ('%s') MD5 is mismatch! (%s, %s)" % (
-            filename, now, saved)
+        assert status2 == 0, f"Read file ('{filename}') MD5 file with error: {output2}"
+        assert now == saved, f"File's ('{filename}') MD5 is mismatch! ({now}, {saved})"
     finally:
         session.close()
 
 
 def blockdev_snapshot_qmp_cmd(source, target, **extra_options):
-    options = [
-        "node",
-        "overlay"]
+    options = ["node", "overlay"]
     arguments = copy_out_dict_if_exists(extra_options, options)
     arguments["node"] = source
     arguments["overlay"] = target
@@ -137,7 +126,7 @@ def blockdev_snapshot_qmp_cmd(source, target, **extra_options):
 
 def blockdev_mirror_qmp_cmd(source, target, **extra_options):
     random_id = utils_misc.generate_random_string(4)
-    job_id = "%s_%s" % (source, random_id)
+    job_id = f"{source}_{random_id}"
     options = [
         "format",
         "node-name",
@@ -153,7 +142,8 @@ def blockdev_mirror_qmp_cmd(source, target, **extra_options):
         "auto-finalize",
         "auto-dismiss",
         "filter-node-name",
-        "unmap"]
+        "unmap",
+    ]
     arguments = copy_out_dict_if_exists(extra_options, options)
     arguments["device"] = source
     arguments["target"] = target
@@ -163,18 +153,19 @@ def blockdev_mirror_qmp_cmd(source, target, **extra_options):
 
 def block_commit_qmp_cmd(device, **extra_options):
     random_id = utils_misc.generate_random_string(4)
-    job_id = "%s_%s" % (device, random_id)
+    job_id = f"{device}_{random_id}"
     options = [
-        'base-node',
-        'base',
-        'top-node',
-        'top',
-        'backing-file',
-        'speed',
-        'on-error',
-        'filter-node-name',
-        'auto-finalize',
-        'auto-dismiss']
+        "base-node",
+        "base",
+        "top-node",
+        "top",
+        "backing-file",
+        "speed",
+        "on-error",
+        "filter-node-name",
+        "auto-finalize",
+        "auto-dismiss",
+    ]
     arguments = copy_out_dict_if_exists(extra_options, options)
     arguments["device"] = device
     arguments["job-id"] = job_id
@@ -185,12 +176,20 @@ def blockdev_stream_qmp_cmd(device, **extra_options):
     if not isinstance(extra_options, dict):
         extra_options = dict()
     random_id = utils_misc.generate_random_string(4)
-    job_id = "%s_%s" % (device, random_id)
+    job_id = f"{device}_{random_id}"
     arguments = {"device": device, "job-id": job_id}
     # TODO: we may have to sync the block-stream options with libvirt
-    options = ["speed", "base", "base-node", "snapshot-file",
-               "filter-node-name", "on-error", "backing-file",
-               "auto-dismiss", "auto-finalize"]
+    options = [
+        "speed",
+        "base",
+        "base-node",
+        "snapshot-file",
+        "filter-node-name",
+        "on-error",
+        "backing-file",
+        "auto-dismiss",
+        "auto-finalize",
+    ]
     args = copy_out_dict_if_exists(extra_options, options)
     if args:
         arguments.update(args)
@@ -202,17 +201,15 @@ def blockdev_backup_qmp_cmd(source, target, **extra_options):
     if not isinstance(extra_options, dict):
         extra_options = dict()
     random_id = utils_misc.generate_random_string(4)
-    job_id = "%s_%s" % (source, random_id)
+    job_id = f"{source}_{random_id}"
     arguments = {"device": source, "target": target, "job-id": job_id}
     arguments["sync"] = extra_options.get("sync", "full")
     arguments["speed"] = int(extra_options.get("speed", 0))
     arguments["compress"] = extra_options.get("compress", False)
     arguments["auto-finalize"] = extra_options.get("auto-finalize", True)
     arguments["auto-dismiss"] = extra_options.get("auto-dismiss", True)
-    arguments["on-source-error"] = extra_options.get(
-        "on-source-error", "report")
-    arguments["on-target-error"] = extra_options.get(
-        "on-target-error", "report")
+    arguments["on-source-error"] = extra_options.get("on-source-error", "report")
+    arguments["on-target-error"] = extra_options.get("on-target-error", "report")
     if "bitmap" in extra_options:
         arguments["bitmap"] = extra_options["bitmap"]
         if "bitmap-mode" in extra_options:
@@ -221,9 +218,9 @@ def blockdev_backup_qmp_cmd(source, target, **extra_options):
         arguments["filter-node-name"] = extra_options["filter-node-name"]
     x_perf_ops = ["use-copy-range", "max-workers", "max-chunk"]
     if any(item in extra_options for item in x_perf_ops):
-        arguments["x-perf"] = {x: extra_options[x]
-                               for x in x_perf_ops
-                               if x in extra_options}
+        arguments["x-perf"] = {
+            x: extra_options[x] for x in x_perf_ops if x in extra_options
+        }
     return "blockdev-backup", arguments
 
 
@@ -238,7 +235,7 @@ def blockdev_create(vm, **options):
 def blockdev_snapshot(vm, source, target, **extra_options):
     cmd, arguments = blockdev_snapshot_qmp_cmd(source, target, **extra_options)
     out = vm.monitor.cmd(cmd, arguments)
-    assert out == {}, 'blockdev-snapshot-sync faild: %s' % out
+    assert out == {}, f"blockdev-snapshot-sync faild: {out}"
 
 
 @fail_on
@@ -287,12 +284,13 @@ def blockdev_backup(vm, source, target, **extra_options):
     timeout = int(extra_options.pop("timeout", 600))
     if "bitmap" in arguments:
         info = block_bitmap.get_bitmap_by_name(vm, source, arguments["bitmap"])
-        assert info, "Bitmap '%s' not exists in device '%s'" % (
-            arguments["bitmap"], source)
+        assert info, "Bitmap '{}' not exists in device '{}'".format(
+            arguments["bitmap"],
+            source,
+        )
         auto_disable_bitmap = extra_options.pop("auto_disable_bitmap", True)
         if auto_disable_bitmap and info.get("status") != "disabled":
-            block_bitmap.block_dirty_bitmap_disable(
-                vm, source, arguments["bitmap"])
+            block_bitmap.block_dirty_bitmap_disable(vm, source, arguments["bitmap"])
     vm.monitor.cmd(cmd, arguments)
     job_id = arguments.get("job-id", source)
     job_utils.wait_until_block_job_completed(vm, job_id, timeout)
@@ -305,16 +303,18 @@ def blockdev_batch_snapshot(vm, source_lst, target_lst, **extra_options):
     jobs_id = []
     for idx, src in enumerate(source_lst):
         snapshot_cmd, arguments = blockdev_snapshot_qmp_cmd(
-            src, target_lst[idx], **extra_options)
+            src, target_lst[idx], **extra_options
+        )
         actions.append({"type": snapshot_cmd, "data": arguments})
     arguments = {"actions": actions}
     vm.monitor.cmd("transaction", arguments)
-    list(map(lambda x: job_utils.wait_until_block_job_completed(vm, x, timeout), jobs_id))
+    list(
+        map(lambda x: job_utils.wait_until_block_job_completed(vm, x, timeout), jobs_id)
+    )
 
 
 @fail_on
-def blockdev_batch_backup(vm, source_lst, target_lst,
-                          bitmap_lst, **extra_options):
+def blockdev_batch_backup(vm, source_lst, target_lst, bitmap_lst, **extra_options):
     actions = []
     jobs_id = []
     bitmap_add_cmd = "block-dirty-bitmap-add"
@@ -333,15 +333,17 @@ def blockdev_batch_backup(vm, source_lst, target_lst,
     for idx, src in enumerate(source_lst):
         if sync_mode in ["incremental", "bitmap"]:
             assert len(bitmap_lst) == len(
-                source_lst), "must provide a valid bitmap name for 'incremental' sync mode"
+                source_lst
+            ), "must provide a valid bitmap name for 'incremental' sync mode"
             extra_options["bitmap"] = bitmap_lst[idx]
         backup_cmd, arguments = blockdev_backup_qmp_cmd(
-            src, target_lst[idx], **extra_options)
+            src, target_lst[idx], **extra_options
+        )
         job_id = arguments.get("job-id", src)
         jobs_id.append(job_id)
         actions.append({"type": backup_cmd, "data": arguments})
 
-        if bitmap_lst and (sync_mode == 'full' or sync_mode == 'none'):
+        if bitmap_lst and (sync_mode == "full" or sync_mode == "none"):
             bitmap_data = {"node": source_lst[idx], "name": bitmap_lst[idx]}
             granularity = extra_options.get("granularity")
             persistent = extra_options.get("persistent")
@@ -355,19 +357,21 @@ def blockdev_batch_backup(vm, source_lst, target_lst,
             actions.append({"type": bitmap_add_cmd, "data": bitmap_data})
 
         if disabled_bitmap_lst:
-            bitmap_data = {"node": source_lst[idx],
-                           "name": disabled_bitmap_lst[idx]}
+            bitmap_data = {"node": source_lst[idx], "name": disabled_bitmap_lst[idx]}
             actions.append({"type": bitmap_disable_cmd, "data": bitmap_data})
 
     arguments = {"actions": actions}
-    if completion_mode == 'grouped':
-        arguments['properties'] = {"completion-mode": "grouped"}
+    if completion_mode == "grouped":
+        arguments["properties"] = {"completion-mode": "grouped"}
     vm.monitor.cmd("transaction", arguments)
 
     if wait_job_complete:
-        list(map(
-            lambda x: job_utils.wait_until_block_job_completed(vm, x, timeout),
-            jobs_id))
+        list(
+            map(
+                lambda x: job_utils.wait_until_block_job_completed(vm, x, timeout),
+                jobs_id,
+            )
+        )
 
 
 @fail_on
@@ -390,7 +394,7 @@ def incremental_backup(vm, source, target, bitmap, **extra_options):
 
 @fail_on
 def full_backup(vm, source, target, **extra_options):
-    """ Do full backup for node"""
+    """Do full backup for node"""
     if extra_options is None:
         extra_options = dict()
     extra_options["sync"] = "full"
@@ -440,9 +444,10 @@ def format_storage_volume(img, filesystem, partition="mbr"):
             img.image_filename,
             filesystem=filesystem,
             image_format=img.image_format,
-            partition="mbr")
+            partition="mbr",
+        )
     finally:
-        process.system("setenforce %s" % selinux_mode, shell=True)
+        process.system(f"setenforce {selinux_mode}", shell=True)
 
 
 def copyif(params, nbd_image, target_image, bitmap=None):
@@ -453,31 +458,27 @@ def copyif(params, nbd_image, target_image, bitmap=None):
     :params target_image: target image tag
     :params bitmap: bitmap name
     """
+
     def _qemu_io_read(qemu_io, s, l, img):
-        cmd = '{io} -C -c "r {s} {l}" -f {fmt} {f}'.format(
-            io=qemu_io, s=s, l=l, fmt=img.image_format,
-            f=img.image_filename
-        )
+        cmd = f'{qemu_io} -C -c "r {s} {l}" -f {img.image_format} {img.image_filename}'
         process.system(cmd, ignore_status=False, shell=True)
 
     qemu_io = utils_misc.get_qemu_io_binary(params)
     qemu_img = utils_misc.get_qemu_img_binary(params)
-    img_obj = qemu_storage.QemuImg(params.object_params(target_image),
-                                   data_dir.get_data_dir(), target_image)
-    nbd_img_obj = qemu_storage.QemuImg(params.object_params(nbd_image),
-                                       None, nbd_image)
-    max_len = int(params.get('qemu_io_max_len', 2147483136))
+    img_obj = qemu_storage.QemuImg(
+        params.object_params(target_image), data_dir.get_data_dir(), target_image
+    )
+    nbd_img_obj = qemu_storage.QemuImg(params.object_params(nbd_image), None, nbd_image)
+    max_len = int(params.get("qemu_io_max_len", 2147483136))
 
     if bitmap is None:
-        args = '-f %s %s' % (nbd_img_obj.image_format,
-                             nbd_img_obj.image_filename)
+        args = f"-f {nbd_img_obj.image_format} {nbd_img_obj.image_filename}"
         state = True
     else:
-        opts = qemu_storage.filename_to_file_opts(
-            nbd_img_obj.image_filename)
-        opt = params.get('dirty_bitmap_opt', 'x-dirty-bitmap')
-        opts[opt] = 'qemu:dirty-bitmap:%s' % bitmap
-        args = "'json:%s'" % json.dumps(opts)
+        opts = qemu_storage.filename_to_file_opts(nbd_img_obj.image_filename)
+        opt = params.get("dirty_bitmap_opt", "x-dirty-bitmap")
+        opts[opt] = f"qemu:dirty-bitmap:{bitmap}"
+        args = f"'json:{json.dumps(opts)}'"
         state = False
 
     img_obj.base_image_filename = nbd_img_obj.image_filename
@@ -485,25 +486,24 @@ def copyif(params, nbd_image, target_image, bitmap=None):
     img_obj.base_tag = nbd_img_obj.tag
     img_obj.rebase(img_obj.params)
 
-    map_cmd = '{qemu_img} map --output=json {args}'.format(
-        qemu_img=qemu_img, args=args)
+    map_cmd = f"{qemu_img} map --output=json {args}"
     result = process.run(map_cmd, ignore_status=False, shell=True)
 
     for item in json.loads(result.stdout.decode().strip()):
-        if item['data'] is not state:
+        if item["data"] is not state:
             continue
 
         # qemu-io can only handle length less than 2147483136,
         # so here we need to split 'large length' into several parts
-        start, length = item['start'], item['length']
+        start, length = item["start"], item["length"]
         while length > max_len:
             _qemu_io_read(qemu_io, start, max_len, img_obj)
-            start, length = start+max_len, length-max_len
+            start, length = start + max_len, length - max_len
         else:
             if length > 0:
                 _qemu_io_read(qemu_io, start, length, img_obj)
 
-    img_obj.base_tag = 'null'
+    img_obj.base_tag = "null"
     img_obj.rebase(img_obj.params)
 
 
@@ -528,26 +528,27 @@ def get_disk_info_by_param(tag, params, session):
     info = None
     drive_path = None
     image_params = params.object_params(tag)
-    if image_params.get('blk_extra_params'):
+    if image_params.get("blk_extra_params"):
         # get disk by serial or wwn
         # utils_disk.get_linux_disks can also get serial, but for
         # virtio-scsi ID_SERIAL is a long string including serial
         # e.g. ID_SERIAL=0QEMU_QEMU_HARDDISK_DATA_DISK2 instead of
         # ID_SERIAL=DATA_DISK2
-        m = re.search(r"(serial|wwn)=(\w+)",
-                      image_params["blk_extra_params"], re.M)
+        m = re.search(r"(serial|wwn)=(\w+)", image_params["blk_extra_params"], re.M)
         if m is not None:
             drive_path = utils_misc.get_linux_drive_path(session, m.group(2))
 
     if drive_path:
-        info = {'kname': drive_path[5:], 'size': image_params['image_size']}
+        info = {"kname": drive_path[5:], "size": image_params["image_size"]}
     else:
         # get disk by disk size
-        conds = {'type': image_params.get('disk_type', 'disk'),
-                 'size': image_params['image_size']}
+        conds = {
+            "type": image_params.get("disk_type", "disk"),
+            "size": image_params["image_size"],
+        }
         disks = utils_disk.get_linux_disks(session, True)
         for kname, attr in disks.items():
-            d = dict(zip(['kname', 'size', 'type'], attr))
+            d = dict(zip(["kname", "size", "type"], attr))
             if all([conds[k] == d[k] for k in conds]):
                 info = d
                 break
@@ -567,8 +568,8 @@ def refresh_mounts(mounts, params, session):
     """
     # always refresh disks info when count of data disks >= 1
     for tag, mount in mounts.items():
-        if tag == 'image1':
+        if tag == "image1":
             continue
         info = get_disk_info_by_param(tag, params, session)
-        assert info, 'Failed to get the kname for device: %s' % tag
-        mount[0] = '/dev/%s1' % info['kname']
+        assert info, f"Failed to get the kname for device: {tag}"
+        mount[0] = "/dev/{}1".format(info["kname"])

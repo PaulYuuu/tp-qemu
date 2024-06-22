@@ -1,32 +1,37 @@
 """IO-Throttling group and other operation relevant testing"""
+
 import json
 
 from virttest import error_context
 from virttest.qemu_monitor import QMPCmdError
-from provider.storage_benchmark import generate_instance
-from provider.throttle_utils import ThrottleGroupManager, ThrottleTester, \
-    ThrottleGroupsTester
+
 from provider.block_devices_plug import BlockDevicesPlug
 from provider.blockdev_snapshot_base import BlockDevSnapshotTest
+from provider.storage_benchmark import generate_instance
+from provider.throttle_utils import (
+    ThrottleGroupManager,
+    ThrottleGroupsTester,
+    ThrottleTester,
+)
 
 
 # This decorator makes the test function aware of context strings
 @error_context.context_aware
 def run(test, params, env):
     """
-        Test throttle relevant properties feature.
+    Test throttle relevant properties feature.
 
-        1) Boot up guest with throttle groups.
-        There are two throttle groups. One have two disks,other is empty.
-        2) Build fio operation options and expected result
-         according to throttle properties.
-        3) Execute single disk throttle testing on  first group.
-        4) Execute group relevant testing for example:
-        Change throttle group attribute or move disk to other group
-        5) Or Execute other operation testing for example:
-        Reboot guest or stop-resume guest
-        or add snapshot on throttle node
-        6) Execute throttle testing on all groups.
+    1) Boot up guest with throttle groups.
+    There are two throttle groups. One have two disks,other is empty.
+    2) Build fio operation options and expected result
+     according to throttle properties.
+    3) Execute single disk throttle testing on  first group.
+    4) Execute group relevant testing for example:
+    Change throttle group attribute or move disk to other group
+    5) Or Execute other operation testing for example:
+    Reboot guest or stop-resume guest
+    or add snapshot on throttle node
+    6) Execute throttle testing on all groups.
     """
 
     def negative_test():
@@ -44,7 +49,10 @@ def run(test, params, env):
                     continue
                 test.log.error(
                     "Cannot got expected wrong result on %s: %s in %s",
-                    name, err_msg, qmp_desc)
+                    name,
+                    err_msg,
+                    qmp_desc,
+                )
                 raise err
             else:
                 test.fail("Can not got expected wrong result")
@@ -99,7 +107,7 @@ def run(test, params, env):
     session = vm.wait_for_login(timeout=360)
 
     error_context.context("Deploy fio", test.log.info)
-    fio = generate_instance(params, vm, 'fio')
+    fio = generate_instance(params, vm, "fio")
 
     tgm = ThrottleGroupManager(vm)
     groups = params["throttle_groups"].split()
@@ -114,7 +122,7 @@ def run(test, params, env):
     tester.start()
 
     # execute relevant operation
-    error_context.context("Execute operation %s" % operation, test.log.info)
+    error_context.context(f"Execute operation {operation}", test.log.info)
     locals_var = locals()
     locals_var[operation]()
     # test after operation
@@ -123,19 +131,18 @@ def run(test, params, env):
     session = vm.wait_for_login(timeout=360)
     for group in groups:
         tgm.get_throttle_group_props(group)
-        images = params.get("throttle_group_member_%s" % group, "").split()
+        images = params.get(f"throttle_group_member_{group}", "").split()
         if len(images) == 0:
             test.log.info("No images in group %s", group)
             continue
         tester = ThrottleTester(test, params, vm, session, group, images)
-        error_context.context("Build test stuff for %s:%s" % (group, images),
-                              test.log.info)
+        error_context.context(f"Build test stuff for {group}:{images}", test.log.info)
         tester.build_default_option()
         tester.build_images_fio_option()
         tester.set_fio(fio)
         testers.append(tester)
 
-    error_context.context("Start groups testing:%s" % groups, test.log.info)
+    error_context.context(f"Start groups testing:{groups}", test.log.info)
     groups_tester = ThrottleGroupsTester(testers)
 
     repeat_test = params.get_numeric("repeat_test", 1)

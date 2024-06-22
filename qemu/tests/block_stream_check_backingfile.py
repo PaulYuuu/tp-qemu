@@ -1,18 +1,16 @@
-import os
 import logging
+import os
 
 from virttest import utils_misc
 
 from qemu.tests import blk_stream
 
-LOG_JOB = logging.getLogger('avocado.test')
+LOG_JOB = logging.getLogger("avocado.test")
 
 
 class BlockStreamCheckBackingfile(blk_stream.BlockStream):
-
     def __init__(self, test, params, env, tag):
-        super(BlockStreamCheckBackingfile, self).__init__(test,
-                                                          params, env, tag)
+        super().__init__(test, params, env, tag)
 
     def check_backingfile(self):
         """
@@ -23,18 +21,20 @@ class BlockStreamCheckBackingfile(blk_stream.BlockStream):
         backingfile = self.get_backingfile("qemu-img")
         if backingfile:
             img_file = self.get_image_file()
-            LOG_JOB.debug("Got backing-file: %s" % backingfile +
-                          "by 'qemu-img info %s'" % img_file)
+            LOG_JOB.debug(
+                f"Got backing-file: {backingfile}" + f"by 'qemu-img info {img_file}'"
+            )
             fail |= bool(backingfile)
         backingfile = self.get_backingfile("monitor")
         if backingfile:
-            LOG_JOB.debug("Got backing-file: %s" % backingfile +
-                          "by 'info/query block' " +
-                          "in %s monitor" % self.vm.monitor.protocol)
+            LOG_JOB.debug(
+                f"Got backing-file: {backingfile}"
+                + "by 'info/query block' "
+                + f"in {self.vm.monitor.protocol} monitor"
+            )
             fail |= bool(backingfile)
         if fail:
-            msg = ("Unexpected backing file found, there should be "
-                   "no backing file")
+            msg = "Unexpected backing file found, there should be " "no backing file"
             self.test.fail(msg)
 
     def check_backingfile_exist(self):
@@ -43,7 +43,7 @@ class BlockStreamCheckBackingfile(blk_stream.BlockStream):
         backingfile = self.get_backingfile()
         if backingfile != self.base_image:
             msg = "The backing file from monitor does not meet expectation. "
-            msg += "It should be %s, now is %s." % (self.base_image, backingfile)
+            msg += f"It should be {self.base_image}, now is {backingfile}."
             self.test.fail(msg)
 
     def check_imagefile(self):
@@ -56,8 +56,8 @@ class BlockStreamCheckBackingfile(blk_stream.BlockStream):
         LOG_JOB.info("Check image file is '%s'", exp_img_file)
         img_file = self.get_image_file()
         if exp_img_file != img_file:
-            msg = "Excepted image file: %s," % exp_img_file
-            msg += "Actual image file: %s" % img_file
+            msg = f"Excepted image file: {exp_img_file},"
+            msg += f"Actual image file: {img_file}"
             self.test.fail(msg)
 
     def set_backingfile(self):

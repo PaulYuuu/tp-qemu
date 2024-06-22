@@ -7,7 +7,6 @@ from provider.blockdev_full_backup_base import BlockdevFullBackupBaseTest
 
 
 class BlockdevFullBackupNonexistTargetTest(BlockdevFullBackupBaseTest):
-
     def prepare_test(self):
         self.prepare_main_vm()
         self.prepare_data_disks()
@@ -16,11 +15,11 @@ class BlockdevFullBackupNonexistTargetTest(BlockdevFullBackupBaseTest):
         """
         Backup source image to target image
         """
-        assert len(
-            self.target_disks) >= len(
-            self.source_disks), "No enough target disks define in cfg!"
-        src_lst = ["drive_%s" % x for x in self.source_disks]
-        dst_lst = ["drive_%s" % x for x in self.target_disks]
+        assert len(self.target_disks) >= len(
+            self.source_disks
+        ), "No enough target disks define in cfg!"
+        src_lst = [f"drive_{x}" for x in self.source_disks]
+        dst_lst = [f"drive_{x}" for x in self.target_disks]
         backup_cmd = backup_utils.blockdev_backup_qmp_cmd
         cmd, arguments = backup_cmd(src_lst[0], dst_lst[0], **self.backup_options)
         try:

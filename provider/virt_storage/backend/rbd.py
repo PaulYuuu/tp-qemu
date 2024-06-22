@@ -1,11 +1,8 @@
 import os
 
-from provider.virt_storage.helper import rbdcli
-
-from provider.virt_storage import storage_volume
-from provider.virt_storage import virt_source
-from provider.virt_storage import virt_target
+from provider.virt_storage import storage_volume, virt_source, virt_target
 from provider.virt_storage.backend import base
+from provider.virt_storage.helper import rbdcli
 
 
 class RBDPool(base.BaseStoragePool):
@@ -14,7 +11,7 @@ class RBDPool(base.BaseStoragePool):
     def __init__(self, name):
         self.image = None
         self.server = None
-        super(RBDPool, self).__init__(name)
+        super().__init__(name)
 
     @property
     def helper(self):
@@ -32,9 +29,7 @@ class RBDPool(base.BaseStoragePool):
         pass
 
     def refresh(self):
-        files = filter(
-            lambda x: not self.find_volume_by_path,
-            self.find_sources())
+        files = filter(lambda x: not self.find_volume_by_path, self.find_sources())
         return map(self.create_volume_on_rbd, files)
 
     def create_volume_on_rbd(self, path):
@@ -55,7 +50,7 @@ class RBDPool(base.BaseStoragePool):
     def get_volume_path_by_param(self, params):
         image_name = params.get("image_name", self.name)
         image_format = params.get("image_format", "qcow2")
-        filename = "%s.%s" % (image_name, image_format)
+        filename = f"{image_name}.{image_format}"
         return os.path.join(self.target.path, filename)
 
     def get_volume_by_params(self, params, name):
@@ -73,9 +68,10 @@ class RBDPool(base.BaseStoragePool):
     def pool_define_by_params(cls, name, params):
         inst = cls(name)
         inst.target = virt_target.PoolTarget.target_define_by_params(params)
-        inst.target.path = params['rbd_pool_name']
+        inst.target.path = params["rbd_pool_name"]
         source_params = params.object_params(name)
         inst.source = virt_source.PoolSource.source_define_by_params(
-                                                 name, source_params)
+            name, source_params
+        )
         inst.set_special_opts_by_params(params)
         return inst

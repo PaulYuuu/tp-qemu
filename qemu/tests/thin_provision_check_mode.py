@@ -1,12 +1,8 @@
 import os
 
-from avocado.utils import genio
+from avocado.utils import genio, process
 from avocado.utils import path as utils_path
-from avocado.utils import process
-
-from virttest import env_process
-from virttest import error_context
-
+from virttest import env_process, error_context
 from virttest.utils_misc import get_linux_drive_path
 
 
@@ -42,28 +38,29 @@ def run(test, params, env):
         depends on params for scsi_debug module.
         """
         device_name = os.path.basename(device)
-        path = "/sys/block/%s/device/scsi_disk" % device_name
-        path += "/%s/provisioning_mode" % host_id
+        path = f"/sys/block/{device_name}/device/scsi_disk"
+        path += f"/{host_id}/provisioning_mode"
         return genio.read_one_line(path).strip()
 
     def get_guest_provisioning_mode(device):
         """
         Get disk provisioning_mode in guest
         """
-        cmd = "lsblk -S -n %s" % device
+        cmd = f"lsblk -S -n {device}"
         status, output = session.cmd_status_output(cmd)
         if status != 0:
-            test.fail("Can not find device %s in guest" % device)
+            test.fail(f"Can not find device {device} in guest")
 
         host_id = output.split()[1]
-        cmd = "cat /sys/bus/scsi/devices/{0}/scsi_disk/{0}/provisioning_mode".format(
-            host_id)
+        cmd = (
+            f"cat /sys/bus/scsi/devices/{host_id}/scsi_disk/{host_id}/provisioning_mode"
+        )
 
         status, output = session.cmd_status_output(cmd)
         if status == 0:
             return output.strip()
 
-        test.fail("Can not get provisioning mode %s in guest" % host_id)
+        test.fail(f"Can not get provisioning mode {host_id} in guest")
 
     utils_path.find_command("lsblk")
     host_scsi_id, disk_name = get_host_scsi_disk()
@@ -76,10 +73,9 @@ def run(test, params, env):
     target_mode = params["target_mode"]
     disk_serial = params["disk_serial"]
     params["start_vm"] = "yes"
-    params["image_name_%s" % data_tag] = disk_name
+    params[f"image_name_{data_tag}"] = disk_name
 
-    error_context.context("boot guest with disk '%s'" % disk_name,
-                          test.log.info)
+    error_context.context(f"boot guest with disk '{disk_name}'", test.log.info)
     # boot guest with scsi_debug disk
     env_process.preprocess_vm(test, params, env, vm_name)
     vm = env.get_vm(vm_name)
@@ -93,6 +89,6 @@ def run(test, params, env):
         test.fail("Can not get output file path in guest.")
 
     mode = get_guest_provisioning_mode(output_path)
-    error_context.context("Checking provision mode %s" % mode, test.log.info)
+    error_context.context(f"Checking provision mode {mode}", test.log.info)
     if mode != target_mode:
         test.fail("Got unexpected mode:%s", mode)

@@ -1,7 +1,4 @@
-from virttest import error_context
-from virttest import utils_test
-from virttest import utils_misc
-from virttest import data_dir
+from virttest import data_dir, error_context, utils_misc, utils_test
 
 from generic.tests import kdump
 
@@ -20,6 +17,7 @@ def run(test, params, env):
     :param params: Dictionary with the test parameters
     :param env: Dictionary with test environment.
     """
+
     def install_stress_app(session):
         """
         Install stress app in guest.
@@ -27,7 +25,7 @@ def run(test, params, env):
         stress_path = data_dir.get_deps_dir("stress")
         stress_guest_path = params["tmp_dir"]
         test.log.info("Copy stress package to guest.")
-        session.cmd_status_output("mkdir -p %s" % stress_guest_path)
+        session.cmd_status_output(f"mkdir -p {stress_guest_path}")
         vm.copy_files_to(stress_path, stress_guest_path)
         session.cmd(params["install_cmd"])
 
@@ -47,9 +45,11 @@ def run(test, params, env):
             bg = ""
             bg_stress_test = params.get("run_bgstress")
 
-            bg = utils_misc.InterruptedThread(utils_test.run_virt_sub_test,
-                                              (test, params, env),
-                                              {"sub_type": bg_stress_test})
+            bg = utils_misc.InterruptedThread(
+                utils_test.run_virt_sub_test,
+                (test, params, env),
+                {"sub_type": bg_stress_test},
+            )
             bg.start()
 
         if stress_type == "io":
@@ -59,8 +59,9 @@ def run(test, params, env):
             test.log.info("Launch stress app in guest with command: '%s'", cmd)
             session.sendline(cmd)
 
-        running = utils_misc.wait_for(lambda: stress_running(session),
-                                      timeout=150, step=5)
+        running = utils_misc.wait_for(
+            lambda: stress_running(session), timeout=150, step=5
+        )
         if not running:
             test.error("Stress isn't running")
 
@@ -83,18 +84,20 @@ def run(test, params, env):
     def_kdump_enable_cmd = "chkconfig kdump on && service kdump restart"
     kdump_enable_cmd = params.get("kdump_enable_cmd", def_kdump_enable_cmd)
     def_crash_kernel_prob_cmd = "grep -q 1 /sys/kernel/kexec_crash_loaded"
-    crash_kernel_prob_cmd = params.get("crash_kernel_prob_cmd",
-                                       def_crash_kernel_prob_cmd)
+    crash_kernel_prob_cmd = params.get(
+        "crash_kernel_prob_cmd", def_crash_kernel_prob_cmd
+    )
 
-    session = kdump.kdump_enable(vm, vm.name,
-                                 crash_kernel_prob_cmd, kernel_param_cmd,
-                                 kdump_enable_cmd, timeout)
+    session = kdump.kdump_enable(
+        vm, vm.name, crash_kernel_prob_cmd, kernel_param_cmd, kdump_enable_cmd, timeout
+    )
 
     try:
         start_stress(session)
 
-        error_context.context("Kdump Testing, force the Linux kernel to crash",
-                              test.log.info)
+        error_context.context(
+            "Kdump Testing, force the Linux kernel to crash", test.log.info
+        )
         crash_cmd = params.get("crash_cmd", "echo c > /proc/sysrq-trigger")
         if crash_cmd == "nmi":
             kdump.crash_test(test, vm, None, crash_cmd, timeout)

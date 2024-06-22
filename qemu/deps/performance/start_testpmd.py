@@ -1,12 +1,11 @@
+import locale
 import logging
+import subprocess
 import sys
 import time
-import locale
+
 import pexpect
-import subprocess
-
 from six import string_types
-
 
 nic1_driver = sys.argv[1]
 nic2_driver = sys.argv[2]
@@ -20,26 +19,36 @@ running_time = int(sys.argv[8])
 ENCODING = locale.getpreferredencoding()
 
 
-class TestPMD(object):
-
+class TestPMD:
     def __init__(self):
-
         self.proc = None
         testpmd_cmd = subprocess.check_output(
-                "rpm -ql dpdk |grep testpmd", shell=True).decode()
+            "rpm -ql dpdk |grep testpmd", shell=True
+        ).decode()
         self.testpmd_exec = testpmd_cmd
 
-    def launch(self, nic1_driver, nic2_driver,
-               whitelist_option, nic1, nic2, cores, queues):
-
-        cmd = ("-l 1,2,3 -n 4 -d %s -d %s"
-               " %s %s %s %s "
-               " -- "
-               " -i --nb-cores=%d "
-               " --disable-rss --rxd=512 --txd=512 "
-               " --rxq=%d --txq=%d" % (
-                   nic1_driver, nic2_driver, whitelist_option,
-                   nic1, whitelist_option, nic2, cores, queues, queues))
+    def launch(
+        self, nic1_driver, nic2_driver, whitelist_option, nic1, nic2, cores, queues
+    ):
+        cmd = (
+            "-l 1,2,3 -n 4 -d %s -d %s"
+            " %s %s %s %s "
+            " -- "
+            " -i --nb-cores=%d "
+            " --disable-rss --rxd=512 --txd=512 "
+            " --rxq=%d --txq=%d"
+            % (
+                nic1_driver,
+                nic2_driver,
+                whitelist_option,
+                nic1,
+                whitelist_option,
+                nic2,
+                cores,
+                queues,
+                queues,
+            )
+        )
         cmd_str = self.testpmd_exec + cmd
         logging.info("[cmd] %s", cmd_str)
         try:
@@ -71,25 +80,25 @@ class TestPMD(object):
         self.command("show port stats all")
 
     def set_portlist(self, portlist):
-        self.command("set portlist %s" % portlist)
+        self.command(f"set portlist {portlist}")
 
     def get_config_fwd(self):
         self.command("show config fwd")
 
     def set_fwd_mac_retry(self):
-        self.command('set fwd mac retry')
+        self.command("set fwd mac retry")
 
     def set_vlan_0(self):
-        self.command('vlan set strip on 0')
+        self.command("vlan set strip on 0")
 
     def set_vlan_1(self):
-        self.command('vlan set strip on 1')
+        self.command("vlan set strip on 1")
 
     def command(self, cmd):
         self.proc.sendline(cmd)
         self.proc.expect("testpmd>")
         logging.info("testpmd> %s", cmd)
-        print("testpmd> %s" % cmd)
+        print(f"testpmd> {cmd}")
         logging.info(self.proc.before)
         line_list = to_text(self.proc.before).split("\n")
         for subline in line_list:
@@ -99,9 +108,9 @@ class TestPMD(object):
         return to_text(self.proc.before)
 
 
-def start_testpmd(nic1_driver, nic2_driver, whitelist_option,
-                  nic1, nic2, cores, queues):
-
+def start_testpmd(
+    nic1_driver, nic2_driver, whitelist_option, nic1, nic2, cores, queues
+):
     my_testpmd = TestPMD()
     my_testpmd.launch(
         nic1_driver=nic1_driver,
@@ -110,7 +119,8 @@ def start_testpmd(nic1_driver, nic2_driver, whitelist_option,
         nic1=nic1,
         nic2=nic2,
         cores=cores,
-        queues=queues)
+        queues=queues,
+    )
 
     my_testpmd.set_fwd_mac_retry()
     my_testpmd.set_vlan_0()
@@ -124,7 +134,7 @@ def start_testpmd(nic1_driver, nic2_driver, whitelist_option,
     end_time = start_time + running_time
     while time.time() < end_time:
         time.sleep(10)
-        print("time.time=%s" % time.time)
+        print(f"time.time={time.time}")
     my_testpmd.stop()
     my_testpmd.set_port_stats()
     my_testpmd.quit()
@@ -145,12 +155,8 @@ def to_text(data):
     if isinstance(data, bytes):
         return data.decode(ENCODING)
     elif not isinstance(data, string_types):
-        if sys.version_info[0] < 3:
-            return unicode(data)    # pylint: disable=E0602
-        else:
-            return str(data)
+        return str(data)
     return data
 
 
-start_testpmd(nic1_driver, nic2_driver, whitelist_option,
-              nic1, nic2, cores, queues)
+start_testpmd(nic1_driver, nic2_driver, whitelist_option, nic1, nic2, cores, queues)

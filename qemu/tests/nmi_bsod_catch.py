@@ -1,7 +1,7 @@
 import time
 
-from virttest import error_context
-from virttest import utils_test
+from virttest import error_context, utils_test
+
 from provider import win_dump_utils
 
 
@@ -34,9 +34,9 @@ def run(test, params, env):
     driver_name = params.get("driver_name")
 
     if driver_name:
-        session = utils_test.qemu.windrv_check_running_verifier(session,
-                                                                vm, test,
-                                                                driver_name)
+        session = utils_test.qemu.windrv_check_running_verifier(
+            session, vm, test, driver_name
+        )
 
     if del_dump_cmd:
         session.sendline(del_dump_cmd)
@@ -49,11 +49,11 @@ def run(test, params, env):
         msg = "Configure the guest"
         for reg_cmd in reg_cmds:
             cmd = params.get(reg_cmd.strip())
-            msg += " The command is %s " % cmd
+            msg += f" The command is {cmd} "
             error_context.context(msg)
             s, o = session.cmd_status_output(cmd, 360)
             if s:
-                test.fail("Fail command: %s. Output: %s" % (cmd, o))
+                test.fail(f"Fail command: {cmd}. Output: {o}")
 
     if params.get("reboot_after_config") == "yes":
         error_context.context("Reboot guest", test.log.info)
@@ -61,34 +61,35 @@ def run(test, params, env):
 
     try:
         if nmi_cmd:
-            error_context.context("Send inject-nmi or nmi from host to guest",
-                                  test.log.info)
+            error_context.context(
+                "Send inject-nmi or nmi from host to guest", test.log.info
+            )
             vm.monitor.send_args_cmd(nmi_cmd)
         # Wait guest create dump file.
         if manual_reboot_cmd:
             bsod_time = params.get("bsod_time", 160)
-            test.log.info("Waiting guest for creating dump file"
-                          " (%ssec)", bsod_time)
+            test.log.info("Waiting guest for creating dump file" " (%ssec)", bsod_time)
             time.sleep(bsod_time)
-            error_context.context("Send a system_reset monitor command",
-                                  test.log.info)
+            error_context.context("Send a system_reset monitor command", test.log.info)
             vm.monitor.send_args_cmd(manual_reboot_cmd)
 
         session = vm.wait_for_login(timeout=timeout)
 
         if check_dump_cmd:
-            error_context.context("Verify whether the dump files are "
-                                  "generated", test.log.info)
+            error_context.context(
+                "Verify whether the dump files are " "generated", test.log.info
+            )
             s, o = session.cmd_status_output(check_dump_cmd, 360)
             test.log.debug("Output for check_dump_cmd command: %s", o)
             if s:
-                err_msg = "Could not find dump files in guest. Output: '%s'" % o
+                err_msg = f"Could not find dump files in guest. Output: '{o}'"
                 test.fail(err_msg)
 
         error_context.context("Analyze dump file with windbg", test.log.info)
         if session.cmd_status(params["chk_sdk_ins"]):
-            win_dump_utils.install_windbg(test, params, session,
-                                          timeout=params.get("wdbg_timeout", 600))
+            win_dump_utils.install_windbg(
+                test, params, session, timeout=params.get("wdbg_timeout", 600)
+            )
         error_context.context("Disable security alert", test.log.info)
         win_dump_utils.disable_security_alert(params, session)
         session.cmd(params["save_path_cmd"])

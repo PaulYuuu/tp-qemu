@@ -1,9 +1,6 @@
 import os
 
-from virttest import error_context
-from virttest import utils_net
-from virttest import env_process
-from virttest import utils_misc
+from virttest import env_process, error_context, utils_misc, utils_net
 
 
 @error_context.context_aware
@@ -23,6 +20,7 @@ def run(test, params, env):
     :param params: Dictionary with the test parameters
     :param env: Dictionary with test environment.
     """
+
     def check_nics_num(expect_c, session):
         """
         Check whether guest NICs number match with params set in cfg file
@@ -40,13 +38,13 @@ def run(test, params, env):
         if not expect_c == actual_c:
             msg += "Nics count mismatch!\n"
             return (False, msg)
-        return (True, msg + 'Nics count match')
+        return (True, msg + "Nics count match")
 
     # Get the ethernet cards number from params
     nics_num = int(params.get("nics_num", 8))
     for i in range(nics_num):
-        nics = "nic%s" % i
-        params["nics"] = ' '.join([params["nics"], nics])
+        nics = f"nic{i}"
+        params["nics"] = " ".join([params["nics"], nics])
     params["start_vm"] = "yes"
     env_process.preprocess_vm(test, params, env, params["main_vm"])
 
@@ -74,8 +72,8 @@ def run(test, params, env):
         ifcfg_path = "/etc/sysconfig/network-scripts/ifcfg-%s"
         for ifname in ifname_list:
             eth_config_path = ifcfg_path % ifname
-            eth_config = "DEVICE=%s\\nBOOTPROTO=dhcp\\nONBOOT=yes" % ifname
-            cmd = "echo -e '%s' > %s" % (eth_config, eth_config_path)
+            eth_config = f"DEVICE={ifname}\\nBOOTPROTO=dhcp\\nONBOOT=yes"
+            cmd = f"echo -e '{eth_config}' > {eth_config_path}"
             s, o = session.cmd_status_output(cmd)
             if s != 0:
                 err_msg = "Failed to create ether config file: %s\nReason is: %s"
@@ -93,24 +91,28 @@ def run(test, params, env):
 
     def _check_ip_number():
         for index, nic in enumerate(vm.virtnet):
-            guest_ip = utils_net.get_guest_ip_addr(session_srl, nic.mac, os_type,
-                                                   ip_version="ipv4")
+            guest_ip = utils_net.get_guest_ip_addr(
+                session_srl, nic.mac, os_type, ip_version="ipv4"
+            )
             if not guest_ip:
                 return False
         return True
 
     # Check all the interfaces in guest get ips
-    session_srl = vm.wait_for_serial_login(timeout=int(params.get("login_timeout", 360)))
+    session_srl = vm.wait_for_serial_login(
+        timeout=int(params.get("login_timeout", 360))
+    )
     if not utils_misc.wait_for(_check_ip_number, 1000, step=10):
         test.error("Timeout when wait for nics to get ip")
 
     nic_interface = []
     for index, nic in enumerate(vm.virtnet):
         test.log.info("index %s nic", index)
-        guest_ip = utils_net.get_guest_ip_addr(session_srl, nic.mac, os_type,
-                                               ip_version="ipv4")
+        guest_ip = utils_net.get_guest_ip_addr(
+            session_srl, nic.mac, os_type, ip_version="ipv4"
+        )
         if not guest_ip:
-            err_log = "vm get interface %s's ip failed." % index
+            err_log = f"vm get interface {index}'s ip failed."
             test.fail(err_log)
         nic_interface.append(guest_ip)
     session_srl.close()

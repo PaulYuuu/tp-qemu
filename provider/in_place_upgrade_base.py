@@ -1,14 +1,13 @@
+import logging
 import re
 import time
-import logging
-
 
 from virttest import utils_package
 
-LOG_JOB = logging.getLogger('avocado.test')
+LOG_JOB = logging.getLogger("avocado.test")
 
 
-class IpuTest(object):
+class IpuTest:
     """
     Class for in_place_upgrade test in the vm
     """
@@ -34,8 +33,7 @@ class IpuTest(object):
         """
         status, output = self.session.cmd_status_output(cmd, timeout=timeout)
         if check_status and status != 0:
-            self.test.fail("Execute command %s failed, output: %s"
-                           % (cmd, output))
+            self.test.fail(f"Execute command {cmd} failed, output: {output}")
         return output.strip()
 
     def upgrade_process(self, cmd, timeout=6000):
@@ -64,7 +62,7 @@ class IpuTest(object):
             update_vm = self.params.get("yum_update")
             self.session.cmd(update_vm, timeout=3000)
         except Exception as error:
-            test.fail("Failed to do yum update in the vm : %s" % str(error))
+            test.fail(f"Failed to do yum update in the vm : {str(error)}")
 
     def rhsm(self, test):
         """
@@ -91,7 +89,7 @@ class IpuTest(object):
             update_vm = self.params.get("yum_update")
             self.session.cmd(update_vm, timeout=6000)
         except Exception as error:
-            test.fail("Failed to register rhsm : %s" % str(error))
+            test.fail(f"Failed to register rhsm : {str(error)}")
 
     def create_ipuser(self, test):
         """
@@ -107,7 +105,7 @@ class IpuTest(object):
             self.session.cmd(add_passwd_ipuser)
             self.session.cmd(no_passwd_for_sudo)
         except Exception as error:
-            test.fail("Failed to create ipuser : %s" % str(error))
+            test.fail(f"Failed to create ipuser : {str(error)}")
 
     def pre_upgrade_whitelist(self, test):
         """
@@ -125,13 +123,12 @@ class IpuTest(object):
             self.session.cmd(self.params.get("fix_permit"))
             # New kernel is not used
             erase_old_kernel = self.params.get("clean_up_old_kernel")
-            s, output = self.session.cmd_status_output(erase_old_kernel,
-                                                       timeout=1200)
+            s, output = self.session.cmd_status_output(erase_old_kernel, timeout=1200)
             error_info = self.params.get("error_info")
             if re.search(error_info, output):
                 pass
         except Exception as error:
-            test.fail("Failed to fix issues in advance: %s" % str(error))
+            test.fail(f"Failed to fix issues in advance: {str(error)}")
 
     def post_upgrade_check(self, test, post_release):
         """
@@ -141,16 +138,18 @@ class IpuTest(object):
             release = self.params.get("release_check")
             status, output_release = self.session.cmd_status_output(release)
             if not re.search(post_release, output_release):
-                test.fail("Post_release: %s, expected result: %s"
-                          % (post_release, output_release))
+                test.fail(
+                    f"Post_release: {post_release}, expected result: {output_release}"
+                )
             new_kernel = self.params.get("new_kernel_ver")
             check_kernel = self.params.get("check_kernel")
             s, actual_new_kernel = self.session.cmd_status_output(check_kernel)
             if not re.search(new_kernel, actual_new_kernel):
-                test.fail("kernel is not right, expected is %s and new is %s"
-                          % (new_kernel, actual_new_kernel))
+                test.fail(
+                    f"kernel is not right, expected is {new_kernel} and new is {actual_new_kernel}"
+                )
         except Exception as error:
-            test.fail("Post upgrade checking failed : %s" % str(error))
+            test.fail(f"Post upgrade checking failed : {str(error)}")
 
     def post_upgrade_restore(self, test):
         """
@@ -166,13 +165,13 @@ class IpuTest(object):
                 if re.search("answerfile", o):
                     s, o = self.session.cmd_status_output(re_permit)
                     if s:
-                        test.fail("Failed to restore permit: %s" % o)
+                        test.fail(f"Failed to restore permit: {o}")
                     re_sshd_service = self.params.get("restart_sshd")
                     break
                 else:
                     test.fail("upgrade is in proress, please add waiting time")
             s, o = self.session.cmd_status_output(re_sshd_service)
             if s != 0:
-                test.fail("Failed to restart sshd: %s" % o)
+                test.fail(f"Failed to restart sshd: {o}")
         except Exception as error:
-            test.fail("Failed to restore permit: %s" % str(error))
+            test.fail(f"Failed to restore permit: {str(error)}")

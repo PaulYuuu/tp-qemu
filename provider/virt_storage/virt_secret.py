@@ -6,8 +6,7 @@ from avocado.utils import genio
 from virttest.qemu_devices import qdevices
 
 
-class StorageSecret(object):
-
+class StorageSecret:
     def __init__(self, name, data, stype=None):
         self.name = name
         self._data = data
@@ -48,7 +47,7 @@ class StorageSecret(object):
         return dev
 
 
-class StorageSecretAdmin(object):
+class StorageSecretAdmin:
     __secrets = list()
 
     @classmethod

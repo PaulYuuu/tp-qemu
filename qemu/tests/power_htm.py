@@ -1,9 +1,7 @@
 import re
 
-from virttest import error_context
-from virttest import utils_misc
-from virttest import utils_package
 from avocado.utils import process
+from virttest import error_context, utils_misc, utils_package
 
 
 @error_context.context_aware
@@ -29,23 +27,23 @@ def run(test, params, env):
         for cmd in cmds:
             s, o = process.getstatusoutput(cmd, timeout=3600)
             if s:
-                test.error("Failed to run cmd '%s', output: %s" % (cmd, o))
+                test.error(f"Failed to run cmd '{cmd}', output: {o}")
         error_context.context("Run htm unit test on host", test.log.info)
         s, o = process.getstatusoutput(params["run_htm_test"], timeout=3600)
         if s:
-            test.fail("Run htm unit test failed, output: %s" % o)
+            test.fail(f"Run htm unit test failed, output: {o}")
         # Make sure if host is available by do commands on host
-        status, output = process.getstatusoutput("rm -rf %s"
-                                                 % params["htm_dir"])
+        status, output = process.getstatusoutput("rm -rf {}".format(params["htm_dir"]))
         if status:
-            test.fail("Please check host's status: %s" % output)
+            test.fail(f"Please check host's status: {output}")
         utils_misc.verify_dmesg()
     else:
         check_exist_cmd = params["check_htm_env"]
         s, o = process.getstatusoutput(check_exist_cmd)
         if s:
-            test.error("Please check htm is supported or not by '%s', output: %s"
-                       % (check_exist_cmd, o))
+            test.error(
+                f"Please check htm is supported or not by '{check_exist_cmd}', output: {o}"
+            )
         vm = env.get_vm(params["main_vm"])
         session = vm.wait_for_login()
         pkgs = params["depends_pkgs"].split()
@@ -53,12 +51,13 @@ def run(test, params, env):
             test.error("Install dependency packages failed")
         session.cmd(params["get_htm_dir"])
         download_htm_demo = params["download_htm_demo"]
-        status = session.cmd_status("wget %s" % download_htm_demo)
+        status = session.cmd_status(f"wget {download_htm_demo}")
         if status:
-            test.error("Failed to download test file, please configure it in cfg : %s"
-                       % download_htm_demo)
+            test.error(
+                f"Failed to download test file, please configure it in cfg : {download_htm_demo}"
+            )
         else:
             status, output = session.cmd_status_output(params["test_htm_command"])
             if not re.search(params["expected_htm_test_result"], output):
-                test.fail("Test failed and please check : %s" % output)
+                test.fail(f"Test failed and please check : {output}")
         vm.verify_kernel_crash()

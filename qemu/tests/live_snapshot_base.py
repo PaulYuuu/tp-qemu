@@ -1,10 +1,5 @@
-from avocado.utils import crypto
-from avocado.utils import process
-
-from virttest import error_context
-from virttest import utils_misc
-from virttest import storage
-from virttest import data_dir
+from avocado.utils import crypto, process
+from virttest import data_dir, error_context, storage, utils_misc
 
 
 @error_context.context_aware
@@ -30,33 +25,31 @@ def run(test, params, env):
     copy_timeout = params.get("copy_timeoout", 600)
     base_file = storage.get_image_filename(params, data_dir.get_data_dir())
     device = vm.get_block({"file": base_file})
-    snapshot_file = "images/%s" % params.get("snapshot_file")
+    snapshot_file = "images/{}".format(params.get("snapshot_file"))
     snapshot_file = utils_misc.get_path(data_dir.get_data_dir(), snapshot_file)
     snapshot_format = params.get("snapshot_format", "qcow2")
     tmp_name = utils_misc.generate_random_string(5)
-    src = dst = "/tmp/%s" % tmp_name
+    src = dst = f"/tmp/{tmp_name}"
     if params.get("os_type") != "linux":
-        dst = "c:\\users\\public\\%s" % tmp_name
+        dst = f"c:\\users\\public\\{tmp_name}"
 
     try:
-        error_context.context("create file on host, copy it to guest",
-                              test.log.info)
+        error_context.context("create file on host, copy it to guest", test.log.info)
         cmd = params.get("dd_cmd") % src
         process.system(cmd, timeout=dd_timeout, shell=True)
         md5 = crypto.hash_file(src, algorithm="md5")
         vm.copy_files_to(src, dst, timeout=copy_timeout)
-        process.system("rm -f %s" % src)
+        process.system(f"rm -f {src}")
         error_context.context("create live snapshot", test.log.info)
-        if vm.live_snapshot(base_file, snapshot_file,
-                            snapshot_format) != device:
+        if vm.live_snapshot(base_file, snapshot_file, snapshot_format) != device:
             test.fail("Fail to create snapshot")
         backing_file = vm.monitor.get_backingfile(device)
         if backing_file != base_file:
-            test.log.error(
-                "backing file: %s, base file: %s", backing_file, base_file)
+            test.log.error("backing file: %s, base file: %s", backing_file, base_file)
             test.fail("Got incorrect backing file")
-        error_context.context("copy file to host, check content not changed",
-                              test.log.info)
+        error_context.context(
+            "copy file to host, check content not changed", test.log.info
+        )
         vm.copy_files_from(dst, src, timeout=copy_timeout)
         if md5 and (md5 != crypto.hash_file(src, algorithm="md5")):
             test.fail("diff md5 before/after create snapshot")
@@ -64,4 +57,4 @@ def run(test, params, env):
     finally:
         if session:
             session.close()
-        process.system("rm -f %s %s" % (snapshot_file, src))
+        process.system(f"rm -f {snapshot_file} {src}")

@@ -1,5 +1,4 @@
-from virttest import utils_qemu
-from virttest import utils_misc
+from virttest import utils_misc, utils_qemu
 from virttest.utils_version import VersionInterval
 
 from provider import block_dirty_bitmap as bitmap_handle
@@ -7,14 +6,17 @@ from provider.blockdev_snapshot_base import BlockDevSnapshotTest
 
 
 class BlkIncModifyBackingBitmaps(BlockDevSnapshotTest):
-
     def reopen_backing_image(self, node_name):
         opts = []
         fmt_node = self.main_vm.devices.get_by_qid(node_name)[0]
         file_node = fmt_node.get_param("file")
         driver = fmt_node.get_param("driver")
-        item = {"driver": driver, "node-name": node_name, "file": file_node,
-                "read-only": False}
+        item = {
+            "driver": driver,
+            "node-name": node_name,
+            "file": file_node,
+            "read-only": False,
+        }
         qemu_binary = utils_misc.get_qemu_binary(self.params)
         qemu_version = utils_qemu.get_qemu_version(qemu_binary)[0]
         required_qemu_version = self.params["required_qemu_version"]
@@ -27,19 +29,18 @@ class BlkIncModifyBackingBitmaps(BlockDevSnapshotTest):
             self.main_vm.monitor.x_blockdev_reopen(args)
 
     def add_bitmap(self, node_name):
-        bitmap = "bitmap_%s" % node_name
-        kargs = {'bitmap_name': bitmap,
-                 'target_device': node_name}
+        bitmap = f"bitmap_{node_name}"
+        kargs = {"bitmap_name": bitmap, "target_device": node_name}
         bitmap_handle.block_dirty_bitmap_add(self.main_vm, kargs)
         self.bitmap_list.append(kargs)
 
     def remove_bitmaps(self):
         actions = []
-        bitmap_rm_cmd = self.params.get('bitmap_remove_cmd',
-                                        'block-dirty-bitmap-remove')
+        bitmap_rm_cmd = self.params.get(
+            "bitmap_remove_cmd", "block-dirty-bitmap-remove"
+        )
         for item in self.bitmap_list:
-            bitmap_data = {"node": item["target_device"],
-                           "name": item["bitmap_name"]}
+            bitmap_data = {"node": item["target_device"], "name": item["bitmap_name"]}
             actions.append({"type": bitmap_rm_cmd, "data": bitmap_data})
         arguments = {"actions": actions}
         self.main_vm.monitor.cmd("transaction", arguments)
@@ -83,7 +84,10 @@ def run(test, params, env):
     """
     base_image = params.get("images", "image1").split()[0]
     params.update(
-        {"image_name_%s" % base_image: params["image_name"],
-         "image_format_%s" % base_image: params["image_format"]})
+        {
+            f"image_name_{base_image}": params["image_name"],
+            f"image_format_{base_image}": params["image_format"],
+        }
+    )
     snapshot_test = BlkIncModifyBackingBitmaps(test, params, env)
     snapshot_test.run_test()

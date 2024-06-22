@@ -37,14 +37,13 @@ class BlockdevMirrorBaseTest(blockdev_base.BlockdevBaseTest):
     """
 
     def __init__(self, test, params, env):
-        super(BlockdevMirrorBaseTest, self).__init__(test, params, env)
+        super().__init__(test, params, env)
         self.clone_vm = None
         self._source_images = params.objects("source_images")
         self._target_images = params.objects("target_images")
-        self._source_nodes = ["drive_%s" % src for src in self._source_images]
-        self._target_nodes = ["drive_%s" % tgt for tgt in self._target_images]
-        self._backup_options = list(map(self._get_backup_options,
-                                        self._source_images))
+        self._source_nodes = [f"drive_{src}" for src in self._source_images]
+        self._target_nodes = [f"drive_{tgt}" for tgt in self._target_images]
+        self._backup_options = list(map(self._get_backup_options, self._source_images))
 
     def _get_backup_options(self, source_image):
         params = self.params.object_params(source_image)
@@ -60,19 +59,20 @@ class BlockdevMirrorBaseTest(blockdev_base.BlockdevBaseTest):
         return backup_options
 
     def _configure_system_disk(self, tag):
-        self.disks_info[tag] = [
-            "system", self.params.get("mnt_on_sys_dsk", "/var/tmp")]
+        self.disks_info[tag] = ["system", self.params.get("mnt_on_sys_dsk", "/var/tmp")]
 
     def _configure_data_disk(self, tag):
         self.format_data_disk(tag)
 
     def remove_files_from_system_image(self, tmo=60):
         """Remove testing files from system image"""
-        tag_dir_list = [(t, d[1]) for t, d in six.iteritems(self.disks_info) if d[0] == "system"]
+        tag_dir_list = [
+            (t, d[1]) for t, d in six.iteritems(self.disks_info) if d[0] == "system"
+        ]
         if tag_dir_list:
             tag, root_dir = tag_dir_list[0]
-            files = ["%s/%s" % (root_dir, f) for f in self.files_info[tag]]
-            rm_cmd = "rm -f %s" % " ".join(files)
+            files = [f"{root_dir}/{f}" for f in self.files_info[tag]]
+            rm_cmd = "rm -f {}".format(" ".join(files))
 
             # restart main vm for the original system image is offlined
             # and the mirror image is attached after block-mirror
@@ -100,39 +100,45 @@ class BlockdevMirrorBaseTest(blockdev_base.BlockdevBaseTest):
 
         params = self.main_vm.params.copy()
         system_image = params.objects("images")[0]
-        images = [system_image] + \
-            self._target_images if self._source_images[0] != system_image else self._target_images
+        images = (
+            [system_image] + self._target_images
+            if self._source_images[0] != system_image
+            else self._target_images
+        )
         params["images"] = " ".join(images)
 
         self.clone_vm = self.main_vm.clone(params=params)
         self.clone_vm.create()
         self.clone_vm.verify_alive()
 
-        self.env.register_vm("%s_clone" % self.clone_vm.name, self.clone_vm)
+        self.env.register_vm(f"{self.clone_vm.name}_clone", self.clone_vm)
 
     def add_target_data_disks(self):
         """Hot plug target disks to VM with qmp monitor"""
         for tag in self._target_images:
             disk = self.target_disk_define_by_params(
-                self.params.object_params(tag), tag)
+                self.params.object_params(tag), tag
+            )
             disk.hotplug(self.main_vm)
             self.trash.append(disk)
 
     def _check_mirrored_block_node_attached(self, source_qdev, target_node):
         out = self.main_vm.monitor.query("block")
         for item in out:
-            if (source_qdev in item["qdev"]
-                    and item["inserted"].get("node-name") == target_node):
+            if (
+                source_qdev in item["qdev"]
+                and item["inserted"].get("node-name") == target_node
+            ):
                 break
         else:
-            self.test.fail("Device(%s) is not attached to target node(%s)"
-                           % (source_qdev, target_node))
+            self.test.fail(
+                f"Device({source_qdev}) is not attached to target node({target_node})"
+            )
 
     def check_mirrored_block_nodes_attached(self):
         """All source devices attach to the mirrored nodes"""
         for idx, target in enumerate(self._target_nodes):
-            self._check_mirrored_block_node_attached(
-                self._source_images[idx], target)
+            self._check_mirrored_block_node_attached(self._source_images[idx], target)
 
     def blockdev_mirror(self):
         """Need to be implemented in specific test case"""

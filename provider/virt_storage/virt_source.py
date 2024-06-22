@@ -1,11 +1,8 @@
 from .virt_auth import StorageAuthation
-from .virt_device import HostAdapter
-from .virt_device import StorageDevice
-from .virt_device import StorageHost
+from .virt_device import HostAdapter, StorageDevice, StorageHost
 
 
-class PoolSource(object):
-
+class PoolSource:
     def __init__(self):
         self.name = None
         self.pool_name = None
@@ -57,4 +54,4 @@ class PoolSource(object):
         return instance
 
     def __str__(self):
-        return "%s: %s" % (self.__class__.__name__, self.name)
+        return f"{self.__class__.__name__}: {self.name}"

@@ -1,15 +1,11 @@
-import os
 import json
-import time
+import os
 import shutil
+import time
 
-from avocado.utils.software_manager import manager
 from avocado.utils import process
-
-from virttest import utils_misc
-from virttest import ssh_key
-from virttest import storage
-from virttest import data_dir
+from avocado.utils.software_manager import manager
+from virttest import data_dir, ssh_key, storage, utils_misc
 
 
 def run(test, params, env):
@@ -29,18 +25,21 @@ def run(test, params, env):
         test.cancel("golang package install failed")
     home = os.environ["HOME"]
     if not ("goroot/bin" in os.environ["PATH"] and "go/bin" in os.environ["PATH"]):
-        process.run('echo "PATH=%s/goroot/bin:%s/go/bin:$PATH" >> %s/.bashrc' % (home, home, home), shell=True)
-    process.run("source %s/.bashrc" % home, shell=True)
+        process.run(
+            f'echo "PATH={home}/goroot/bin:{home}/go/bin:$PATH" >> {home}/.bashrc',
+            shell=True,
+        )
+    process.run(f"source {home}/.bashrc", shell=True)
     process.run("go get -u -d github.com/google/syzkaller/...", shell=True)
-    process.run("cd %s/go/src/github.com/google/syzkaller;make" % home, shell=True)
-    syzkaller_path = "%s/go/src/github.com/google/syzkaller" % home
+    process.run(f"cd {home}/go/src/github.com/google/syzkaller;make", shell=True)
+    syzkaller_path = f"{home}/go/src/github.com/google/syzkaller"
 
     # Step 2: Setup Guest for passwordless ssh from host
     vm = env.get_vm(params["main_vm"])
     session = vm.wait_for_login()
-    ssh_key.setup_ssh_key(vm.get_address(),
-                          params.get("username"),
-                          params.get("password"))
+    ssh_key.setup_ssh_key(
+        vm.get_address(), params.get("username"), params.get("password")
+    )
     session.close()
     vm.destroy()
 
@@ -49,17 +48,26 @@ def run(test, params, env):
     guest_kernel_branch = params.get("syz_kernel_branch")
     guest_kernel_config = params.get("syz_kernel_config")
     guest_kernel_build_path = utils_misc.get_path(test.debugdir, "linux")
-    process.run("git clone --depth 1 %s -b %s %s" % (guest_kernel_repo, guest_kernel_branch, guest_kernel_build_path), shell=True)
-    process.run("cd %s;git log -1;make %s" % (guest_kernel_build_path, guest_kernel_config), shell=True)
-    process.run('cd %s; echo "CONFIG_KCOV=y\nCONFIG_GCC_PLUGINS=y" >> .config; make olddefconfig' % guest_kernel_build_path, shell=True)
-    process.run("cd %s;make -j 40" % guest_kernel_build_path, shell=True)
+    process.run(
+        f"git clone --depth 1 {guest_kernel_repo} -b {guest_kernel_branch} {guest_kernel_build_path}",
+        shell=True,
+    )
+    process.run(
+        f"cd {guest_kernel_build_path};git log -1;make {guest_kernel_config}",
+        shell=True,
+    )
+    process.run(
+        f'cd {guest_kernel_build_path}; echo "CONFIG_KCOV=y\nCONFIG_GCC_PLUGINS=y" >> .config; make olddefconfig',
+        shell=True,
+    )
+    process.run(f"cd {guest_kernel_build_path};make -j 40", shell=True)
 
     # Step 4: Prepare syzkaller config with qemu params and guest params
     syz_config_path = utils_misc.get_path(test.debugdir, "syzkaller_config")
-    os.makedirs("%s/syzkaller" % test.debugdir)
-    workdir = "%s/syzkaller" % test.debugdir
-    sshkey = "%s/.ssh/id_rsa" % os.environ["HOME"]
-    kernel_path = "%s/vmlinux" % guest_kernel_build_path
+    os.makedirs(f"{test.debugdir}/syzkaller")
+    workdir = f"{test.debugdir}/syzkaller"
+    sshkey = "{}/.ssh/id_rsa".format(os.environ["HOME"])
+    kernel_path = f"{guest_kernel_build_path}/vmlinux"
 
     vm_config = {
         "count": int(params.get("syz_count")),
@@ -67,33 +75,36 @@ def run(test, params, env):
         "mem": int(params.get("mem")),
         "kernel": kernel_path,
         "cmdline": params.get("kernel_args"),
-        "qemu_args": params.get("syz_qemu_args")
-        }
+        "qemu_args": params.get("syz_qemu_args"),
+    }
 
     syz_config = {
-        'target': params.get("syz_target"),
-        'workdir': workdir,
+        "target": params.get("syz_target"),
+        "workdir": workdir,
         "http": params.get("syz_http"),
         "image": storage.get_image_filename(params, data_dir.get_data_dir()),
         "syzkaller": syzkaller_path,
         "procs": int(params.get("syz_procs")),
         "type": "qemu",
         "sshkey": sshkey,
-        "vm": vm_config
+        "vm": vm_config,
     }
     try:
         with open(syz_config_path, "w") as fp:
             json.dump(syz_config, fp)
-    except IOError as err:
+    except OSError as err:
         test.error("Unable to update syzkaller config: %s", err)
     end_time = time.time()
     # Step 5: Start sykaller config with specified time
     # Let's calculate the syzkaller timeout from
     # test timeout excluding current elapsed time + buffer
     testtimeout = int(params.get("test_timeout")) - (int(end_time - start_time) + 10)
-    cmd = "%s/bin/syz-manager -config %s %s" % (syzkaller_path, syz_config_path, params.get("syz_cmd_params"))
-    process.run(cmd, timeout=testtimeout,
-                ignore_status=True, shell=True)
+    cmd = "{}/bin/syz-manager -config {} {}".format(
+        syzkaller_path,
+        syz_config_path,
+        params.get("syz_cmd_params"),
+    )
+    process.run(cmd, timeout=testtimeout, ignore_status=True, shell=True)
     # Let's delete linux kernel folder from test-results as it would
     # consume lot of space and test log have all the information about
     # it incase to retrieve it back.

@@ -1,7 +1,6 @@
 import re
 
-from virttest import error_context
-from virttest import env_process
+from virttest import env_process, error_context
 
 
 @error_context.context_aware
@@ -27,7 +26,7 @@ def run(test, params, env):
     timeout = float(params.get("login_timeout", 240))
     dev_type = params.get("dev_type", "virtio-blk-pci")
     dev_param_name = params.get("dev_param_name", "blk_extra_params")
-    dev_pattern = params.get("dev_pattern", "(dev: %s.*?)dev:" % dev_type)
+    dev_pattern = params.get("dev_pattern", f"(dev: {dev_type}.*?)dev:")
     pci_id_pattern = params.get("pci_id_pattern")
     ccw_id_pattern = params.get("ccw_id_pattern")
     convert_dict = {"1": ["on", "true"], "0": ["off", "false"]}
@@ -38,16 +37,17 @@ def run(test, params, env):
             extra_params = orig_extra_params
             for index, value in enumerate(properties):
                 if value != default_value[index]:
-                    extra_params += ",%s=%s" % (options[index],
-                                                option_add[index])
+                    extra_params += f",{options[index]}={option_add[index]}"
             params[dev_param_name] = extra_params.lstrip(",")
         else:
             properties = default_value
 
-        error_context.context("Boot up guest with properites: %s value as: %s"
-                              % (str(options), properties), test.log.info)
+        error_context.context(
+            f"Boot up guest with properites: {str(options)} value as: {properties}",
+            test.log.info,
+        )
         vm_name = params["main_vm"]
-        params["start_vm"] = 'yes'
+        params["start_vm"] = "yes"
         env_process.preprocess_vm(test, params, env, vm_name)
 
         vm = env.get_vm(vm_name)
@@ -59,46 +59,49 @@ def run(test, params, env):
             test.error("Can't get device info from qtree result.")
 
         for index, option in enumerate(options):
-            option_regex = r"%s\s+=\s+(\w+)" % option
+            option_regex = rf"{option}\s+=\s+(\w+)"
             option_value = re.findall(option_regex, dev_info[0], re.M)
             if not option_value:
                 test.log.debug("dev info in qtree: %s", dev_info[0])
                 test.error("Can't get the property info from qtree result")
             if option_value[0] not in convert_dict[properties[index]]:
-                msg = "'%s' value get '%s', " % (option, option_value)
-                msg += "expect value '%s'" % convert_dict[properties[index]]
+                msg = f"'{option}' value get '{option_value}', "
+                msg += f"expect value '{convert_dict[properties[index]]}'"
                 test.log.debug(msg)
-                test.fail("Properity bit for %s is wrong." % option)
+                test.fail(f"Properity bit for {option} is wrong.")
 
             test.log.info("Properity bit in qtree is right for %s.", option)
             if params.get("check_in_guest", "yes") == "yes":
-                if params.get('machine_type').startswith("s390"):
-                    id_pattern = \
-                        ccw_id_pattern + re.findall(
-                            'dev:virtio-scsi-ccw.*\n''.*\n.*\n.*\ndev_id=\"'
-                            'fe.0.(.*?)\"', qtree_info.replace(' ', ''))[0]
+                if params.get("machine_type").startswith("s390"):
+                    id_pattern = (
+                        ccw_id_pattern
+                        + re.findall(
+                            "dev:virtio-scsi-ccw.*\n"
+                            '.*\n.*\n.*\ndev_id="'
+                            'fe.0.(.*?)"',
+                            qtree_info.replace(" ", ""),
+                        )[0]
+                    )
                     ccw_info = session.cmd_output("lscss")
                     ccw_n = re.findall(id_pattern, ccw_info)
                     if not ccw_n:
                         test.error("Can't get the ccw id for device")
-                    cmd = "cat /sys/bus/ccw/devices/%s/" % ccw_n[0]
+                    cmd = f"cat /sys/bus/ccw/devices/{ccw_n[0]}/"
                 else:
                     pci_info = session.cmd_output("lspci -n")
                     pci_n = re.findall(pci_id_pattern, pci_info)
                     if not pci_n:
                         test.error("Can't get the pci id for device")
-                    cmd = "cat /sys/bus/pci/devices/0000:%s/" % pci_n[0]
+                    cmd = f"cat /sys/bus/pci/devices/0000:{pci_n[0]}/"
                 cmd += "virtio*/features"
                 bitstr = session.cmd_output(cmd)
                 bitstr = re.findall("[01]+", bitstr)[-1]
 
                 if bitstr[int(options_offset[index])] != properties[index]:
-                    msg = "bit string in guest: %s" % bitstr
-                    msg += "expect bit string: %s" % properties[index]
+                    msg = f"bit string in guest: {bitstr}"
+                    msg += f"expect bit string: {properties[index]}"
                     test.log.debug(msg)
-                    test.fail("Properity bit for %s is wrong"
-                              " inside guest." % option)
-            test.log.info("Properity bit in qtree is right for %s"
-                          " in guest.", option)
+                    test.fail(f"Properity bit for {option} is wrong" " inside guest.")
+            test.log.info("Properity bit in qtree is right for %s" " in guest.", option)
         session.close()
         vm.destroy()

@@ -25,13 +25,14 @@ def run(test, params, env):
 
         # Set up guest environment
         cpuid_pkg = params.get("cpuid_pkg")
-        if session.cmd_status("rpm -qa|grep %s" % cpuid_pkg):
+        if session.cmd_status(f"rpm -qa|grep {cpuid_pkg}"):
             try:
                 session.cmd_output_safe(params.get("repo_install_cmd"))
-                session.cmd_status("yum -y install %s" % cpuid_pkg)
+                session.cmd_status(f"yum -y install {cpuid_pkg}")
             except Exception:
-                test.cancel("Fail to install package cpuid, please retest"
-                            "this case again.")
+                test.cancel(
+                    "Fail to install package cpuid, please retest" "this case again."
+                )
 
         error_context.context("Check the sgx CPUID features", test.log.info)
         check_cpuid_entry_cmd = params.get("cpuid_entry_cmd")
@@ -39,15 +40,17 @@ def run(test, params, env):
         for i in sgx_features_list:
             cmd = params.get("check_cpuid_sgx_cmd").format(sgx_cpu_features=i)
             if session.cmd_status(cmd):
-                test.fail("Fail to verify sgx feature %s " % i)
+                test.fail(f"Fail to verify sgx feature {i} ")
         if params.get("cpuid_entry_cmd"):
-            error_context.context("Check the corresponding CPUID entries with"
-                                  "sgx cpu flags", test.log.info)
+            error_context.context(
+                "Check the corresponding CPUID entries with" "sgx cpu flags",
+                test.log.info,
+            )
             output = session.cmd_output(check_cpuid_entry_cmd)
-            eax_value = output.splitlines()[-1].split()[2].split('0x')[-1]
-            eax_value = bin(int(eax_value, 16)).split('0b')[-1]
-            if eax_value[-5] != '1':
-                test.fail('CPUID 0x12.0x1.EAX bit 4 is 0')
+            eax_value = output.splitlines()[-1].split()[2].split("0x")[-1]
+            eax_value = bin(int(eax_value, 16)).split("0b")[-1]
+            if eax_value[-5] != "1":
+                test.fail("CPUID 0x12.0x1.EAX bit 4 is 0")
     finally:
         session.close()
     vm.destroy()

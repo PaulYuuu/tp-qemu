@@ -9,7 +9,7 @@ class BlockdevStreamVMRebootTest(BlockdevStreamParallelTest):
         self.main_vm.reboot(method=reboot_method)
 
     def do_test(self):
-        super(BlockdevStreamVMRebootTest, self).do_test()
+        super().do_test()
         self.clone_vm.destroy()
         self.remove_files_from_system_image()
 

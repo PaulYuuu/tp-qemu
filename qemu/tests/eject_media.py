@@ -1,10 +1,10 @@
 import time
 
-from virttest import error_context
-from provider.cdrom import QMPEventCheckCDEject, QMPEventCheckCDChange
-from virttest import data_dir
+from virttest import data_dir, error_context
 from virttest.qemu_capabilities import Flags
 from virttest.qemu_storage import QemuImg, get_image_json
+
+from provider.cdrom import QMPEventCheckCDChange, QMPEventCheckCDEject
 
 
 @error_context.context_aware
@@ -39,7 +39,7 @@ def run(test, params, env):
         if vm.check_capability(Flags.BLOCKDEV):
             for info_dict in vm.monitor.info("block"):
                 if device_name in str(info_dict):
-                    qdev = info_dict['qdev']
+                    qdev = info_dict["qdev"]
                     break
             vm.monitor.blockdev_open_tray(qdev, force)
             return vm.monitor.blockdev_remove_medium(qdev)
@@ -50,7 +50,7 @@ def run(test, params, env):
     p_dict = {"file": orig_img_name}
     device_name = vm.get_block(p_dict)
     if device_name is None:
-        msg = "Fail to get device using image %s" % orig_img_name
+        msg = f"Fail to get device using image {orig_img_name}"
         test.fail(msg)
 
     eject_check = QMPEventCheckCDEject(vm, device_name)
@@ -61,11 +61,10 @@ def run(test, params, env):
     with eject_check:
         vm.eject_cdrom(device_name, force=True)
     if check_block(orig_img_name):
-        test.fail("Fail to eject cdrom %s. " % orig_img_name)
+        test.fail(f"Fail to eject cdrom {orig_img_name}. ")
 
     # eject second time
-    error_context.context("Eject original device for second time",
-                          test.log.info)
+    error_context.context("Eject original device for second time", test.log.info)
     with eject_check:
         vm.eject_cdrom(device_name)
 
@@ -75,48 +74,50 @@ def run(test, params, env):
     with change_check:
         vm.change_media(device_name, new_img_name)
     if not check_block(new_img_name):
-        test.fail("Fail to change cdrom to %s." % new_img_name)
+        test.fail(f"Fail to change cdrom to {new_img_name}.")
 
     # eject after change
-    error_context.context("Eject device after add new image by change command",
-                          test.log.info)
+    error_context.context(
+        "Eject device after add new image by change command", test.log.info
+    )
     with eject_check:
         vm.eject_cdrom(device_name, True)
     if check_block(new_img_name):
-        test.fail("Fail to eject cdrom %s." % orig_img_name)
+        test.fail(f"Fail to eject cdrom {orig_img_name}.")
 
     # change back to orig_img_name
-    error_context.context("Insert %s to device %s" % (orig_img_name,
-                                                      device_name),
-                          test.log.info)
+    error_context.context(
+        f"Insert {orig_img_name} to device {device_name}", test.log.info
+    )
     with change_check:
         vm.change_media(device_name, orig_img_name)
     if not check_block(orig_img_name):
-        test.fail("Fail to change cdrom to %s." % orig_img_name)
+        test.fail(f"Fail to change cdrom to {orig_img_name}.")
 
-    error_context.context("Eject device after add org image by change command",
-                          test.log.info)
+    error_context.context(
+        "Eject device after add org image by change command", test.log.info
+    )
     with eject_check:
         vm.eject_cdrom(device_name, True)
     # change again
-    error_context.context("Insert %s to device %s" % (new_img_name,
-                                                      device_name),
-                          test.log.info)
+    error_context.context(
+        f"Insert {new_img_name} to device {device_name}", test.log.info
+    )
     with change_check:
         vm.change_media(device_name, new_img_name)
     if not check_block(new_img_name):
-        test.fail("Fail to change cdrom to %s." % new_img_name)
+        test.fail(f"Fail to change cdrom to {new_img_name}.")
 
     # eject non-removable
     error_context.context("Try to eject non-removable device", test.log.info)
     p_dict = {"removable": False}
     device_name = vm.get_block(p_dict)
     if vm.check_capability(Flags.BLOCKDEV):
-        img_tag = params['images'].split()[0]
+        img_tag = params["images"].split()[0]
         root_dir = data_dir.get_data_dir()
         sys_image = QemuImg(params, root_dir, img_tag)
         filename = sys_image.image_filename
-        if sys_image.image_format == 'luks':
+        if sys_image.image_format == "luks":
             filename = get_image_json(img_tag, params, root_dir)
         device_name = vm.get_block({"filename": filename})
     if device_name is None:

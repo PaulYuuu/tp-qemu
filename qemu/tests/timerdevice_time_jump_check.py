@@ -1,9 +1,7 @@
 import time
 
+from avocado.utils import cpu, process
 from virttest import error_context
-
-from avocado.utils import process
-from avocado.utils import cpu
 
 
 @error_context.context_aware
@@ -23,8 +21,9 @@ def run(test, params, env):
     vm = env.get_vm(params["main_vm"])
     session = vm.wait_for_login()
 
-    error_context.context("Check the clock source currently used on guest",
-                          test.log.info)
+    error_context.context(
+        "Check the clock source currently used on guest", test.log.info
+    )
     cmd = "cat /sys/devices/system/clocksource/"
     cmd += "clocksource0/current_clocksource"
     test.log.info("%s is current clocksource.", session.cmd_output(cmd))
@@ -39,7 +38,7 @@ def run(test, params, env):
     cpu_pin_list = list(zip(vm.vcpu_threads, host_cpu_list))
 
     for vcpu, pcpu in cpu_pin_list:
-        process.system("taskset -p -c %s %s" % (pcpu, vcpu))
+        process.system(f"taskset -p -c {pcpu} {vcpu}")
 
     check_cmd = params["check_cmd"]
     output = str(session.cmd_output(check_cmd)).splitlines()
@@ -52,7 +51,7 @@ def run(test, params, env):
         time_list.append(etime)
     for idx, _ in enumerate(time_list):
         if idx < len(time_list) - 1:
-            if _ == time_list[idx+1] or (_ + 1) == time_list[idx+1]:
+            if _ == time_list[idx + 1] or (_ + 1) == time_list[idx + 1]:
                 continue
             else:
                 test.fail("Test fail, time jumps backward or forward on guest")

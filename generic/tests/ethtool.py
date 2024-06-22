@@ -2,11 +2,7 @@ import re
 
 import aexpect
 from avocado.utils import crypto, process
-
-from virttest import utils_net
-from virttest import utils_misc
-from virttest import remote
-from virttest import error_context
+from virttest import error_context, remote, utils_misc, utils_net
 
 
 @error_context.context_aware
@@ -36,23 +32,23 @@ def run(test, params, env):
         find a way to get it installed using yum/apt-get/
         whatever
     """
+
     def ethtool_get(session):
         feature_pattern = {
-            'tx': 'tx.*checksumming',
-            'rx': 'rx.*checksumming',
-            'sg': 'scatter.*gather',
-            'tso': 'tcp.*segmentation.*offload',
-            'gso': 'generic.*segmentation.*offload',
-            'gro': 'generic.*receive.*offload',
-            'lro': 'large.*receive.*offload',
+            "tx": "tx.*checksumming",
+            "rx": "rx.*checksumming",
+            "sg": "scatter.*gather",
+            "tso": "tcp.*segmentation.*offload",
+            "gso": "generic.*segmentation.*offload",
+            "gro": "generic.*receive.*offload",
+            "lro": "large.*receive.*offload",
         }
 
-        o = session.cmd("ethtool -k %s" % ethname)
+        o = session.cmd(f"ethtool -k {ethname}")
         status = {}
         for f in feature_pattern.keys():
             try:
-                temp = re.findall(
-                    "%s: (.*)" % feature_pattern.get(f), o)[0]
+                temp = re.findall(f"{feature_pattern.get(f)}: (.*)", o)[0]
                 if temp.find("[fixed]") != -1:
                     test.log.debug("%s is fixed", f)
                     continue
@@ -71,23 +67,25 @@ def run(test, params, env):
         :param status: New status will be changed to
         """
         txt = "Set offload status for device "
-        txt += "'%s': %s" % (ethname, str(status))
+        txt += f"'{ethname}': {str(status)}"
         error_context.context(txt, test.log.info)
 
-        cmd = "ethtool -K %s " % ethname
-        cmd += " ".join([o + ' ' + s for o, s in status.items()])
-        err_msg = "Failed to set offload status for device '%s'" % ethname
+        cmd = f"ethtool -K {ethname} "
+        cmd += " ".join([o + " " + s for o, s in status.items()])
+        err_msg = f"Failed to set offload status for device '{ethname}'"
         try:
             session.cmd_output_safe(cmd)
         except aexpect.ShellCmdError as e:
             test.log.error("%s, detail: %s", err_msg, e)
             return False
 
-        curr_status = dict((k, v) for k, v in ethtool_get(session).items()
-                           if k in status.keys())
+        curr_status = dict(
+            (k, v) for k, v in ethtool_get(session).items() if k in status.keys()
+        )
         if curr_status != status:
-            test.log.error("%s, got: '%s', expect: '%s'", err_msg,
-                           str(curr_status), str(status))
+            test.log.error(
+                "%s, got: '%s', expect: '%s'", err_msg, str(curr_status), str(status)
+            )
             return False
 
         return True
@@ -107,7 +105,7 @@ def run(test, params, env):
         error_context.context(txt, test.log.info)
         host_result = crypto.hash_file(name, algorithm="md5")
         try:
-            o = session.cmd_output("md5sum %s" % name)
+            o = session.cmd_output(f"md5sum {name}")
             guest_result = re.findall(r"\w+", o)[0]
         except IndexError:
             test.log.error("Could not get file md5sum in guest")
@@ -124,51 +122,54 @@ def run(test, params, env):
         :return: Tuple (status, error msg/tcpdump result)
         """
         sess = vm.wait_for_login(timeout=login_timeout)
-        session.cmd_output("rm -rf %s" % filename)
-        dd_cmd = ("dd if=/dev/urandom of=%s bs=1M count=%s" %
-                  (filename, params.get("filesize")))
-        failure = (False, "Failed to create file using dd, cmd: %s" % dd_cmd)
-        txt = "Creating file in source host, cmd: %s" % dd_cmd
+        session.cmd_output(f"rm -rf {filename}")
+        dd_cmd = "dd if=/dev/urandom of={} bs=1M count={}".format(
+            filename,
+            params.get("filesize"),
+        )
+        failure = (False, f"Failed to create file using dd, cmd: {dd_cmd}")
+        txt = f"Creating file in source host, cmd: {dd_cmd}"
         error_context.context(txt, test.log.info)
-        ethname = utils_net.get_linux_ifname(session,
-                                             vm.get_mac_address(0))
-        tcpdump_cmd = "tcpdump -lep -i %s -s 0 tcp -vv port ssh" % ethname
+        ethname = utils_net.get_linux_ifname(session, vm.get_mac_address(0))
+        tcpdump_cmd = f"tcpdump -lep -i {ethname} -s 0 tcp -vv port ssh"
         if src == "guest":
-            tcpdump_cmd += " and src %s" % guest_ip
+            tcpdump_cmd += f" and src {guest_ip}"
             copy_files_func = vm.copy_files_from
             try:
                 sess.cmd_output(dd_cmd, timeout=360)
-            except aexpect.ShellCmdError as e:
+            except aexpect.ShellCmdError:
                 return failure
         else:
-            tcpdump_cmd += " and dst %s" % guest_ip
+            tcpdump_cmd += f" and dst {guest_ip}"
             copy_files_func = vm.copy_files_to
             try:
                 process.system(dd_cmd, shell=True)
-            except process.CmdError as e:
+            except process.CmdError:
                 return failure
 
         # only capture the new tcp port after offload setup
         original_tcp_ports = re.findall(
-            r"tcp.*:(\d+).*%s" % guest_ip,
-            process.system_output("/bin/netstat -nap").decode())
+            rf"tcp.*:(\d+).*{guest_ip}",
+            process.system_output("/bin/netstat -nap").decode(),
+        )
 
         for i in original_tcp_ports:
-            tcpdump_cmd += " and not port %s" % i
+            tcpdump_cmd += f" and not port {i}"
 
-        txt = "Listening traffic using command: %s" % tcpdump_cmd
+        txt = f"Listening traffic using command: {tcpdump_cmd}"
         error_context.context(txt, test.log.info)
         sess.sendline(tcpdump_cmd)
         if not utils_misc.wait_for(
-                lambda: session.cmd_status("pgrep tcpdump") == 0, 30):
+            lambda: session.cmd_status("pgrep tcpdump") == 0, 30
+        ):
             return (False, "Tcpdump process wasn't launched")
 
-        txt = "Transferring file %s from %s" % (filename, src)
+        txt = f"Transferring file {filename} from {src}"
         error_context.context(txt, test.log.info)
         try:
             copy_files_func(filename, filename)
         except remote.SCPError as e:
-            return (False, "File transfer failed (%s)" % e)
+            return (False, f"File transfer failed ({e})")
 
         session.cmd("killall tcpdump")
         try:
@@ -201,8 +202,9 @@ def run(test, params, env):
             return False
         error_context.context("Check if contained large frame", test.log.info)
         # MTU: default IPv4 MTU is 1500 Bytes, ethernet header is 14 Bytes
-        return (status == "on") ^ (len([i for i in re.findall(
-                                   r"length (\d*):", o) if int(i) > mtu]) == 0)
+        return (status == "on") ^ (
+            len([i for i in re.findall(r"length (\d*):", o) if int(i) > mtu]) == 0
+        )
 
     def ro_callback(status="on"):
         s, o = transfer_file("host")
@@ -239,7 +241,14 @@ def run(test, params, env):
         "tx": (tx_callback, (), ()),
         "rx": (rx_callback, (), ()),
         "sg": (tx_callback, ("tx",), ()),
-        "tso": (so_callback, ("tx", "sg",), ("gso",)),
+        "tso": (
+            so_callback,
+            (
+                "tx",
+                "sg",
+            ),
+            ("gso",),
+        ),
         "gso": (so_callback, (), ("tso",)),
         "gro": (ro_callback, ("rx",), ("lro",)),
         "lro": (rx_callback, (), ("gro",)),
@@ -254,15 +263,20 @@ def run(test, params, env):
             offload_stat.update(dict.fromkeys(test_matrix[f_type][1], "on"))
             # lro is fixed for e1000 and e1000e, while trying to exclude
             # lro by setting "lro off", the command of ethtool returns error
-            if not (f_type == "gro" and (vm.virtnet[0].nic_model == "e1000e"
-                                         or vm.virtnet[0].nic_model == "e1000")):
+            if not (
+                f_type == "gro"
+                and (
+                    vm.virtnet[0].nic_model == "e1000e"
+                    or vm.virtnet[0].nic_model == "e1000"
+                )
+            ):
                 offload_stat.update(dict.fromkeys(test_matrix[f_type][2], "off"))
             if not ethtool_set(session, offload_stat):
                 e_msg = "Failed to set offload status"
                 test.log.error(e_msg)
                 failed_tests.append(e_msg)
 
-            txt = "Run callback function %s" % callback.__name__
+            txt = f"Run callback function {callback.__name__}"
             error_context.context(txt, test.log.info)
 
             # Some older kernel versions split packets by GSO
@@ -270,23 +284,23 @@ def run(test, params, env):
             # corrupts our results. Disable check when GSO is
             # enabled.
             if not callback(status="on") and f_type != "gso":
-                e_msg = "Callback failed after enabling %s" % f_type
+                e_msg = f"Callback failed after enabling {f_type}"
                 test.log.error(e_msg)
                 failed_tests.append(e_msg)
 
             if not ethtool_set(session, {f_type: "off"}):
-                e_msg = "Failed to disable %s" % f_type
+                e_msg = f"Failed to disable {f_type}"
                 test.log.error(e_msg)
                 failed_tests.append(e_msg)
-            txt = "Run callback function %s" % callback.__name__
+            txt = f"Run callback function {callback.__name__}"
             error_context.context(txt, test.log.info)
             if not callback(status="off"):
-                e_msg = "Callback failed after disabling %s" % f_type
+                e_msg = f"Callback failed after disabling {f_type}"
                 test.log.error(e_msg)
                 failed_tests.append(e_msg)
 
         if failed_tests:
-            test.fail("Failed tests: %s" % failed_tests)
+            test.fail(f"Failed tests: {failed_tests}")
 
     finally:
         try:
@@ -299,5 +313,4 @@ def run(test, params, env):
             session = vm.wait_for_serial_login(timeout=login_timeout)
             ethtool_restore_params(session, pretest_status)
         except Exception as detail:
-            test.log.warn("Could not restore parameter of"
-                          " eth card: '%s'", detail)
+            test.log.warn("Could not restore parameter of" " eth card: '%s'", detail)

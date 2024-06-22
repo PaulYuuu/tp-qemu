@@ -2,9 +2,7 @@ import re
 import time
 
 from avocado.utils import process
-from virttest import utils_net
-from virttest import env_process
-from virttest import error_context
+from virttest import env_process, error_context, utils_net
 
 
 @error_context.context_aware
@@ -25,6 +23,7 @@ def run(test, params, env):
     :param params: Dictionary with the test parameters
     :param env: Dictionary with test environment.
     """
+
     def mirror_bridge_to_tap(tap_name):
         """
         Mirror all packages on bridge to tap device connected to vm vNIC
@@ -46,8 +45,10 @@ def run(test, params, env):
         port = re.findall("qdisc prio (.*):", output)[0]
 
         tc_filter_show_dev_port = params.get("tc_filter_show_dev_port") % port
-        tc_filter_replace_dev_port = params.get(
-            "tc_filter_replace_dev_port") % (port, tap_name)
+        tc_filter_replace_dev_port = params.get("tc_filter_replace_dev_port") % (
+            port,
+            tap_name,
+        )
         process.system_output(tc_filter_show_dev_port)
         process.system_output(tc_filter_replace_dev_port)
 
@@ -62,10 +63,8 @@ def run(test, params, env):
 
         :return: bool type result.
         """
-        rex_request = r".*IP %s > %s.*ICMP echo request.*" % (
-            src_ip, des_ip)
-        rex_reply = r".*IP %s > %s.*ICMP echo reply.*" % (
-            des_ip, src_ip)
+        rex_request = rf".*IP {src_ip} > {des_ip}.*ICMP echo request.*"
+        rex_reply = rf".*IP {des_ip} > {src_ip}.*ICMP echo reply.*"
         request_num = 0
         reply_num = 0
         for idx, _ in enumerate(output.splitlines()):
@@ -75,11 +74,15 @@ def run(test, params, env):
                 reply_num += 1
 
         if request_num != ping_count or reply_num != ping_count:
-            test.log.debug("Unexpected request or reply number. "
-                           "current request number is: %d, "
-                           "current reply number is: %d, "
-                           "expected request and reply number is: %d. ",
-                           request_num, reply_num, ping_count)
+            test.log.debug(
+                "Unexpected request or reply number. "
+                "current request number is: %d, "
+                "current reply number is: %d, "
+                "expected request and reply number is: %d. ",
+                request_num,
+                reply_num,
+                ping_count,
+            )
             return False
         return True
 
@@ -104,7 +107,7 @@ def run(test, params, env):
     br_iface.up()
     br_iface.promisc_on()
 
-    params['netdst'] = brname
+    params["netdst"] = brname
     params["start_vm"] = "yes"
     vm_names = params.get("vms").split()
     vms_info = {}
@@ -113,15 +116,15 @@ def run(test, params, env):
             env_process.preprocess_vm(test, params, env, vm_name)
             vm = env.get_vm(vm_name)
             vm.verify_alive()
-            ip = params["ip_%s" % vm_name]
+            ip = params[f"ip_{vm_name}"]
             mac = vm.get_mac_address()
             serial_session = vm.wait_for_serial_login(timeout=login_timeout)
             serial_session.cmd_output_safe(stop_NM_cmd)
             serial_session.cmd_output_safe(stop_firewall_cmd)
             nic_name = utils_net.get_linux_ifname(serial_session, mac)
             ifname = vm.get_ifname()
-            ifset_cmd = "ip addr add %s/%s dev %s" % (ip, net_mask, nic_name)
-            ifup_cmd = "ip link set dev %s up" % nic_name
+            ifset_cmd = f"ip addr add {ip}/{net_mask} dev {nic_name}"
+            ifup_cmd = f"ip link set dev {nic_name} up"
             serial_session.cmd_output_safe(ifset_cmd)
             serial_session.cmd_output_safe(ifup_cmd)
             vms_info[vm_name] = [vm, ifname, ip, serial_session, nic_name]
@@ -131,30 +134,28 @@ def run(test, params, env):
         vm_des = vm_names[2]
 
         error_context.context(
-            "Mirror all packets on bridge to tap device conncted to %s"
-            % vm_mirror)
+            f"Mirror all packets on bridge to tap device conncted to {vm_mirror}"
+        )
         tap_ifname = vms_info[vm_mirror][0].virtnet[0].ifname
         mirror_bridge_to_tap(tap_ifname)
 
-        error_context.context("Start tcpdump in %s"
-                              % vm_mirror, test.log.info)
+        error_context.context(f"Start tcpdump in {vm_mirror}", test.log.info)
         tcpdump_cmd = tcpdump_cmd % (vms_info[vm_des][2], tcpdump_log)
         test.log.info("tcpdump command: %s", tcpdump_cmd)
         vms_info[vm_mirror][3].sendline(tcpdump_cmd)
         time.sleep(5)
 
-        error_context.context("Start ping from %s to %s" %
-                              (vm_src, vm_des), test.log.info)
+        error_context.context(f"Start ping from {vm_src} to {vm_des}", test.log.info)
         ping_cmd = params.get("ping_cmd") % vms_info[vm_des][2]
         vms_info[vm_src][3].cmd(ping_cmd, timeout=150)
 
         error_context.context("Check tcpdump results", test.log.info)
         time.sleep(5)
         vms_info[vm_mirror][3].cmd_output_safe("pkill tcpdump")
-        tcpdump_content = vms_info[vm_mirror][3].cmd_output(
-            get_tcpdump_log_cmd).strip()
-        if not check_tcpdump(tcpdump_content, vms_info[vm_src][2],
-                             vms_info[vm_des][2], ping_count):
+        tcpdump_content = vms_info[vm_mirror][3].cmd_output(get_tcpdump_log_cmd).strip()
+        if not check_tcpdump(
+            tcpdump_content, vms_info[vm_src][2], vms_info[vm_des][2], ping_count
+        ):
             test.fail("tcpdump results are not expected, mirror fail.")
     finally:
         for vm in vms_info:

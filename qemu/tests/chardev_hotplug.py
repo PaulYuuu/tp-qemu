@@ -1,9 +1,7 @@
 import os
 
 from avocado.utils import process
-
-from virttest import arch
-from virttest import error_context
+from virttest import arch, error_context
 
 
 @error_context.context_aware
@@ -32,30 +30,30 @@ def run(test, params, env):
         test.log.debug("[qmp reply] %s", reply)
         if "error" in reply:
             if reply["error"]["class"] == "CommandNotFound":
-                test.cancel("qmp command %s not supported" % cmd)
+                test.cancel(f"qmp command {cmd} not supported")
             else:
-                test.fail("qmp error: %s" % reply["error"]["desc"])
+                test.fail("qmp error: {}".format(reply["error"]["desc"]))
         return reply
 
     def pci_serial_add(vm, name, addr, chardev):
-        reply = cmd_qmp_log(vm, 'device_add', {'driver': 'pci-serial',
-                                               'id': name,
-                                               'addr': addr,
-                                               'chardev': chardev})
+        reply = cmd_qmp_log(
+            vm,
+            "device_add",
+            {"driver": "pci-serial", "id": name, "addr": addr, "chardev": chardev},
+        )
         return reply
 
     def device_del(vm, name):
-        reply = cmd_qmp_log(vm, 'device_del', {'id': name})
+        reply = cmd_qmp_log(vm, "device_del", {"id": name})
         return reply
 
     def chardev_add(vm, name, kind, args):
-        backend = {'type': kind, 'data': args}
-        reply = cmd_qmp_log(vm, 'chardev-add', {'id': name,
-                                                'backend': backend})
+        backend = {"type": kind, "data": args}
+        reply = cmd_qmp_log(vm, "chardev-add", {"id": name, "backend": backend})
         return reply
 
     def chardev_del(vm, name):
-        reply = cmd_qmp_log(vm, 'chardev-remove', {'id': name})
+        reply = cmd_qmp_log(vm, "chardev-remove", {"id": name})
         return reply
 
     def chardev_use(vm, name):
@@ -65,19 +63,19 @@ def run(test, params, env):
         pci_serial_add(vm, "test-serial", addr, name)
         session.cmd_status("sleep 1")
         session.cmd_status("udevadm settle")
-        msg_add = session.cmd("dmesg -c | grep %s" % addr)
+        msg_add = session.cmd(f"dmesg -c | grep {addr}")
         for line in msg_add.splitlines():
             test.log.debug("[dmesg add] %s", line)
-        lspci = session.cmd("lspci -vs %s" % addr)
+        lspci = session.cmd(f"lspci -vs {addr}")
         for line in lspci.splitlines():
             test.log.debug("[lspci] %s", line)
 
         # send message
-        device = session.cmd("ls /sys/bus/pci/devices/*%s/tty" % addr)
+        device = session.cmd(f"ls /sys/bus/pci/devices/*{addr}/tty")
         device = device.strip()
         test.log.info("guest tty device is '%s'", device)
-        session.cmd("test -c /dev/%s" % device)
-        session.cmd("echo 'Hello virttest world' > /dev/%s" % device)
+        session.cmd(f"test -c /dev/{device}")
+        session.cmd(f"echo 'Hello virttest world' > /dev/{device}")
 
         # unplug serial adapter
         device_del(vm, "test-serial")
@@ -91,7 +89,7 @@ def run(test, params, env):
     vm.verify_alive()
     session = vm.wait_for_login()
     session.cmd_status("dmesg -c")
-    ppc_host = 'ppc' in params.get('vm_arch_name', arch.ARCH)
+    ppc_host = "ppc" in params.get("vm_arch_name", arch.ARCH)
 
     error_context.context("Test null chardev", test.log.info)
     chardev_add(vm, "chardev-null", "null", {})
@@ -100,16 +98,16 @@ def run(test, params, env):
     chardev_del(vm, "chardev-null")
 
     error_context.context("Test file chardev", test.log.info)
-    filename = "/tmp/chardev-file-%s" % vm.instance
-    args = {'out': filename}
+    filename = f"/tmp/chardev-file-{vm.instance}"
+    args = {"out": filename}
     chardev_add(vm, "chardev-file", "file", args)
     if not ppc_host:
         chardev_use(vm, "chardev-file")
     chardev_del(vm, "chardev-file")
     if not ppc_host:
-        output = process.system_output("cat %s" % filename).decode()
+        output = process.system_output(f"cat {filename}").decode()
         if output.find("Hello virttest world") == -1:
-            test.fail("Guest message not found [%s]" % output)
+            test.fail(f"Guest message not found [{output}]")
 
     error_context.context("Test pty chardev", test.log.info)
     reply = chardev_add(vm, "chardev-pty", "pty", {})
@@ -121,7 +119,7 @@ def run(test, params, env):
         output = os.read(fd_dst, 256).decode()
         os.close(fd_dst)
         if output.find("Hello virttest world") == -1:
-            test.fail("Guest message not found [%s]" % output)
+            test.fail(f"Guest message not found [{output}]")
     chardev_del(vm, "chardev-pty")
 
     error_context.context("Cleanup", test.log.info)

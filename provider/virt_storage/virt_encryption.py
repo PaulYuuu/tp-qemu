@@ -1,9 +1,9 @@
 import json
+
 from .virt_secret import secret_admin
 
 
-class VolumeEncryption(object):
-
+class VolumeEncryption:
     def __init__(self, encrypt_format=None, secret=None):
         self.format = encrypt_format
         self.secret = secret
@@ -19,7 +19,7 @@ class VolumeEncryption(object):
         return "'%s'" % {"format": self.format, "key-secret": self.secret.name}
 
     def __str__(self):
-        return "%s: %s" % (self.__class__.__name__, self.format)
+        return f"{self.__class__.__name__}: {self.format}"
 
     @classmethod
     def encryption_define_by_params(cls, params):
@@ -33,7 +33,6 @@ class VolumeEncryption(object):
         secret = secret_admin.find_secret_by_name(secret_name)
         if not secret:
             secret_params = params.object_params(secret_name)
-            secret = secret_admin.secret_define_by_params(
-                secret_name, secret_params)
+            secret = secret_admin.secret_define_by_params(secret_name, secret_params)
         instance.secret = secret
         return instance

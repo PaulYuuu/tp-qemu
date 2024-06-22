@@ -1,5 +1,4 @@
-class PoolTarget(object):
-
+class PoolTarget:
     def __init__(self):
         self.path = None
         self.format = None
@@ -12,4 +11,4 @@ class PoolTarget(object):
         return instance
 
     def __str__(self):
-        return "%s: %s" % (self.__class__.__name__, self.path)
+        return f"{self.__class__.__name__}: {self.path}"

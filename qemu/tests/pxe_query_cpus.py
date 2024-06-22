@@ -1,29 +1,27 @@
+import logging
 import os
 import time
-import logging
 
 import aexpect
 from avocado.utils import process
+from virttest import cpu, env_process, error_context, qemu_monitor, utils_misc, virt_vm
 
-from virttest import error_context
-from virttest import utils_misc
-from virttest import cpu
-from virttest import qemu_monitor
-from virttest import env_process
-from virttest import virt_vm
-
-LOG_JOB = logging.getLogger('avocado.test')
+LOG_JOB = logging.getLogger("avocado.test")
 
 
 @error_context.context_aware
 def _capture_tftp(test, vm, timeout):
     error_context.context("Snoop packet in the tap device", LOG_JOB.info)
-    output = aexpect.run_fg("tcpdump -nli %s port '(tftp or bootps)'" % vm.get_ifname(),
-                            LOG_JOB.debug, "(pxe capture) ", timeout)[1]
+    output = aexpect.run_fg(
+        f"tcpdump -nli {vm.get_ifname()} port '(tftp or bootps)'",
+        LOG_JOB.debug,
+        "(pxe capture) ",
+        timeout,
+    )[1]
 
     error_context.context("Analyzing the tcpdump result", LOG_JOB.info)
     if "tftp" not in output:
-        test.fail("Couldn't find any TFTP packets after %s seconds" % timeout)
+        test.fail(f"Couldn't find any TFTP packets after {timeout} seconds")
     LOG_JOB.info("Found TFTP packet")
 
 
@@ -34,7 +32,7 @@ def _kill_vms(params, env):
             env.unregister_vm(vm.name)
 
     qemu_bin = os.path.basename(params["qemu_binary"])
-    process.run("killall -g %s" % qemu_bin, ignore_status=True)
+    process.run(f"killall -g {qemu_bin}", ignore_status=True)
     time.sleep(5)
 
 
@@ -56,16 +54,16 @@ def run(test, params, env):
 
     error_context.context("Enable ept/npt", test.log.info)
     try:
-        flag = list(filter(lambda x: x in cpu.get_cpu_flags(),
-                           ['ept', 'npt']))[0]
+        flag = list(filter(lambda x: x in cpu.get_cpu_flags(), ["ept", "npt"]))[0]
     except IndexError:
         test.log.info("Host doesn't support ept/npt, skip the configuration")
     else:
-        enable_mmu_cmd = params["enable_mmu_cmd_%s" % flag]
-        check_mmu_cmd = params["check_mmu_cmd_%s" % flag]
-        restore_mmu_cmd = params["restore_mmu_cmd_%s" % flag]
-        status = process.system(check_mmu_cmd, timeout=120, ignore_status=True,
-                                shell=True)
+        enable_mmu_cmd = params[f"enable_mmu_cmd_{flag}"]
+        check_mmu_cmd = params[f"check_mmu_cmd_{flag}"]
+        restore_mmu_cmd = params[f"restore_mmu_cmd_{flag}"]
+        status = process.system(
+            check_mmu_cmd, timeout=120, ignore_status=True, shell=True
+        )
         if status != 0:
             _kill_vms(params, env)
             process.run(enable_mmu_cmd, shell=True)
@@ -88,13 +86,16 @@ def run(test, params, env):
             count += 1
             try:
                 vm.monitor.info("cpus", debug=False)
-                if params.get('machine_type').startswith("s390"):
-                    if vm.monitor.get_status()['status'] in ['running',
-                                                             'guest-panicked']:
+                if params.get("machine_type").startswith("s390"):
+                    if vm.monitor.get_status()["status"] in [
+                        "running",
+                        "guest-panicked",
+                    ]:
                         pass
                     else:
-                        raise virt_vm.VMStatusError('Unexpected VM status: "%s"'
-                                                    % vm.monitor.get_status())
+                        raise virt_vm.VMStatusError(
+                            f'Unexpected VM status: "{vm.monitor.get_status()}"'
+                        )
                 else:
                     vm.verify_status("running")
                 if not bg.is_alive():

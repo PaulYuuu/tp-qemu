@@ -1,6 +1,5 @@
 from avocado import fail_on
 from avocado.utils import process
-
 from virttest import data_dir
 from virttest.qemu_io import QemuIOSystem
 from virttest.qemu_storage import QemuImg
@@ -20,13 +19,14 @@ def run(test, params, env):
     :param params: Dictionary with the test parameters.
     :param env: Dictionary with test environment.
     """
+
     def _qemu_io(img, cmd):
         """Run qemu-io cmd to a given img."""
         test.log.info("Run qemu-io %s", img.image_filename)
         try:
             QemuIOSystem(test, params, img.image_filename).cmd_output(cmd, 120)
         except process.CmdError as err:
-            test.fail("qemu-io to '%s' failed: %s." % (img.image_filename, err))
+            test.fail(f"qemu-io to '{img.image_filename}' failed: {err}.")
 
     images = params["image_chain"].split()
     root_dir = data_dir.get_data_dir()

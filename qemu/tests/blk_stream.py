@@ -1,26 +1,26 @@
-from virttest import error_context
-from virttest import utils_misc
+from virttest import error_context, utils_misc
 
 from qemu.tests import block_copy
 
 
 class BlockStream(block_copy.BlockCopy):
-
     """
     base class for block stream tests;
     """
 
     def __init__(self, test, params, env, tag):
-        super(BlockStream, self).__init__(test, params, env, tag)
+        super().__init__(test, params, env, tag)
         self.base_image = None
         self.ext_args = {}
 
     def parser_test_args(self):
-        default_params = {"wait_finished": "yes",
-                          "snapshot_format": "qcow2",
-                          "snapshot_chain": ""}
+        default_params = {
+            "wait_finished": "yes",
+            "snapshot_format": "qcow2",
+            "snapshot_chain": "",
+        }
         self.default_params.update(default_params)
-        return super(BlockStream, self).parser_test_args()
+        return super().parser_test_args()
 
     @error_context.context_aware
     def start(self):
@@ -36,7 +36,7 @@ class BlockStream(block_copy.BlockCopy):
         if not status:
             self.test.fail("no active job found")
         msg = "block stream job running, "
-        msg += "with limited speed %s B/s" % default_speed
+        msg += f"with limited speed {default_speed} B/s"
         self.test.log.info(msg)
 
     @error_context.context_aware
@@ -54,9 +54,10 @@ class BlockStream(block_copy.BlockCopy):
             device = self.vm.live_snapshot(image_file, snapshot, image_format)
             if device != self.device:
                 image_file = self.get_image_file()
-                self.test.log.info("expect file: %s" % snapshot +
-                                   "opening file: %s" % image_file)
-                self.test.fail("create snapshot '%s' fail" % snapshot)
+                self.test.log.info(
+                    f"expect file: {snapshot}" + f"opening file: {image_file}"
+                )
+                self.test.fail(f"create snapshot '{snapshot}' fail")
             self.trash_files.append(snapshot)
 
     def action_when_streaming(self):

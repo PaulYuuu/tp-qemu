@@ -1,16 +1,14 @@
 """qemu-img related functions."""
-import avocado
+
 import contextlib
 import logging
 import tempfile
 
-from avocado.utils import path
-from virttest import env_process
-from virttest import utils_misc
+import avocado
+from avocado.utils import path, process
+from virttest import env_process, utils_misc
 
-from avocado.utils import process
-
-LOG_JOB = logging.getLogger('avocado.test')
+LOG_JOB = logging.getLogger("avocado.test")
 
 
 def boot_vm_with_images(test, params, env, images=None, vm_name=None):
@@ -48,22 +46,23 @@ def save_random_file_to_vm(vm, save_path, count, sync_bin, blocksize=512):
     sync_bin = utils_misc.set_winutils_letter(session, sync_bin)
     status, out = session.cmd_status_output(sync_bin, timeout=240)
     if status:
-        raise EnvironmentError("Fail to execute %s: %s" % (sync_bin, out))
+        raise OSError(f"Fail to execute {sync_bin}: {out}")
     session.close()
 
 
 @avocado.fail_on(exceptions=(ValueError,))
 def check_md5sum(filepath, md5sum_bin, session, md5_value_to_check=None):
     """Check md5sum value of the file specified."""
-    md5cmd = "%s %s" % (md5sum_bin, filepath)
+    md5cmd = f"{md5sum_bin} {filepath}"
     status, out = session.cmd_status_output(md5cmd, timeout=240)
     if status:
-        raise EnvironmentError("Fail to get md5 value of file: %s" % filepath)
+        raise OSError(f"Fail to get md5 value of file: {filepath}")
     md5_value = out.split()[0]
     LOG_JOB.debug("md5sum value of %s: %s", filepath, md5_value)
     if md5_value_to_check and md5_value != md5_value_to_check:
-        raise ValueError("md5 values mismatch, got: %s, expected: %s" %
-                         (md5_value, md5_value_to_check))
+        raise ValueError(
+            f"md5 values mismatch, got: {md5_value}, expected: {md5_value_to_check}"
+        )
     return md5_value
 
 

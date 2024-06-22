@@ -1,5 +1,5 @@
-import time
 import re
+import time
 
 from virttest import error_context
 
@@ -13,6 +13,7 @@ def run(test, params, env):
     :param params: Dictionary with the test parameters
     :param env: Dictionary with test environment.
     """
+
     @error_context.context_aware
     def usb_dev_hotplug():
         error_context.context("Plugin usb device", test.log.info)
@@ -20,19 +21,20 @@ def run(test, params, env):
         reply = vm.monitor.cmd(monitor_add)
         if params.get("usb_negative_test") == "yes":
             if params["usb_reply_msg"] not in reply:
-                test.fail("Could not get expected warning"
-                          " msg in negative test, monitor"
-                          " returns: '%s'" % reply)
+                test.fail(
+                    "Could not get expected warning"
+                    " msg in negative test, monitor"
+                    f" returns: '{reply}'"
+                )
             return
 
         monitor_pattern = "Parameter 'driver' expects a driver name"
         if reply.find(monitor_pattern) != -1:
-            test.cancel("usb device %s not available" % device)
+            test.cancel(f"usb device {device} not available")
 
     @error_context.context_aware
     def usb_dev_verify():
-        error_context.context("Verify usb device is pluged on guest",
-                              test.log.info)
+        error_context.context("Verify usb device is pluged on guest", test.log.info)
         time.sleep(sleep_time)
         session.cmd(udev_refresh_cmd)
         messages_add = session.cmd(query_syslog_cmd)
@@ -57,7 +59,7 @@ def run(test, params, env):
     product_id = params["product_id"]
 
     # compose strings
-    monitor_add = "device_add %s" % device
+    monitor_add = f"device_add {device}"
     monitor_add += ",bus=usbtest.0,id=usbplugdev"
     monitor_del = "device_del usbplugdev"
     match_add = params.get("usb_match_add", "idVendor=%s, idProduct=%s")

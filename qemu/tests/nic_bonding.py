@@ -1,12 +1,10 @@
-import time
 import os
 import random
+import time
 
 import aexpect
-
 from avocado.utils import crypto, process
-from virttest import utils_net
-from virttest import utils_misc
+from virttest import utils_misc, utils_net
 
 
 def run(test, params, env):
@@ -36,7 +34,8 @@ def run(test, params, env):
 
     ssh_login_cmd = (
         "echo LoginGraceTime 5m  >> /etc/ssh/sshd_config &&"
-        " systemctl restart sshd.service || service sshd restart")
+        " systemctl restart sshd.service || service sshd restart"
+    )
     session_serial.cmd_output_safe(ssh_login_cmd)
 
     # get params of bonding
@@ -45,9 +44,9 @@ def run(test, params, env):
     modprobe_cmd = "modprobe -r bonding; modprobe bonding"
     bonding_params = params.get("bonding_params")
     if bonding_params:
-        modprobe_cmd += " %s" % bonding_params
+        modprobe_cmd += f" {bonding_params}"
     session_serial.cmd_output_safe(modprobe_cmd)
-    session_serial.cmd_output_safe("ip link set dev bond0 addr %s up" % mac)
+    session_serial.cmd_output_safe(f"ip link set dev bond0 addr {mac} up")
     setup_cmd = "ifenslave bond0 " + " ".join(ifnames)
     session_serial.cmd_output_safe(setup_cmd)
     # do a pgrep to check if dhclient has already been running
@@ -64,10 +63,8 @@ def run(test, params, env):
 
     session_serial.cmd_output_safe("dhclient bond0")
     # prepare test data
-    guest_path = os.path.join(tmp_dir + "dst-%s" %
-                              utils_misc.generate_random_string(8))
-    host_path = os.path.join(test.tmpdir, "tmp-%s" %
-                             utils_misc.generate_random_string(8))
+    guest_path = os.path.join(tmp_dir + f"dst-{utils_misc.generate_random_string(8)}")
+    host_path = os.path.join(test.tmpdir, f"tmp-{utils_misc.generate_random_string(8)}")
     test.log.info("Test setup: Creating %dMB file on host", filesize)
     process.run(dd_cmd % host_path, shell=True)
 
@@ -79,7 +76,8 @@ def run(test, params, env):
         test.log.info("md5 value of data original: %s", original_md5)
         test.log.info("Failover test with file transfer")
         transfer_thread = utils_misc.InterruptedThread(
-            vm.copy_files_to, (host_path, guest_path))
+            vm.copy_files_to, (host_path, guest_path)
+        )
         transfer_thread.start()
         try:
             while transfer_thread.is_alive():
@@ -94,11 +92,12 @@ def run(test, params, env):
         else:
             transfer_thread.join()
 
-        test.log.info('Cleaning temp file on host')
+        test.log.info("Cleaning temp file on host")
         os.remove(host_path)
         test.log.info("Failover test 2 with file transfer")
         transfer_thread = utils_misc.InterruptedThread(
-            vm.copy_files_from, (guest_path, host_path))
+            vm.copy_files_from, (guest_path, host_path)
+        )
         transfer_thread.start()
         try:
             nic_num = len(ifnames)
@@ -109,7 +108,9 @@ def run(test, params, env):
                 session_serial.cmd_output_safe(link_set_cmd % (ifnames[up_index], "up"))
                 nic_indexes.remove(up_index)
                 for num in nic_indexes:
-                    session_serial.cmd_output_safe(link_set_cmd % (ifnames[num], "down"))
+                    session_serial.cmd_output_safe(
+                        link_set_cmd % (ifnames[num], "down")
+                    )
                 time.sleep(random.randint(3, 5))
                 up_index += 1
         except aexpect.ShellProcessTerminatedError:
@@ -120,8 +121,7 @@ def run(test, params, env):
         current_md5 = crypto.hash_file(host_path, algorithm="md5")
         test.log.info("md5 value of data current: %s", current_md5)
         if original_md5 != current_md5:
-            test.fail("File changed after transfer host -> guest "
-                      "and guest -> host")
+            test.fail("File changed after transfer host -> guest " "and guest -> host")
 
     finally:
         session_serial.sendline("ifenslave -d bond0 " + " ".join(ifnames))

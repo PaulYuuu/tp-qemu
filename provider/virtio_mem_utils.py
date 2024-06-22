@@ -4,10 +4,10 @@ virtio_mem useful functions.
 This module is meant to reduce code size on virtio_mem cases avoiding
 repeat functions implementation.
 """
+
 import re
 
 from avocado.utils.wait import wait_for
-
 from virttest import error_context
 from virttest.utils_misc import normalize_data_size
 
@@ -132,7 +132,7 @@ def count_memslots(vm, mem_object_id):
     :param mem_object_id: the ID of the memory object device
     """
     output = vm.monitor.info("mtree")
-    return len(set(re.findall(r"(memslot.+%s)" % mem_object_id, output, re.MULTILINE)))
+    return len(set(re.findall(rf"(memslot.+{mem_object_id})", output, re.MULTILINE)))
 
 
 def validate_memslots(expected_memslots, test, vm, mem_object_id, timeout=10):

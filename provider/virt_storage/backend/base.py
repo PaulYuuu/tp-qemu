@@ -1,11 +1,10 @@
 import re
 import uuid
 
-from provider.virt_storage import virt_source
-from provider.virt_storage import virt_target
+from provider.virt_storage import virt_source, virt_target
 
 
-class BaseStoragePool(object):
+class BaseStoragePool:
     TYPE = "none"
 
     def __init__(self, name):
@@ -37,7 +36,8 @@ class BaseStoragePool(object):
         if params.get("source"):
             source_params = params.object_params(params.get("source"))
             inst.source = virt_source.PoolSource.source_define_by_params(
-                params.get("source"), source_params)
+                params.get("source"), source_params
+            )
         inst.set_special_opts_by_params(params)
         return inst
 
@@ -99,12 +99,9 @@ class BaseStoragePool(object):
         :raise:
         """
 
-        matched_volumes = list(filter(
-            lambda x: str(
-                getattr(
-                    x,
-                    attr)) == str(val),
-            self.get_volumes()))
+        matched_volumes = list(
+            filter(lambda x: str(getattr(x, attr)) == str(val), self.get_volumes())
+        )
         return matched_volumes[0] if matched_volumes else None
 
     def get_volumes(self):
@@ -133,4 +130,4 @@ class BaseStoragePool(object):
         return out
 
     def __str__(self):
-        return "%s:%s" % (self.__class__.__name__, self.name)
+        return f"{self.__class__.__name__}:{self.name}"

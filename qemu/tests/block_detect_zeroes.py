@@ -1,11 +1,12 @@
 """blockdev detect-zeroes option test"""
+
 import time
 
-from provider.block_devices_plug import BlockDevicesPlug
-from virttest import utils_misc, utils_disk, storage, data_dir
-
+from virttest import data_dir, storage, utils_disk, utils_misc
 from virttest.utils_misc import get_linux_drive_path
 from virttest.utils_windows.drive import get_disk_props_by_serial_number
+
+from provider.block_devices_plug import BlockDevicesPlug
 
 
 def run(test, params, env):
@@ -30,29 +31,29 @@ def run(test, params, env):
         idx_info = get_disk_props_by_serial_number(session, serial, ["Index"])
         if idx_info:
             return idx_info["Index"]
-        test.fail("Not find expected disk %s" % serial)
+        test.fail(f"Not find expected disk {serial}")
 
     def _check_disk_in_guest(img):
         nonlocal guest_cmd
         os_type = params["os_type"]
         pre_guest_cmd = params.get("pre_guest_cmd")
         post_guest_cmd = params.get("post_guest_cmd")
-        logger.debug("Check disk %s in guest" % img)
-        if os_type == 'windows':
-            img_size = params.get("image_size_%s" % img)
+        logger.debug(f"Check disk {img} in guest")
+        if os_type == "windows":
+            img_size = params.get(f"image_size_{img}")
             cmd = utils_misc.set_winutils_letter(session, guest_cmd)
             disk = _get_window_disk_index_by_serial(img)
             utils_disk.update_windows_disk_attributes(session, disk)
             logger.info("Formatting disk:%s", disk)
-            driver = \
-                utils_disk.configure_empty_disk(session, disk, img_size,
-                                                os_type)[0]
+            driver = utils_disk.configure_empty_disk(session, disk, img_size, os_type)[
+                0
+            ]
             output_path = driver + ":\\test.dat"
             guest_cmd = cmd.format(output_path)
         else:
             driver = get_linux_drive_path(session, img)
             if not driver:
-                test.fail("Can not find disk by %s" % img)
+                test.fail(f"Can not find disk by {img}")
             logger.debug(driver)
             if pre_guest_cmd:
                 pre_guest_cmd = pre_guest_cmd.format(driver)
@@ -60,7 +61,7 @@ def run(test, params, env):
                 session.cmd(pre_guest_cmd)
             if post_guest_cmd:
                 post_guest_cmd = post_guest_cmd.format(driver)
-            output_path = "/home/{}/test.dat".format(driver)
+            output_path = f"/home/{driver}/test.dat"
             guest_cmd = guest_cmd.format(output_path)
 
         logger.debug("Ready execute cmd:" + guest_cmd)
@@ -81,9 +82,10 @@ def run(test, params, env):
     def block_resize_test():
         image_params = params.object_params(data_img)
         image_size = params.get_numeric("new_image_size_stg1")
-        image_filename = storage.get_image_filename(image_params,
-                                                    data_dir.get_data_dir())
-        image_dev = vm.get_block({'file': image_filename})
+        image_filename = storage.get_image_filename(
+            image_params, data_dir.get_data_dir()
+        )
+        image_dev = vm.get_block({"file": image_filename})
         if not image_dev:
             blocks_info = vm.monitor.human_monitor_cmd("info block")
             logger.debug(blocks_info)
@@ -93,7 +95,7 @@ def run(test, params, env):
                     logger.debug("Find %s node:%s", image_filename, image_dev)
                     break
         if not image_dev:
-            test.fail("Can not find dev by %s" % image_filename)
+            test.fail(f"Can not find dev by {image_filename}")
         args = (None, image_size, image_dev)
 
         vm.monitor.block_resize(*args)
@@ -111,7 +113,7 @@ def run(test, params, env):
 
     locals_var = locals()
     if guest_operation:
-        logger.debug("Execute guest operation %s" % guest_operation)
+        logger.debug(f"Execute guest operation {guest_operation}")
         locals_var[guest_operation]()
 
     vm.destroy()

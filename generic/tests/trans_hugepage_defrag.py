@@ -1,9 +1,7 @@
-import time
 import os
+import time
 
-from virttest import test_setup
-from virttest import error_context
-from virttest import kernel_interface
+from virttest import error_context, kernel_interface, test_setup
 
 from provider import thp_fragment_tool
 
@@ -51,8 +49,7 @@ def run(test, params, env):
             off_action = "0"
         else:
             raise ValueError(
-                "Uknown possible values for file %s: %s"
-                % (test_config.thp_path, possible_values)
+                f"Uknown possible values for file {test_config.thp_path}: {possible_values}"
             )
 
         if status == "on":
@@ -86,8 +83,8 @@ def run(test, params, env):
     if thps_defrag_off >= thps_defrag_on:
         test.fail(
             "No memory defragmentation on host: "
-            "%s THPs before turning "
-            "khugepaged defrag on, %s after it" % (thps_defrag_off, thps_defrag_on)
+            f"{thps_defrag_off} THPs before turning "
+            f"khugepaged defrag on, {thps_defrag_on} after it"
         )
     test.log.info("Defrag test succeeded")
     thp_fragment_tool.clean()

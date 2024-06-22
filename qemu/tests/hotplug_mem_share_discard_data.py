@@ -1,11 +1,8 @@
 from avocado.utils import process
-
-from virttest import error_context
-from virttest import env_process
-
+from virttest import env_process, error_context
+from virttest.staging import utils_memory
 from virttest.utils_numeric import normalize_data_size
 from virttest.utils_test.qemu import MemoryHotplugTest
-from virttest.staging import utils_memory
 
 
 @error_context.context_aware
@@ -28,19 +25,21 @@ def run(test, params, env):
 
     timeout = int(params.get("login_timeout", 240))
 
-    mem_dev = params.get('mem_devs')
-    size_mem = int(normalize_data_size(params['size_mem_%s' % mem_dev], 'K'))
+    mem_dev = params.get("mem_devs")
+    size_mem = int(normalize_data_size(params[f"size_mem_{mem_dev}"], "K"))
     total_hg_size = size_mem
 
     target_mem = params.get("target_mems")
-    if params.get('backend_mem_%s' % target_mem) == 'memory-backend-file':
-        size_target_mem = int(normalize_data_size(params['size_mem_%s' % target_mem], 'K'))
+    if params.get(f"backend_mem_{target_mem}") == "memory-backend-file":
+        size_target_mem = int(
+            normalize_data_size(params[f"size_mem_{target_mem}"], "K")
+        )
         total_hg_size += size_target_mem
 
     hp_size = utils_memory.read_from_meminfo("Hugepagesize")
-    params['target_hugepages'] = int(total_hg_size // hp_size)
-    params['setup_hugepages'] = "yes"
-    params['not_preprocess'] = "no"
+    params["target_hugepages"] = int(total_hg_size // hp_size)
+    params["setup_hugepages"] = "yes"
+    params["not_preprocess"] = "no"
 
     env_process.preprocess(test, params, env)
 
@@ -59,30 +58,32 @@ def run(test, params, env):
     vm.destroy()
 
     hp_total = int(utils_memory.read_from_meminfo("HugePages_Total"))
-    hp_free = int(utils_memory.read_from_meminfo('HugePages_Free'))
+    hp_free = int(utils_memory.read_from_meminfo("HugePages_Free"))
 
-    error_context.context("hp_total: %s" % str(hp_total), test.log.debug)
-    error_context.context("hp_free: %s" % str(hp_free), test.log.debug)
+    error_context.context(f"hp_total: {str(hp_total)}", test.log.debug)
+    error_context.context(f"hp_free: {str(hp_free)}", test.log.debug)
 
     if params.get("backend_mem_plug1") == "memory-backend-file":
         if not params.get_boolean("discard-data_plug1", True):
             try:
-                process.system("ls %s" % params["mem-path_plug1"])
+                process.system("ls {}".format(params["mem-path_plug1"]))
             except process.CmdError:
-                test.fail("Error, %s not found." % params["mem-path_plug1"])
+                test.fail("Error, {} not found.".format(params["mem-path_plug1"]))
 
             op = (hp_total - hp_free) * (hp_size / 1024)
-            hp_used = int(normalize_data_size("%sM" % str(op), "K"))
+            hp_used = int(normalize_data_size(f"{str(op)}M", "K"))
 
-            error_context.context("hp_used: %s" % str(hp_used), test.log.debug)
+            error_context.context(f"hp_used: {str(hp_used)}", test.log.debug)
 
             if hp_used != size_target_mem:
                 test.fail("Error, total hugepages doesn't match with used memory")
         elif hp_total != hp_free:
             test.fail("Error, free hugepages doesn't match with total hugepages")
         # Deletes the mem-path file to avoid test error
-        process.system("rm -rf %s" % params["mem-path_plug1"])
+        process.system("rm -rf {}".format(params["mem-path_plug1"]))
         # Compares free and total memory values after deleting mem-path file
-        hp_free_after_delete = int(utils_memory.read_from_meminfo('HugePages_Free'))
+        hp_free_after_delete = int(utils_memory.read_from_meminfo("HugePages_Free"))
         if hp_total != hp_free_after_delete:
-            test.fail("Error, free hugepages doesn't match with total hugepages after deleting mem-path file")
+            test.fail(
+                "Error, free hugepages doesn't match with total hugepages after deleting mem-path file"
+            )

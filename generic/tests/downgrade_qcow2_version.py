@@ -1,7 +1,4 @@
-from virttest import utils_test
-from virttest import error_context
-from virttest import qemu_storage
-from virttest import data_dir
+from virttest import data_dir, error_context, qemu_storage, utils_test
 
 
 @error_context.context_aware
@@ -18,8 +15,7 @@ def run(test, params, env):
     :param env: Dictionary with test environment
     """
     ver_to = params.get("lower_version_qcow2", "0.10")
-    error_context.context("Downgrade qcow2 image version to '%s'"
-                          % ver_to, test.log.info)
+    error_context.context(f"Downgrade qcow2 image version to '{ver_to}'", test.log.info)
     image = params.get("images").split()[0]
     t_params = params.object_params(image)
     qemu_image = qemu_storage.QemuImg(t_params, data_dir.get_data_dir(), image)
@@ -28,5 +24,5 @@ def run(test, params, env):
     actual_compat = utils_test.get_image_version(qemu_image)
     if actual_compat != ver_to:
         err_msg = "Fail to downgrade qcow2 image version!"
-        err_msg += "Actual: %s, expect: %s" % (actual_compat, ver_to)
+        err_msg += f"Actual: {actual_compat}, expect: {ver_to}"
         test.fail(err_msg)

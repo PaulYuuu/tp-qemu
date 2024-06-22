@@ -1,9 +1,6 @@
 import os
 
-from virttest import cpu
-from virttest import data_dir
-from virttest import env_process
-from virttest import error_context
+from virttest import cpu, data_dir, env_process, error_context
 from virttest.utils_test import update_boot_option
 
 from provider.cpu_utils import check_cpu_flags
@@ -32,10 +29,10 @@ def run(test, params, env):
     if not cpu_model:
         cpu_model = cpu.get_qemu_best_cpu_model(params)
     if cpu_model not in supported_models.split():
-        test.cancel("'%s' doesn't support this test case" % cpu_model)
+        test.cancel(f"'{cpu_model}' doesn't support this test case")
 
     params["start_vm"] = "yes"
-    vm_name = params['main_vm']
+    vm_name = params["main_vm"]
     env_process.preprocess_vm(test, params, env, vm_name)
 
     proc_cmdline = params["proc_cmdline"]
@@ -44,7 +41,7 @@ def run(test, params, env):
     boot_option = params["boot_option"]
     check_output = str(session.cmd(proc_cmdline, timeout=60)).split()
     if boot_option and boot_option not in check_output:
-        error_context.context("Add '%s' to guest" % boot_option, test.log.info)
+        error_context.context(f"Add '{boot_option}' to guest", test.log.info)
         update_boot_option(vm, args_added=boot_option)
         session = vm.wait_for_login()
 
@@ -56,13 +53,13 @@ def run(test, params, env):
     compile_cmd = params["compile_cmd"]
     try:
         session.cmd(compile_cmd % guest_dir)
-        check_msr = 'cd %s && ' % guest_dir + params["check_msr"]
+        check_msr = f"cd {guest_dir} && " + params["check_msr"]
         result = session.cmd_output(check_msr)
         nums_vcpus = session.cmd_output("grep processor /proc/cpuinfo -c")
         if result != nums_vcpus:
             test.fail("verify the guest sets the spec ctrl failed.")
     finally:
-        session.cmd("rm -rf %s/msr* %s/master*" % (test_dir, test_dir))
+        session.cmd(f"rm -rf {test_dir}/msr* {test_dir}/master*")
         session.close()
         vm.verify_kernel_crash()
         if boot_option and boot_option not in check_output:

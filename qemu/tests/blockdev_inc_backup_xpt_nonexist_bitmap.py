@@ -1,21 +1,19 @@
-import os
 import logging
+import os
 import string
 
 from avocado.utils import process
-
 from virttest import utils_misc
 
 from provider.blockdev_base import BlockdevBaseTest
 from provider.nbd_image_export import QemuNBDExportImage
 
-LOG_JOB = logging.getLogger('avocado.test')
+LOG_JOB = logging.getLogger("avocado.test")
 
 
 class BlkdevIncXptNonexistBitmap(BlockdevBaseTest):
-
     def __init__(self, test, params, env):
-        super(BlkdevIncXptNonexistBitmap, self).__init__(test, params, env)
+        super().__init__(test, params, env)
         self.source_images = []
         self.nbd_exports = []
         self.bitmaps = []
@@ -24,9 +22,9 @@ class BlkdevIncXptNonexistBitmap(BlockdevBaseTest):
 
     def _init_arguments_by_params(self, tag):
         image_params = self.params.object_params(tag)
-        self.source_images.append("drive_%s" % tag)
-        self.bitmaps.append("bitmap_%s" % tag)
-        image_params["nbd_export_bitmaps"] = "bitmap_%s" % tag
+        self.source_images.append(f"drive_{tag}")
+        self.bitmaps.append(f"bitmap_{tag}")
+        image_params["nbd_export_bitmaps"] = f"bitmap_{tag}"
         self.nbd_exports.append(QemuNBDExportImage(image_params, tag))
 
     def expose_nonexist_bitmap(self):
@@ -39,34 +37,40 @@ class BlkdevIncXptNonexistBitmap(BlockdevBaseTest):
                 "fork": "--fork",
                 "pid_file": "",
                 "bitmap": "",
-                }
-            export_cmd = ('{export_format} {persistent} {port} {bitmap} '
-                          '{fork} {pid_file} {filename}')
-            pid_file = utils_misc.generate_tmp_file_name('%s_nbd_server'
-                                                         % local_image, 'pid')
-            cmd_dict['pid_file'] = '--pid-file %s' % pid_file
-            cmd_dict['filename'] = filename
-            if params.get('nbd_export_format'):
-                cmd_dict['export_format'] = '-f %s' % params['nbd_export_format']
+            }
+            export_cmd = (
+                "{export_format} {persistent} {port} {bitmap} "
+                "{fork} {pid_file} {filename}"
+            )
+            pid_file = utils_misc.generate_tmp_file_name(
+                f"{local_image}_nbd_server", "pid"
+            )
+            cmd_dict["pid_file"] = f"--pid-file {pid_file}"
+            cmd_dict["filename"] = filename
+            if params.get("nbd_export_format"):
+                cmd_dict["export_format"] = "-f {}".format(params["nbd_export_format"])
             else:
-                if params.get('nbd_port'):
-                    cmd_dict['port'] = '-p %s' % params['nbd_port']
-            if params.get('nbd_export_bitmaps'):
-                cmd_dict['bitmap'] = "".join(
-                    [" -B %s" % _ for _ in params['nbd_export_bitmaps'].split()])
-            cmdline = qemu_nbd + ' ' + string.Formatter().format(export_cmd,
-                                                                 **cmd_dict)
+                if params.get("nbd_port"):
+                    cmd_dict["port"] = "-p {}".format(params["nbd_port"])
+            if params.get("nbd_export_bitmaps"):
+                cmd_dict["bitmap"] = "".join(
+                    [f" -B {_}" for _ in params["nbd_export_bitmaps"].split()]
+                )
+            cmdline = qemu_nbd + " " + string.Formatter().format(export_cmd, **cmd_dict)
             return pid_file, cmdline
 
         LOG_JOB.info("Export inconsistent bitmap with qemu-nbd")
-        pid_file, cmd = _nbd_expose_cmd(self.nbd_exports[0]._qemu_nbd,
-                                        self.nbd_exports[0]._local_filename,
-                                        self.nbd_exports[0]._tag,
-                                        self.nbd_exports[0]._image_params)
-        result = process.run(cmd, ignore_status=True, shell=True,
-                             ignore_bg_processes=True)
+        pid_file, cmd = _nbd_expose_cmd(
+            self.nbd_exports[0]._qemu_nbd,
+            self.nbd_exports[0]._local_filename,
+            self.nbd_exports[0]._tag,
+            self.nbd_exports[0]._image_params,
+        )
+        result = process.run(
+            cmd, ignore_status=True, shell=True, ignore_bg_processes=True
+        )
         if result.exit_status == 0:
-            with open(pid_file, "r") as pid_file_fd:
+            with open(pid_file) as pid_file_fd:
                 qemu_nbd_pid = int(pid_file_fd.read().strip())
             os.unlink(pid_file)
             utils_misc.kill_process_tree(qemu_nbd_pid, 9, timeout=60)

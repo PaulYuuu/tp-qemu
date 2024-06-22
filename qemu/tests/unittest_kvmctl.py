@@ -20,12 +20,12 @@ def run(test, params, env):
         os.makedirs(unit_dir)
     os.chdir(unit_dir)
 
-    cmd = "./kvmctl test/x86/bootstrap test/x86/%s.flat" % case
+    cmd = f"./kvmctl test/x86/bootstrap test/x86/{case}.flat"
     try:
         results = process.system_output(cmd, shell=True)
     except process.CmdError:
-        test.fail("Unit test %s failed" % case)
+        test.fail(f"Unit test {case} failed")
 
     result_file = os.path.join(test.resultsdir, case)
-    with open(result_file, 'w') as file:
+    with open(result_file, "w") as file:
         file.write(results)

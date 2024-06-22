@@ -1,7 +1,4 @@
-from virttest import env_process
-from virttest import error_context
-from virttest import cpu
-from virttest import utils_test
+from virttest import cpu, env_process, error_context, utils_test
 
 
 @error_context.context_aware
@@ -24,10 +21,9 @@ def run(test, params, env):
         if cpu_vendor == "unknow":
             test.error("unknow cpu vendor")
         else:
-            model_list = params.get("cpu_model_%s" % cpu_vendor,
-                                    host_model[-1])
+            model_list = params.get(f"cpu_model_{cpu_vendor}", host_model[-1])
 
-    extra_flags = params.get("cpu_model_flags_%s" % cpu_vendor, "")
+    extra_flags = params.get(f"cpu_model_flags_{cpu_vendor}", "")
     if extra_flags:
         cpu_flags = params.get("cpu_model_flags", "") + extra_flags
         params["cpu_model_flags"] = cpu_flags
@@ -41,14 +37,16 @@ def run(test, params, env):
                 env_process.preprocess_vm(test, params, env, params["main_vm"])
                 # check guest flags
                 if params.get("enable_check", "no") == "yes":
-                    utils_test.run_virt_sub_test(test, params,
-                                                 env, sub_type="flag_check")
+                    utils_test.run_virt_sub_test(
+                        test, params, env, sub_type="flag_check"
+                    )
                 else:
                     # log in and shutdown guest
-                    utils_test.run_virt_sub_test(test, params,
-                                                 env, sub_type="shutdown")
+                    utils_test.run_virt_sub_test(test, params, env, sub_type="shutdown")
                     test.log.info("shutdown guest successfully")
             else:
                 if params.get("enable_check", "no") == "yes":
-                    test.cancel("Can not test %s model on %s host, pls use "
-                                "%s host" % (model, host_model[0], model))
+                    test.cancel(
+                        f"Can not test {model} model on {host_model[0]} host, pls use "
+                        f"{model} host"
+                    )

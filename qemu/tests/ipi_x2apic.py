@@ -2,9 +2,7 @@ import os
 import re
 
 import aexpect
-
-from virttest import env_process
-from virttest import error_context
+from virttest import env_process, error_context
 
 
 def get_re_average(opt, re_str):
@@ -43,8 +41,10 @@ def run(test, params, env):
     smp = params.get("smp")
     if int(smp) < 2:
         params["smp"] = 2
-        test.log.warn("This case need at least 2 vcpu, but only 1 specified in"
-                      " configuration. So change the vcpu to 2.")
+        test.log.warn(
+            "This case need at least 2 vcpu, but only 1 specified in"
+            " configuration. So change the vcpu to 2."
+        )
     vm_name = params.get("main_vm")
     error_context.context("Boot guest with x2apic cpu flag.", test.log.info)
     env_process.preprocess_vm(test, params, env, vm_name)
@@ -60,11 +60,11 @@ def run(test, params, env):
         x2apic_check_string = params.get("x2apic_check_string").split(",")
         for check_string in x2apic_check_string:
             if check_string.strip() not in x2apic_output:
-                msg = "%s is not displayed in output" % check_string
+                msg = f"{check_string} is not displayed in output"
                 test.fail(msg)
 
     pipetest_cmd = params.get("pipetest_cmd")
-    if session.cmd_status("test -x %s" % pipetest_cmd):
+    if session.cmd_status(f"test -x {pipetest_cmd}"):
         file_link = os.path.join(test.virtdir, "scripts/pipetest.c")
         vm.copy_files_to(file_link, "/tmp/pipetest.c")
         build_pipetest_cmd = params.get("build_pipetest_cmd")
@@ -87,8 +87,7 @@ def run(test, params, env):
     vm.verify_alive()
     session = vm.wait_for_login(timeout=int(params.get("login_timeout", 360)))
     if check_x2apic_cmd:
-        error_context.context("Check x2apic flag in guest after reboot.",
-                              test.log.info)
+        error_context.context("Check x2apic flag in guest after reboot.", test.log.info)
         x2apic_output = session.cmd_output(check_x2apic_cmd).strip()
         test.log.info(x2apic_output)
         if x2apic_output:
@@ -100,14 +99,13 @@ def run(test, params, env):
     except aexpect.ShellTimeoutError as e:
         o = e
     val2 = get_re_average(o, re_str)
-    error_context.context("Compare the output of pipetest script.",
-                          test.log.info)
+    error_context.context("Compare the output of pipetest script.", test.log.info)
     if val1 >= val2:
         msg = "Overhead of IPI with x2apic is not smaller than that without"
-        msg += " x2apic. pipetest script output with x2apic: %s. " % val1
-        msg += "pipetest script output without x2apic: %s" % val2
+        msg += f" x2apic. pipetest script output with x2apic: {val1}. "
+        msg += f"pipetest script output without x2apic: {val2}"
         test.fail(msg)
-    msg = "pipetest script output with x2apic: %s. " % val1
-    msg += "pipetest script output without x2apic: %s" % val2
+    msg = f"pipetest script output with x2apic: {val1}. "
+    msg += f"pipetest script output without x2apic: {val2}"
     test.log.info(msg)
     session.close()

@@ -1,8 +1,10 @@
 """QSD blockdev option test"""
+
 import json
 
-from provider.qsd import QsdDaemonDev
 from virttest import error_context
+
+from provider.qsd import QsdDaemonDev
 
 
 # This decorator makes the test function aware of context strings
@@ -16,14 +18,14 @@ def run(test, params, env):
     """
 
     def _verify_blockdev(img, data):
-        prot_attrs = json.loads(params.get("qsd_image_protocol_%s" % img, "{}"))
-        fmt_attrs = json.loads(params.get("qsd_image_format_%s" % img, "{}"))
+        prot_attrs = json.loads(params.get(f"qsd_image_protocol_{img}", "{}"))
+        fmt_attrs = json.loads(params.get(f"qsd_image_format_{img}", "{}"))
         prot_node = {}
         fmt_node = {}
         for node in data:
-            if node["node-name"] == "prot_%s" % img:
+            if node["node-name"] == f"prot_{img}":
                 prot_node = node
-            if node["node-name"] == "fmt_%s" % img:
+            if node["node-name"] == f"fmt_{img}":
                 fmt_node = node
         if not fmt_node or not prot_node:
             test.fail("Can not find blockdev node")
@@ -37,7 +39,7 @@ def run(test, params, env):
                     logger.info("Checking img %s %s ", img, k)
                     if k == "cache":
                         v["writeback"] = True
-                    test.assertEqual(v, node[k], "Find unequal key %s" % k)
+                    test.assertEqual(v, node[k], f"Find unequal key {k}")
 
     logger = test.log
     qsd = None

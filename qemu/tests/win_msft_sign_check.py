@@ -1,5 +1,4 @@
-from virttest import error_context
-from virttest import utils_test
+from virttest import error_context, utils_test
 
 
 @error_context.context_aware
@@ -19,20 +18,21 @@ def run(test, params, env):
 
     driver_name = params["driver_name"]
     driver_verifier = params.get("driver_verifier", driver_name)
-    session = utils_test.qemu.windrv_check_running_verifier(session, vm,
-                                                            test, driver_verifier)
+    session = utils_test.qemu.windrv_check_running_verifier(
+        session, vm, test, driver_verifier
+    )
 
     # check if Windows VirtIO driver is msft digital signed.
     device_name = params["device_name"]
     chk_cmd = params["vio_driver_chk_cmd"] % device_name[0:30]
     chk_timeout = int(params.get("chk_timeout", 240))
-    error_context.context("%s Driver Check" % driver_name, test.log.info)
+    error_context.context(f"{driver_name} Driver Check", test.log.info)
     chk_output = session.cmd_output(chk_cmd, timeout=chk_timeout)
     if "FALSE" in chk_output:
         fail_log = "VirtIO driver is not digitally signed!"
-        fail_log += "    VirtIO driver check output: '%s'" % chk_output
+        fail_log += f"    VirtIO driver check output: '{chk_output}'"
         test.fail(fail_log)
     elif "TRUE" in chk_output:
         pass
     else:
-        test.error("Device %s is not found in guest" % device_name)
+        test.error(f"Device {device_name} is not found in guest")

@@ -2,21 +2,18 @@ import copy
 import logging
 
 from avocado.utils import process
-
-from virttest import error_context
-from virttest import storage
+from virttest import error_context, storage
 
 from qemu.tests import qemu_disk_img
 
-LOG_JOB = logging.getLogger('avocado.test')
+LOG_JOB = logging.getLogger("avocado.test")
 
 
 class RebaseTest(qemu_disk_img.QemuImgTest):
-
     def __init__(self, test, params, env, tag):
         self.tag = tag
         t_params = params.object_params(tag)
-        super(RebaseTest, self).__init__(test, t_params, env, tag)
+        super().__init__(test, t_params, env, tag)
 
     @error_context.context_aware
     def rebase(self, t_params=None):
@@ -28,7 +25,7 @@ class RebaseTest(qemu_disk_img.QemuImgTest):
         if t_params:
             params.update(t_params)
         cache_mode = params.get("cache_mode")
-        super(RebaseTest, self).rebase(params, cache_mode)
+        super().rebase(params, cache_mode)
         return params
 
     def clean(self):
@@ -36,7 +33,7 @@ class RebaseTest(qemu_disk_img.QemuImgTest):
         for sn in params.get("image_chain").split()[1:]:
             _params = params.object_params(sn)
             _image = storage.get_image_filename(_params, self.data_dir)
-            process.run("rm -f %s" % _image)
+            process.run(f"rm -f {_image}")
 
 
 def run(test, params, env):
@@ -51,15 +48,18 @@ def run(test, params, env):
     params_bak = copy.deepcopy(params)
     md5_dict = {}
     params.update(
-        {"image_name_%s" % base_image: params["image_name"],
-         "image_format_%s" % base_image: params["image_format"]})
+        {
+            f"image_name_{base_image}": params["image_name"],
+            f"image_format_{base_image}": params["image_format"],
+        }
+    )
     image_chain = params.get("image_chain", "").split()
     for idx, tag in enumerate(image_chain):
-        params["image_chain"] = " ".join(image_chain[:idx + 1])
+        params["image_chain"] = " ".join(image_chain[: idx + 1])
         rebase_test = RebaseTest(test, params, env, tag)
         n_params = rebase_test.create_snapshot()
         rebase_test.start_vm(n_params)
-        t_file = params["guest_file_name_%s" % tag]
+        t_file = params[f"guest_file_name_{tag}"]
         md5 = rebase_test.save_file(t_file)
         if not md5:
             test.error("Fail to save tmp file")
@@ -88,7 +88,7 @@ def run(test, params, env):
         for _file in check_files:
             ret = rebase_test.check_file(_file, md5_dict[_file])
             if not ret:
-                test.error("Check md5sum fail (file:%s)" % _file)
+                test.error(f"Check md5sum fail (file:{_file})")
         rebase_test.destroy_vm()
         rebase_test.check_image()
 

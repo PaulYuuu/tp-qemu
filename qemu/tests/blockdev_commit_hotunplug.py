@@ -1,12 +1,10 @@
 from virttest import utils_misc
 
-from provider import job_utils
-from provider import backup_utils
+from provider import backup_utils, job_utils
 from provider.blockdev_commit_base import BlockDevCommitTest
 
 
 class BlockdevCommitHotunplug(BlockDevCommitTest):
-
     def is_device_deleted(self, device):
         return device not in str(self.main_vm.monitor.info_block())
 
@@ -22,18 +20,17 @@ class BlockdevCommitHotunplug(BlockDevCommitTest):
         commit_cmd = backup_utils.block_commit_qmp_cmd
         cmd, args = commit_cmd(device, **arguments)
         self.main_vm.monitor.cmd(cmd, args)
-        self.main_vm.monitor.cmd('device_del',
-                                 {'id': self.params["device_tag"]})
-        unplug_s = utils_misc.wait_for(lambda: self.is_device_deleted(device),
-                                       timeout=60, step=1.0)
+        self.main_vm.monitor.cmd("device_del", {"id": self.params["device_tag"]})
+        unplug_s = utils_misc.wait_for(
+            lambda: self.is_device_deleted(device), timeout=60, step=1.0
+        )
         if not unplug_s:
             self.test.fail("Hotunplug device failed")
         job_id = args.get("job-id", device)
         job_status = job_utils.get_job_status(self.main_vm, job_id)
         if job_status not in self.params["expect_status"]:
-            self.test.fail("Job status %s is not correct" % job_status)
-        self.main_vm.monitor.cmd("block-job-set-speed",
-                                 {'device': job_id, 'speed': 0})
+            self.test.fail(f"Job status {job_status} is not correct")
+        self.main_vm.monitor.cmd("block-job-set-speed", {"device": job_id, "speed": 0})
         job_utils.wait_until_block_job_completed(self.main_vm, job_id)
 
     def run_test(self):

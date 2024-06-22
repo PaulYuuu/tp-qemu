@@ -1,7 +1,8 @@
 """Test booting with multi disks"""
+
 import re
 
-from virttest import error_context, env_process, utils_misc, utils_disk
+from virttest import env_process, error_context, utils_disk, utils_misc
 from virttest.utils_misc import get_linux_drive_path
 from virttest.utils_windows.drive import get_disk_props_by_serial_number
 
@@ -29,30 +30,29 @@ def run(test, params, env):
         for idx_ in range(stg_image_num):
             name = "stg%d" % idx_
             params["images"] = params["images"] + " " + name
-            params["image_name_%s" % name] = image_name % name
-            params["image_size_%s" % name] = image_size
-            params["image_format_%s" % name] = image_format
-            params["drive_format_%s" % name] = drive_format
-            params["boot_drive_%s" % name] = "yes"
-            params["blk_extra_params_%s" % name] = "serial=%s" % name
+            params[f"image_name_{name}"] = image_name % name
+            params[f"image_size_{name}"] = image_size
+            params[f"image_format_{name}"] = image_format
+            params[f"drive_format_{name}"] = drive_format
+            params[f"boot_drive_{name}"] = "yes"
+            params[f"blk_extra_params_{name}"] = f"serial={name}"
 
     def _get_window_disk_index_by_serial(serial):
         idx_info = get_disk_props_by_serial_number(session, serial, ["Index"])
         if idx_info:
             return idx_info["Index"]
-        test.fail("Not find expected disk %s" % serial)
+        test.fail(f"Not find expected disk {serial}")
 
     def _check_disk_in_guest(img):
-        logger.debug("Check disk %s in guest" % img)
-        if os_type == 'windows':
-
+        logger.debug(f"Check disk {img} in guest")
+        if os_type == "windows":
             cmd = utils_misc.set_winutils_letter(session, guest_cmd)
             disk = _get_window_disk_index_by_serial(img)
             utils_disk.update_windows_disk_attributes(session, disk)
             logger.info("Formatting disk:%s", disk)
-            driver = \
-                utils_disk.configure_empty_disk(session, disk, image_size,
-                                                os_type)[0]
+            driver = utils_disk.configure_empty_disk(
+                session, disk, image_size, os_type
+            )[0]
             output_path = driver + ":\\test.dat"
             cmd = cmd.format(output_path)
         else:
@@ -63,18 +63,19 @@ def run(test, params, env):
         session.cmd(cmd)
 
     logger = test.log
-    stg_image_num = params.get_numeric('stg_image_num')
+    stg_image_num = params.get_numeric("stg_image_num")
     os_type = params["os_type"]
     image_size = params.get("stg_image_size", "512M")
     guest_cmd = params["guest_cmd"]
 
-    logger.info('Prepare images ...%s', params["stg_image_num"])
+    logger.info("Prepare images ...%s", params["stg_image_num"])
     _prepare_images()
-    logger.info('Booting vm...')
-    params['start_vm'] = 'yes'
-    vm = env.get_vm(params['main_vm'])
-    env_process.process(test, params, env, env_process.preprocess_image,
-                        env_process.preprocess_vm)
+    logger.info("Booting vm...")
+    params["start_vm"] = "yes"
+    vm = env.get_vm(params["main_vm"])
+    env_process.process(
+        test, params, env, env_process.preprocess_image, env_process.preprocess_vm
+    )
     timeout = params.get_numeric("login_timeout", 360)
 
     logger.debug("Login in guest...")
@@ -83,12 +84,12 @@ def run(test, params, env):
     check_message = params.get("check_message")
     if check_message:
         logger.debug("Check warning message in BIOS log...")
-        logs = vm.logsessions['seabios'].get_output()
+        logs = vm.logsessions["seabios"].get_output()
         result = re.search(check_message, logs, re.S)
         result = "yes" if result else "no"
         expect_find = params.get("expect_find")
         if result != expect_find:
-            test.fail("Get unexpected find %s %s" % (result, expect_find))
+            test.fail(f"Get unexpected find {result} {expect_find}")
 
     logger.debug("Check disk number in guest...")
     check_num_cmd = params["check_num_cmd"]
@@ -96,8 +97,10 @@ def run(test, params, env):
     guest_disk_num = int(guest_cmd_output.strip())
     expected_disk_number = stg_image_num + 1
     if guest_disk_num != expected_disk_number:
-        test.fail("Guest disk number is wrong,expected: %d actually: %d" % (
-            guest_disk_num, expected_disk_number))
+        test.fail(
+            "Guest disk number is wrong,expected: %d actually: %d"
+            % (guest_disk_num, expected_disk_number)
+        )
 
     logger.debug("Check IO on guest disk...")
     for idx in range(params.get_numeric("check_disk_num", 3)):

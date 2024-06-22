@@ -1,17 +1,14 @@
-"""Verify Maximum transfer length and max_sector_kb in guest """
+"""Verify Maximum transfer length and max_sector_kb in guest"""
 
+import copy
+import json
 import time
 from os.path import basename
 
 from avocado.utils import process
-from virttest import env_process
-from virttest import data_dir
-from virttest import utils_misc
-
+from virttest import data_dir, env_process, utils_misc
 from virttest.iscsi import Iscsi
 from virttest.utils_misc import get_linux_drive_path
-import json
-import copy
 
 
 def run(test, params, env):
@@ -30,7 +27,7 @@ def run(test, params, env):
     """
 
     def _verify_transfer_info(host_info, guest_info):
-        errmsg = "The guest get unexpected transfer %s" % guest_info
+        errmsg = f"The guest get unexpected transfer {guest_info}"
         if guest_info["sectors_kb"] > host_info["sectors_kb"]:
             test.fail(errmsg)
         min_host = min(host_info["sectors_kb"], host_info["segments"] * 4)
@@ -42,15 +39,15 @@ def run(test, params, env):
 
     def _get_target_devices(trans_type, size=None):
         devs = []
-        cond = "$2==\"%s\"" % trans_type
+        cond = f'$2=="{trans_type}"'
         if size:
-            cond += " && $3==\"%s\"" % size
-        cmd = "lsblk -Spo 'NAME,TRAN,SIZE' |awk '{if(%s) print $1}'" % cond
+            cond += f' && $3=="{size}"'
+        cmd = f"lsblk -Spo 'NAME,TRAN,SIZE' |awk '{{if({cond}) print $1}}'"
         logger.debug(cmd)
         status, output = process.getstatusoutput(cmd)
         devs_str = output.strip().replace("\n", " ")
         if devs_str:
-            cmd = "lsblk -Jpo 'NAME,HCTL,SERIAL,TRAN,FSTYPE,WWN' %s" % devs_str
+            cmd = f"lsblk -Jpo 'NAME,HCTL,SERIAL,TRAN,FSTYPE,WWN' {devs_str}"
             status, output = process.getstatusoutput(cmd)
             devs = copy.deepcopy(json.loads(output)["blockdevices"])
 
@@ -83,7 +80,7 @@ def run(test, params, env):
 
     try:
         tran_type = params["tran_type"]
-        params['image_size'] = params.get('emulated_image_size', "")
+        params["image_size"] = params.get("emulated_image_size", "")
         if tran_type == "iscsi":
             logger.debug("Create iscsi disk.")
             base_dir = data_dir.get_data_dir()
@@ -91,17 +88,17 @@ def run(test, params, env):
             iscsi.login()
             dev_name = utils_misc.wait_for(lambda: iscsi.get_device_name(), 60)
             if not dev_name:
-                test.error('Can not get the iSCSI device.')
+                test.error("Can not get the iSCSI device.")
             logger.debug(dev_name)
             time.sleep(2)
-            logger.debug(_run_cmd("lsblk -JO %s" % dev_name))
+            logger.debug(_run_cmd(f"lsblk -JO {dev_name}"))
 
-        target_devs = _get_target_devices(tran_type, params['image_size'])
+        target_devs = _get_target_devices(tran_type, params["image_size"])
         if not len(target_devs):
             if tran_type == "fc":
-                test.cancel("No FC device:%s" % params['image_size'])
+                test.cancel("No FC device:{}".format(params["image_size"]))
             else:
-                test.error("No ISCSI device:%s" % params['image_size'])
+                test.error("No ISCSI device:{}".format(params["image_size"]))
 
         target_dev = target_devs[0]
         logger.debug(target_dev)
@@ -111,7 +108,7 @@ def run(test, params, env):
             set_max_sector_cmd = set_max_sector_cmd % dev_name
             _run_cmd(set_max_sector_cmd)
 
-        vm = env.get_vm(params['main_vm'])
+        vm = env.get_vm(params["main_vm"])
         timeout = float(params.get("timeout", 240))
         guest_cmd = params["guest_cmd"]
 
@@ -127,9 +124,10 @@ def run(test, params, env):
 
         logger.debug("Get host transfer info of %s ", dev_name)
         host_tran_info = _get_transfer_parameters(dev_name)
-        params['start_vm'] = 'yes'
-        env_process.process(test, params, env, env_process.preprocess_image,
-                            env_process.preprocess_vm)
+        params["start_vm"] = "yes"
+        env_process.process(
+            test, params, env, env_process.preprocess_image, env_process.preprocess_vm
+        )
 
         session = vm.wait_for_login(timeout=timeout)
 
@@ -143,7 +141,7 @@ def run(test, params, env):
         logger.debug("Verify transfer info of %s", target_path)
         _verify_transfer_info(host_tran_info, guest_tran_info)
         guest_cmd = guest_cmd % target_path
-        logger.debug('Start IO: %s', guest_cmd)
+        logger.debug("Start IO: %s", guest_cmd)
         session.cmd(guest_cmd, timeout=360)
         vm.monitor.verify_status("running")
 

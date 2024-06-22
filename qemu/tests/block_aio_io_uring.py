@@ -1,10 +1,10 @@
 """Blockdev aio=io_uring basic test"""
 
-
-from provider.block_devices_plug import BlockDevicesPlug
 from virttest import utils_disk, utils_misc
 from virttest.utils_misc import get_linux_drive_path
 from virttest.utils_windows.drive import get_disk_props_by_serial_number
+
+from provider.block_devices_plug import BlockDevicesPlug
 
 
 def run(test, params, env):
@@ -24,22 +24,22 @@ def run(test, params, env):
         idx_info = get_disk_props_by_serial_number(session, serial, ["Index"])
         if idx_info:
             return idx_info["Index"]
-        test.fail("Not find expected disk %s" % serial)
+        test.fail(f"Not find expected disk {serial}")
 
     def _check_disk_in_guest(img):
         os_type = params["os_type"]
-        logger.debug("Check disk %s in guest" % img)
-        if os_type == 'windows':
-            img_size = params.get("image_size_%s" % img)
+        logger.debug(f"Check disk {img} in guest")
+        if os_type == "windows":
+            img_size = params.get(f"image_size_{img}")
             cmd = utils_misc.set_winutils_letter(session, guest_cmd)
             disk = _get_window_disk_index_by_serial(img)
             utils_disk.update_windows_disk_attributes(session, disk)
             logger.info("Clean disk:%s", disk)
             utils_disk.clean_partition_windows(session, disk)
             logger.info("Formatting disk:%s", disk)
-            driver = \
-                utils_disk.configure_empty_disk(session, disk, img_size,
-                                                os_type)[0]
+            driver = utils_disk.configure_empty_disk(session, disk, img_size, os_type)[
+                0
+            ]
             output_path = driver + ":\\test.dat"
             cmd = cmd.format(output_path)
         else:
@@ -73,5 +73,5 @@ def run(test, params, env):
 
     locals_var = locals()
     if guest_operation:
-        logger.debug("Execute guest operation %s" % guest_operation)
+        logger.debug(f"Execute guest operation {guest_operation}")
         locals_var[guest_operation]()

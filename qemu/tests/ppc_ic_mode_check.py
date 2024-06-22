@@ -26,8 +26,9 @@ def run(test, params, env):
     try:
         vm.create(params=params)
     except VMCreateError as e:
-        if re.search(r"kernel_irqchip requested but unavailable|"
-                     r"XIVE-only machines", e.output):
+        if re.search(
+            r"kernel_irqchip requested but unavailable|" r"XIVE-only machines", e.output
+        ):
             test.cancel(e.output)
         raise
     else:
@@ -36,12 +37,11 @@ def run(test, params, env):
 
     error_context.context("Get irqchip and ic-mode information.", test.log.info)
     pic_o = vm.monitor.info("pic")
-    irqchip_match = re.search(r"^irqchip: %s" % kernel_irqchip, pic_o, re.M)
-    ic_mode_match = session.cmd_status("grep %s /proc/interrupts"
-                                       % ic_mode.upper()) == 0
+    irqchip_match = re.search(rf"^irqchip: {kernel_irqchip}", pic_o, re.M)
+    ic_mode_match = session.cmd_status(f"grep {ic_mode.upper()} /proc/interrupts") == 0
 
     error_context.context("Check wherever irqchip/ic-mode match.", test.log.info)
     if not irqchip_match:
-        test.fail("irqchip does not match to '%s'." % kernel_irqchip)
+        test.fail(f"irqchip does not match to '{kernel_irqchip}'.")
     elif not ic_mode_match:
-        test.fail("ic-mode does not match to '%s'." % ic_mode)
+        test.fail(f"ic-mode does not match to '{ic_mode}'.")

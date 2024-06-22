@@ -1,14 +1,9 @@
-from provider import backup_utils
-from provider import blockdev_base
-from provider import block_dirty_bitmap
+from provider import backup_utils, block_dirty_bitmap, blockdev_base
 
 
 class BlockdevIncBackupNonPersistentBitmapTest(blockdev_base.BlockdevBaseTest):
-
     def __init__(self, test, params, env):
-        super(BlockdevIncBackupNonPersistentBitmapTest, self).__init__(test,
-                                                                       params,
-                                                                       env)
+        super().__init__(test, params, env)
         self.source_images = []
         self.full_backups = []
         self.bitmaps = []
@@ -19,9 +14,9 @@ class BlockdevIncBackupNonPersistentBitmapTest(blockdev_base.BlockdevBaseTest):
     def _init_arguments_by_params(self, tag):
         image_params = self.params.object_params(tag)
         image_chain = image_params.objects("image_backup_chain")
-        self.source_images.append("drive_%s" % tag)
-        self.full_backups.append("drive_%s" % image_chain[0])
-        self.bitmaps.append("bitmap_%s" % tag)
+        self.source_images.append(f"drive_{tag}")
+        self.full_backups.append(f"drive_{image_chain[0]}")
+        self.bitmaps.append(f"bitmap_{tag}")
 
     def do_full_backup(self):
         extra_options = {"sync": "full", "auto_disable_bitmap": False}
@@ -30,14 +25,14 @@ class BlockdevIncBackupNonPersistentBitmapTest(blockdev_base.BlockdevBaseTest):
             self.source_images,
             self.full_backups,
             self.bitmaps,
-            **extra_options)
+            **extra_options,
+        )
 
     def get_bitmaps_info(self):
         out = []
         for idx, bitmap in enumerate(self.bitmaps):
             node = self.source_images[idx]
-            info = block_dirty_bitmap.get_bitmap_by_name(
-                self.main_vm, node, bitmap)
+            info = block_dirty_bitmap.get_bitmap_by_name(self.main_vm, node, bitmap)
             out.append(info)
         return out
 
@@ -54,20 +49,22 @@ class BlockdevIncBackupNonPersistentBitmapTest(blockdev_base.BlockdevBaseTest):
     def check_bitmaps(self, file_write=False):
         bitmaps = self.get_bitmaps_info()
         if not bitmaps:
-            self.test.fail('No bitmap was found.')
+            self.test.fail("No bitmap was found.")
 
         for info in bitmaps:
             # check if bitmap is non-persistent
-            if info['persistent']:
-                self.test.fail('It should be non-persistent')
+            if info["persistent"]:
+                self.test.fail("It should be non-persistent")
 
             # check if count is changed after file writing
             if file_write:
                 if info["count"] <= self.bitmap_count:
-                    self.test.fail('count of bitmap should be greater than '
-                                   'the original after writing a file')
+                    self.test.fail(
+                        "count of bitmap should be greater than "
+                        "the original after writing a file"
+                    )
             else:
-                self.bitmap_count = info['count']
+                self.bitmap_count = info["count"]
 
     def check_image_info(self):
         # make sure non-persistent bitmaps never exist after VM shutdown
@@ -77,10 +74,10 @@ class BlockdevIncBackupNonPersistentBitmapTest(blockdev_base.BlockdevBaseTest):
             out = disk.info()
 
             if out:
-                if self.params['check_bitmaps'] in out:
-                    self.test.fail('bitmap should not be in image')
+                if self.params["check_bitmaps"] in out:
+                    self.test.fail("bitmap should not be in image")
             else:
-                self.test.error('Error when querying image info by qemu-img')
+                self.test.error("Error when querying image info by qemu-img")
 
     def do_test(self):
         self.do_full_backup()

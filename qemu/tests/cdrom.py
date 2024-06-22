@@ -6,27 +6,28 @@ KVM cdrom test
 :author: Jiri Zupka <jzupka@redhat.com>
 :copyright: 2011 Red Hat, Inc.
 """
-import re
-import time
+
 import os
+import random
+import re
 import sys
 import tempfile
-import random
-import six
+import time
 
 import aexpect
-
+import six
 from avocado.utils import process
-
-from virttest import error_context
-from virttest import utils_misc
-from virttest import gluster
-from virttest import env_process
-from virttest import data_dir
-from virttest import utils_test
-from virttest import qemu_migration
-from virttest.utils_test.qemu import migration
+from virttest import (
+    data_dir,
+    env_process,
+    error_context,
+    gluster,
+    qemu_migration,
+    utils_misc,
+    utils_test,
+)
 from virttest.qemu_capabilities import Flags
+from virttest.utils_test.qemu import migration
 
 
 @error_context.context_aware
@@ -71,7 +72,7 @@ def run(test, params, env):
     @warning: Check dmesg for block device failures
     """
     # Some versions of qemu are unable to eject CDROM directly after insert
-    workaround_eject_time = float(params.get('workaround_eject_time', 0))
+    workaround_eject_time = float(params.get("workaround_eject_time", 0))
 
     login_timeout = int(params.get("login_timeout", 360))
     cdrom_prepare_timeout = int(params.get("cdrom_preapre_timeout", 360))
@@ -79,7 +80,7 @@ def run(test, params, env):
     def generate_serial_num():
         length = int(params.get("length", "10"))
         id_leng = random.randint(6, length)
-        ignore_str = ",!\"#$%&\'()*+./:;<=>?@[\\]^`{|}~"
+        ignore_str = ",!\"#$%&'()*+./:;<=>?@[\\]^`{|}~"
         return utils_misc.generate_random_string(id_leng, ignore_str)
 
     def list_guest_cdroms(session):
@@ -107,7 +108,7 @@ def run(test, params, env):
         """
         mount_point = "/mnt"
         if params["os_type"] == "windows":
-            cmd = "wmic volume where DriveLetter='%s' " % drive_letter
+            cmd = f"wmic volume where DriveLetter='{drive_letter}' "
             cmd += "get DeviceID | more +1"
             mount_point = session.cmd_output(cmd).strip()
         return mount_point
@@ -124,8 +125,7 @@ def run(test, params, env):
 
         :return: path to new iso image file.
         """
-        error_context.context("Creating test iso image '%s'" % name,
-                              test.log.info)
+        error_context.context(f"Creating test iso image '{name}'", test.log.info)
         cdrom_cd = params["target_cdrom"]
         cdrom_cd = params[cdrom_cd]
         if not os.path.isabs(cdrom_cd):
@@ -141,58 +141,56 @@ def run(test, params, env):
             else:
                 gluster_server = "localhost"
             volume_name = params["gluster_volume_name"]
-            g_mount_link = "%s:/%s" % (gluster_server, volume_name)
-            mount_cmd = "mount -t glusterfs %s %s" % (g_mount_link, g_mount_point)
+            g_mount_link = f"{gluster_server}:/{volume_name}"
+            mount_cmd = f"mount -t glusterfs {g_mount_link} {g_mount_point}"
             process.system(mount_cmd, timeout=60)
-            file_name = os.path.join(g_mount_point, "%s.iso" % name)
+            file_name = os.path.join(g_mount_point, f"{name}.iso")
         else:
-            file_name = utils_misc.get_path(iso_image_dir, "%s.iso" % name)
+            file_name = utils_misc.get_path(iso_image_dir, f"{name}.iso")
         if prepare:
             cmd = "dd if=/dev/urandom of=%s bs=1M count=%d"
             process.run(cmd % (name, file_size))
-            process.run("mkisofs -o %s %s" % (file_name, name))
-            process.run("rm -rf %s" % (name))
+            process.run(f"mkisofs -o {file_name} {name}")
+            process.run(f"rm -rf {name}")
         if image_params.get("enable_gluster") == "yes":
             gluster_uri = gluster.create_gluster_uri(image_params)
-            file_name = "%s%s.iso" % (gluster_uri, name)
+            file_name = f"{gluster_uri}{name}.iso"
             try:
-                umount_cmd = "umount %s" % g_mount_point
+                umount_cmd = f"umount {g_mount_point}"
                 process.system(umount_cmd, timeout=60)
                 os.rmdir(g_mount_point)
             except Exception as err:
-                msg = "Fail to clean up %s" % g_mount_point
-                msg += "Error message %s" % err
+                msg = f"Fail to clean up {g_mount_point}"
+                msg += f"Error message {err}"
                 test.log.warn(msg)
         return file_name
 
     def cleanup_cdrom(path):
-        """ Removes created iso image """
+        """Removes created iso image"""
         if path:
-            error_context.context("Cleaning up temp iso image '%s'" % path,
-                                  test.log.info)
+            error_context.context(f"Cleaning up temp iso image '{path}'", test.log.info)
             if "gluster" in path:
                 g_mount_point = tempfile.mkdtemp("gluster")
                 g_server, v_name, f_name = path.split("/")[-3:]
                 if ":" in g_server:
                     g_server = g_server.split(":")[0]
-                g_mount_link = "%s:/%s" % (g_server, v_name)
-                mount_cmd = "mount -t glusterfs %s %s" % (g_mount_link,
-                                                          g_mount_point)
+                g_mount_link = f"{g_server}:/{v_name}"
+                mount_cmd = f"mount -t glusterfs {g_mount_link} {g_mount_point}"
                 process.system(mount_cmd, timeout=60)
                 path = os.path.join(g_mount_point, f_name)
             try:
                 test.log.debug("Remove the file with os.remove().")
-                os.remove("%s" % path)
-            except OSError as err:
+                os.remove(f"{path}")
+            except OSError:
                 test.log.warn("Fail to delete %s", path)
             if "gluster" in path:
                 try:
-                    umount_cmd = "umount %s" % g_mount_point
+                    umount_cmd = f"umount {g_mount_point}"
                     process.system(umount_cmd, timeout=60)
                     os.rmdir(g_mount_point)
                 except Exception as err:
-                    msg = "Fail to clean up %s" % g_mount_point
-                    msg += "Error message %s" % err
+                    msg = f"Fail to clean up {g_mount_point}"
+                    msg += f"Error message {err}"
                     test.log.warn(msg)
 
     def get_cdrom_file(vm, qemu_cdrom_device):
@@ -205,23 +203,25 @@ def run(test, params, env):
         enable_blockdev = vm.check_capability(Flags.BLOCKDEV)
         cdfile = None
         if isinstance(blocks, six.string_types):
-            tmp_re_str = r'%s: .*file=(\S*) ' % qemu_cdrom_device
+            tmp_re_str = rf"{qemu_cdrom_device}: .*file=(\S*) "
             file_list = re.findall(tmp_re_str, blocks)
             if file_list:
                 cdfile = file_list[0]
             else:
                 # try to deal with new qemu
-                tmp_re_str = r'%s: (\S*) \(.*\)' % qemu_cdrom_device
+                tmp_re_str = rf"{qemu_cdrom_device}: (\S*) \(.*\)"
                 file_list = re.findall(tmp_re_str, blocks)
                 if file_list:
                     cdfile = file_list[0]
         else:
             for block in blocks:
-                if (enable_blockdev and block['qdev'] == vm.devices.get_qdev_by_drive(
-                        qemu_cdrom_device) or (
-                        not enable_blockdev and block['device'] == qemu_cdrom_device)):
+                if (
+                    enable_blockdev
+                    and block["qdev"] == vm.devices.get_qdev_by_drive(qemu_cdrom_device)
+                    or (not enable_blockdev and block["device"] == qemu_cdrom_device)
+                ):
                     try:
-                        cdfile = block['inserted']['file']
+                        cdfile = block["inserted"]["file"]
                         break
                     except KeyError:
                         continue
@@ -256,19 +256,21 @@ def run(test, params, env):
                     tmp_block = ""
         else:
             for block in blocks:
-                if (enable_blockdev and block['qdev'] == vm.devices.get_qdev_by_drive(
-                        qemu_cdrom_device) or (
-                        not enable_blockdev and block['device'] == qemu_cdrom_device)):
-                    key = list(filter(lambda x: re.match(r"tray.*open", x),
-                                      block.keys()))
+                if (
+                    enable_blockdev
+                    and block["qdev"] == vm.devices.get_qdev_by_drive(qemu_cdrom_device)
+                    or (not enable_blockdev and block["device"] == qemu_cdrom_device)
+                ):
+                    key = list(
+                        filter(lambda x: re.match(r"tray.*open", x), block.keys())
+                    )
                     # compatible rhel6 and rhel7 diff qmp output
                     if not key:
                         break
                     is_open, checked = (block[key[0]], True)
         return (is_open, checked)
 
-    def is_tray_opened(vm, qemu_cdrom_device, mode='monitor',
-                       dev_name="/dev/sr0"):
+    def is_tray_opened(vm, qemu_cdrom_device, mode="monitor", dev_name="/dev/sr0"):
         """
         Checks whether the tray is opend
 
@@ -286,11 +288,10 @@ def run(test, params, env):
         """
         is_open, checked = (None, False)
 
-        if mode in ['monitor', 'mixed']:
-            is_open, checked = _get_tray_stat_via_monitor(
-                vm, qemu_cdrom_device)
+        if mode in ["monitor", "mixed"]:
+            is_open, checked = _get_tray_stat_via_monitor(vm, qemu_cdrom_device)
 
-        if (mode in ['session', 'mixed']) and not checked:
+        if (mode in ["session", "mixed"]) and not checked:
             session = vm.wait_for_login(timeout=login_timeout)
             tray_cmd = params["tray_check_cmd"] % dev_name
             o = session.cmd_output(tray_cmd)
@@ -337,8 +338,8 @@ def run(test, params, env):
                     tmp_block = ""
         else:
             for block in blocks:
-                if block['device'] == cdrom and 'locked' in block.keys():
-                    return block['locked']
+                if block["device"] == cdrom and "locked" in block.keys():
+                    return block["locked"]
         return None
 
     @error_context.context_aware
@@ -351,9 +352,9 @@ def run(test, params, env):
         :return: device object
         """
         error_context.context("Get cdrom device object")
-        device = vm.get_block({'file': dev_file_path})
+        device = vm.get_block({"file": dev_file_path})
         if not device:
-            device = vm.get_block({'backing_file': dev_file_path})
+            device = vm.get_block({"backing_file": dev_file_path})
             if not device:
                 test.fail("Could not find a valid cdrom device")
         return device
@@ -379,10 +380,11 @@ def run(test, params, env):
                     break
             if not serial_cdrom:
                 qtree_info = vm.monitor.info("qtree")
-                test.fail("Could not find the device whose "
-                          "serial number %s is same in Qemu"
-                          " CML.\n Qtree info: %s" %
-                          (serial_num, qtree_info))
+                test.fail(
+                    "Could not find the device whose "
+                    f"serial number {serial_num} is same in Qemu"
+                    f" CML.\n Qtree info: {qtree_info}"
+                )
 
         show_cdrom_cmd = "ls -l /dev/cdrom*"
         dev_cdrom_output = session.cmd_output(show_cdrom_cmd)
@@ -391,8 +393,10 @@ def run(test, params, env):
                 if utils_misc.find_substring(str(line), str(serial_cdrom)):
                     match_cdrom = line.split(" ")[-3]
                     return match_cdrom
-            test.fail("Could not find the corresponding cdrom"
-                      "in guest which is same in Qemu CML.")
+            test.fail(
+                "Could not find the corresponding cdrom"
+                "in guest which is same in Qemu CML."
+            )
 
     def get_testing_cdrom_device(vm, session, cdrom_dev_list, serial_num=None):
         """
@@ -403,7 +407,7 @@ def run(test, params, env):
         try:
             if params["os_type"] == "windows":
                 winutil_drive = utils_misc.get_winutils_vol(session)
-                winutil_drive = "%s:" % winutil_drive
+                winutil_drive = f"{winutil_drive}:"
                 cdrom_dev_list.remove(winutil_drive)
                 testing_cdrom_device = cdrom_dev_list[-1]
             else:
@@ -426,11 +430,10 @@ def run(test, params, env):
         if copy_timeout is None:
             copy_timeout = 120
         session = vm.wait_for_login(timeout=login_timeout)
-        copy_file_cmd = (
-            "nohup cp %s %s 2> /dev/null &" % (src_path, dst_path))
+        copy_file_cmd = f"nohup cp {src_path} {dst_path} 2> /dev/null &"
         get_pid_cmd = "echo $!"
         if params["os_type"] == "windows":
-            copy_file_cmd = "start cmd /c copy /y %s %s" % (src_path, dst_path)
+            copy_file_cmd = f"start cmd /c copy /y {src_path} {dst_path}"
             get_pid_cmd = "wmic process where name='cmd.exe' get ProcessID"
         session.cmd(copy_file_cmd, timeout=copy_timeout)
         pid = re.findall(r"\d+", session.cmd_output(get_pid_cmd))[-1]
@@ -443,27 +446,34 @@ def run(test, params, env):
         device = None
         blocks = vm.monitor.info("block")
         if isinstance(blocks, six.string_types):
-            for block in blocks.strip().split('\n'):
-                if 'not inserted' in block:
-                    device = block.split(':')[0]
+            for block in blocks.strip().split("\n"):
+                if "not inserted" in block:
+                    device = block.split(":")[0]
         else:
             for block in blocks:
                 if vm.check_capability(Flags.BLOCKDEV):
-                    if 'inserted' in block.keys():
-                        if block['inserted']['file'] == 'null-co://':
-                            device = block['inserted']['node-name']
+                    if "inserted" in block.keys():
+                        if block["inserted"]["file"] == "null-co://":
+                            device = block["inserted"]["node-name"]
                 else:
-                    if 'inserted' not in block.keys():
-                        device = block['device']
+                    if "inserted" not in block.keys():
+                        device = block["device"]
         return device
 
-    def eject_test_via_monitor(vm, qemu_cdrom_device, guest_cdrom_device,
-                               iso_image_orig, iso_image_new, max_times):
+    def eject_test_via_monitor(
+        vm,
+        qemu_cdrom_device,
+        guest_cdrom_device,
+        iso_image_orig,
+        iso_image_new,
+        max_times,
+    ):
         """
         Test cdrom eject function via qemu monitor.
         """
-        error_context.context("Eject the iso image in monitor %s times"
-                              % max_times, test.log.info)
+        error_context.context(
+            f"Eject the iso image in monitor {max_times} times", test.log.info
+        )
         session = vm.wait_for_login(timeout=login_timeout)
         iso_image = iso_image_orig
         for i in range(1, max_times):
@@ -471,8 +481,7 @@ def run(test, params, env):
             vm.eject_cdrom(qemu_cdrom_device)
             time.sleep(2)
             if get_cdrom_file(vm, qemu_cdrom_device) is not None:
-                test.fail("Device %s was not ejected"
-                          " (round %s)" % (iso_image, i))
+                test.fail(f"Device {iso_image} was not ejected" f" (round {i})")
 
             iso_image = iso_image_new
             # On even attempts, try to change the iso image
@@ -480,12 +489,12 @@ def run(test, params, env):
                 iso_image = iso_image_orig
             vm.change_media(qemu_cdrom_device, iso_image)
             if get_cdrom_file(vm, qemu_cdrom_device) != iso_image:
-                test.fail("Could not change iso image %s"
-                          " (round %s)" % (iso_image, i))
+                test.fail(f"Could not change iso image {iso_image}" f" (round {i})")
             time.sleep(workaround_eject_time)
 
-    def check_tray_status_test(vm, qemu_cdrom_device, guest_cdrom_device,
-                               max_times, iso_image_new):
+    def check_tray_status_test(
+        vm, qemu_cdrom_device, guest_cdrom_device, max_times, iso_image_new
+    ):
         """
         Test cdrom tray status reporting function.
         """
@@ -501,8 +510,9 @@ def run(test, params, env):
             error_context.context("Copy test script to guest")
             tray_check_src = params.get("tray_check_src")
             if tray_check_src:
-                tray_check_src = os.path.join(data_dir.get_deps_dir(), "cdrom",
-                                              tray_check_src)
+                tray_check_src = os.path.join(
+                    data_dir.get_deps_dir(), "cdrom", tray_check_src
+                )
                 vm.copy_files_to(tray_check_src, params["tmp_dir"])
 
             if is_tray_opened(vm, qemu_cdrom_device) is None:
@@ -510,20 +520,24 @@ def run(test, params, env):
                 test.log.warn("cdrom_test_tray_status test is skipped...")
                 return
 
-            error_context.context("Eject the cdrom in guest %s times"
-                                  % max_times, test.log.info)
+            error_context.context(
+                f"Eject the cdrom in guest {max_times} times", test.log.info
+            )
             session = vm.wait_for_login(timeout=login_timeout)
             for i in range(1, max_times):
                 session.cmd(params["eject_cdrom_cmd"] % guest_cdrom_device)
                 if not is_tray_opened(vm, qemu_cdrom_device):
-                    test.fail("Monitor reports tray closed"
-                              " when ejecting (round %s)" % i)
+                    test.fail(
+                        "Monitor reports tray closed" f" when ejecting (round {i})"
+                    )
 
                 cmd = params["close_cdrom_cmd"] % guest_cdrom_device
                 session.cmd(cmd)
                 if is_tray_opened(vm, qemu_cdrom_device):
-                    test.fail("Monitor reports tray opened when close"
-                              " cdrom in guest (round %s)" % i)
+                    test.fail(
+                        "Monitor reports tray opened when close"
+                        f" cdrom in guest (round {i})"
+                    )
                 time.sleep(workaround_eject_time)
         finally:
             vm.change_media(qemu_cdrom_device, iso_image_orig)
@@ -532,11 +546,13 @@ def run(test, params, env):
         """
         Test cdrom tray locked function.
         """
-        error_context.context("Check cdrom tray status after cdrom is locked",
-                              test.log.info)
+        error_context.context(
+            "Check cdrom tray status after cdrom is locked", test.log.info
+        )
         session = vm.wait_for_login(timeout=login_timeout)
-        tmp_is_trap_open = is_tray_opened(vm, qemu_cdrom_device, mode='mixed',
-                                          dev_name=guest_cdrom_device)
+        tmp_is_trap_open = is_tray_opened(
+            vm, qemu_cdrom_device, mode="mixed", dev_name=guest_cdrom_device
+        )
         if tmp_is_trap_open is None:
             test.log.warn("Tray status reporting is not supported by qemu!")
             test.log.warn("cdrom_test_locked test is skipped...")
@@ -545,8 +561,9 @@ def run(test, params, env):
         eject_failed = False
         eject_failed_msg = "Tray should be closed even in locked status"
         session.cmd(params["eject_cdrom_cmd"] % guest_cdrom_device)
-        tmp_is_trap_open = is_tray_opened(vm, qemu_cdrom_device, mode='mixed',
-                                          dev_name=guest_cdrom_device)
+        tmp_is_trap_open = is_tray_opened(
+            vm, qemu_cdrom_device, mode="mixed", dev_name=guest_cdrom_device
+        )
         if not tmp_is_trap_open:
             test.fail("Tray should not in closed status")
         session.cmd(params["lock_cdrom_cmd"] % guest_cdrom_device)
@@ -554,11 +571,12 @@ def run(test, params, env):
             session.cmd(params["close_cdrom_cmd"] % guest_cdrom_device)
         except aexpect.ShellCmdError as e:
             eject_failed = True
-            eject_failed_msg += ", eject command failed: %s" % str(e)
+            eject_failed_msg += f", eject command failed: {str(e)}"
 
-        tmp_is_trap_open = is_tray_opened(vm, qemu_cdrom_device, mode='mixed',
-                                          dev_name=guest_cdrom_device)
-        if (eject_failed or tmp_is_trap_open):
+        tmp_is_trap_open = is_tray_opened(
+            vm, qemu_cdrom_device, mode="mixed", dev_name=guest_cdrom_device
+        )
+        if eject_failed or tmp_is_trap_open:
             test.fail(eject_failed_msg)
         session.cmd(params["unlock_cdrom_cmd"] % guest_cdrom_device)
         session.cmd(params["close_cdrom_cmd"] % guest_cdrom_device)
@@ -568,10 +586,8 @@ def run(test, params, env):
         Cdrom file operation test.
         """
         filename = "new"
-        mount_point = get_cdrom_mount_point(session,
-                                            guest_cdrom_device, params)
-        mount_cmd = params["mount_cdrom_cmd"] % (guest_cdrom_device,
-                                                 mount_point)
+        mount_point = get_cdrom_mount_point(session, guest_cdrom_device, params)
+        mount_cmd = params["mount_cdrom_cmd"] % (guest_cdrom_device, mount_point)
         umount_cmd = params["umount_cdrom_cmd"] % guest_cdrom_device
         src_file = params["src_file"] % (mount_point, filename)
         dst_file = params["dst_file"] % filename
@@ -581,19 +597,20 @@ def run(test, params, env):
         md5sum_cmd = params["md5sum_cmd"]
 
         if params["os_type"] != "windows":
-            error_context.context("Mounting the cdrom under %s" % mount_point,
-                                  test.log.info)
+            error_context.context(
+                f"Mounting the cdrom under {mount_point}", test.log.info
+            )
             session.cmd(mount_cmd, timeout=30)
         error_context.context("File copying test", test.log.info)
         session.cmd(copy_file_cmd)
         f1_hash = session.cmd(md5sum_cmd % dst_file).split()[0].strip()
         f2_hash = session.cmd(md5sum_cmd % src_file).split()[0].strip()
         if f1_hash != f2_hash:
-            test.fail("On disk and on cdrom files are different, "
-                      "md5 mismatch")
+            test.fail("On disk and on cdrom files are different, " "md5 mismatch")
         session.cmd(remove_file_cmd)
-        error_context.context("Mount/Unmount cdrom for %s times" % max_times,
-                              test.log.info)
+        error_context.context(
+            f"Mount/Unmount cdrom for {max_times} times", test.log.info
+        )
         for _ in range(1, max_times):
             try:
                 session.cmd(umount_cmd)
@@ -603,13 +620,12 @@ def run(test, params, env):
                 test.log.debug(session.cmd(show_mount_cmd))
                 raise
         if params["os_type"] != "windows":
-            session.cmd("umount %s" % guest_cdrom_device)
+            session.cmd(f"umount {guest_cdrom_device}")
 
     # Test main body start.
-    class MiniSubtest(object):
-
+    class MiniSubtest:
         def __new__(cls, *args, **kargs):
-            self = super(MiniSubtest, cls).__new__(cls)
+            self = super().__new__(cls)
             ret = None
             exc_info = None
             if args is None:
@@ -631,7 +647,6 @@ def run(test, params, env):
             return ret
 
     class test_singlehost(MiniSubtest):
-
         def test(self):
             self.iso_image_orig = create_iso_image(params, "orig")
             self.iso_image_new = create_iso_image(params, "new")
@@ -642,7 +657,7 @@ def run(test, params, env):
             params["start_vm"] = "yes"
             serial_num = generate_serial_num()
             cdrom = params.get("cdroms", "").split()[-1]
-            params["drive_serial_%s" % cdrom] = serial_num
+            params[f"drive_serial_{cdrom}"] = serial_num
             env_process.preprocess_vm(test, params, env, params["main_vm"])
             vm = env.get_vm(params["main_vm"])
 
@@ -660,97 +675,100 @@ def run(test, params, env):
             cdrom_dev_list = list_guest_cdroms(self.session)
             test.log.debug("cdrom_dev_list: '%s'", cdrom_dev_list)
 
-            if params.get('not_insert_at_start') == "yes":
-                error_context.context("Locked without media present",
-                                      test.log.info)
+            if params.get("not_insert_at_start") == "yes":
+                error_context.context("Locked without media present", test.log.info)
                 # XXX: The device got from monitor might not match with the guest
                 # defice if there are multiple cdrom devices.
                 qemu_cdrom_device = get_empty_cdrom_device(vm)
-                guest_cdrom_device = get_testing_cdrom_device(vm,
-                                                              self.session,
-                                                              cdrom_dev_list,
-                                                              serial_num)
+                guest_cdrom_device = get_testing_cdrom_device(
+                    vm, self.session, cdrom_dev_list, serial_num
+                )
                 if vm.check_block_locked(qemu_cdrom_device):
-                    test.fail("Device should not be locked just"
-                              " after booting up")
+                    test.fail("Device should not be locked just" " after booting up")
                 cmd = params["lock_cdrom_cmd"] % guest_cdrom_device
                 self.session.cmd(cmd)
                 if not vm.check_block_locked(qemu_cdrom_device):
                     test.fail("Device is not locked as expect.")
                 return
 
-            error_context.context("Detecting the existence of a cdrom "
-                                  "(guest OS side)", test.log.info)
+            error_context.context(
+                "Detecting the existence of a cdrom " "(guest OS side)", test.log.info
+            )
             cdrom_dev_list = list_guest_cdroms(self.session)
-            guest_cdrom_device = get_testing_cdrom_device(vm,
-                                                          self.session,
-                                                          cdrom_dev_list,
-                                                          serial_num)
-            error_context.context("Detecting the existence of a cdrom "
-                                  "(qemu side)", test.log.info)
+            guest_cdrom_device = get_testing_cdrom_device(
+                vm, self.session, cdrom_dev_list, serial_num
+            )
+            error_context.context(
+                "Detecting the existence of a cdrom " "(qemu side)", test.log.info
+            )
             qemu_cdrom_device = get_device(vm, iso_image)
             if params["os_type"] != "windows":
-                self.session.cmd_output("umount %s" % guest_cdrom_device)
-            if params.get('cdrom_test_autounlock') == 'yes':
-                error_context.context("Trying to unlock the cdrom",
-                                      test.log.info)
-                if not utils_misc.wait_for(lambda: not
-                                           vm.check_block_locked(qemu_cdrom_device),
-                                           300):
-                    test.fail("Device %s could not be"
-                              " unlocked" % (qemu_cdrom_device))
+                self.session.cmd_output(f"umount {guest_cdrom_device}")
+            if params.get("cdrom_test_autounlock") == "yes":
+                error_context.context("Trying to unlock the cdrom", test.log.info)
+                if not utils_misc.wait_for(
+                    lambda: not vm.check_block_locked(qemu_cdrom_device), 300
+                ):
+                    test.fail(f"Device {qemu_cdrom_device} could not be" " unlocked")
 
             max_test_times = int(params.get("cdrom_max_test_times", 100))
             if params.get("cdrom_test_eject") == "yes":
-                eject_test_via_monitor(vm, qemu_cdrom_device,
-                                       guest_cdrom_device, self.iso_image_orig,
-                                       self.iso_image_new, max_test_times)
+                eject_test_via_monitor(
+                    vm,
+                    qemu_cdrom_device,
+                    guest_cdrom_device,
+                    self.iso_image_orig,
+                    self.iso_image_new,
+                    max_test_times,
+                )
 
-            if params.get('cdrom_test_tray_status') == 'yes':
-                check_tray_status_test(vm, qemu_cdrom_device,
-                                       guest_cdrom_device, max_test_times,
-                                       self.iso_image_new)
+            if params.get("cdrom_test_tray_status") == "yes":
+                check_tray_status_test(
+                    vm,
+                    qemu_cdrom_device,
+                    guest_cdrom_device,
+                    max_test_times,
+                    self.iso_image_new,
+                )
 
-            if params.get('cdrom_test_locked') == 'yes':
-                check_tray_locked_test(vm, qemu_cdrom_device,
-                                       guest_cdrom_device)
+            if params.get("cdrom_test_locked") == "yes":
+                check_tray_locked_test(vm, qemu_cdrom_device, guest_cdrom_device)
 
-            error_context.context("Check whether the cdrom is read-only",
-                                  test.log.info)
+            error_context.context("Check whether the cdrom is read-only", test.log.info)
             cmd = params["readonly_test_cmd"] % guest_cdrom_device
             try:
                 self.session.cmd(cmd)
-                test.fail("Attempt to format cdrom %s succeeded" %
-                          (guest_cdrom_device))
+                test.fail(f"Attempt to format cdrom {guest_cdrom_device} succeeded")
             except aexpect.ShellError:
                 pass
 
             sub_test = params.get("sub_test")
             if sub_test:
-                error_context.context("Run sub test '%s' before doing file"
-                                      " operation" % sub_test, test.log.info)
+                error_context.context(
+                    f"Run sub test '{sub_test}' before doing file" " operation",
+                    test.log.info,
+                )
                 utils_test.run_virt_sub_test(test, params, env, sub_test)
 
             if params.get("cdrom_test_file_operation") == "yes":
-                file_operation_test(self.session, guest_cdrom_device,
-                                    max_test_times)
+                file_operation_test(self.session, guest_cdrom_device, max_test_times)
 
             error_context.context("Cleanup")
             # Return the self.iso_image_orig
             cdfile = get_cdrom_file(vm, qemu_cdrom_device)
             if cdfile != self.iso_image_orig:
                 time.sleep(workaround_eject_time)
-                self.session.cmd(params["eject_cdrom_cmd"] %
-                                 guest_cdrom_device)
+                self.session.cmd(params["eject_cdrom_cmd"] % guest_cdrom_device)
                 vm.eject_cdrom(qemu_cdrom_device)
                 if get_cdrom_file(vm, qemu_cdrom_device) is not None:
-                    test.fail("Device %s was not ejected"
-                              " in clearup stage" % qemu_cdrom_device)
+                    test.fail(
+                        f"Device {qemu_cdrom_device} was not ejected"
+                        " in clearup stage"
+                    )
 
                 vm.change_media(qemu_cdrom_device, self.iso_image_orig)
                 if get_cdrom_file(vm, qemu_cdrom_device) != self.iso_image_orig:
-                    test.fail("It wasn't possible to change"
-                              " cdrom %s" % iso_image)
+                    test.fail("It wasn't possible to change" f" cdrom {iso_image}")
             post_cmd = params.get("post_cmd")
             if post_cmd:
                 self.session.cmd(post_cmd)
@@ -763,10 +781,8 @@ def run(test, params, env):
             cleanup_cdrom(self.iso_image_new)
 
     class Multihost(MiniSubtest):
-
         def test(self):
-            error_context.context("Preparing migration env and cdroms.",
-                                  test.log.info)
+            error_context.context("Preparing migration env and cdroms.", test.log.info)
             mig_protocol = params.get("mig_protocol", "tcp")
             self.mig_type = migration.MultihostMigration
             if mig_protocol == "fd":
@@ -780,21 +796,31 @@ def run(test, params, env):
             self.srchost = params.get("hosts")[0]
             self.dsthost = params.get("hosts")[1]
             self.is_src = params.get("hostid") == self.srchost
-            self.mig = self.mig_type(test, params, env, False, )
+            self.mig = self.mig_type(
+                test,
+                params,
+                env,
+                False,
+            )
             self.cdrom_size = int(params.get("cdrom_size", 10))
             cdrom = params.objects("cdroms")[-1]
-            self.serial_num = params.get("drive_serial_%s" % cdrom)
+            self.serial_num = params.get(f"drive_serial_{cdrom}")
 
             if self.is_src:
-                self.cdrom_orig = create_iso_image(params, "orig",
-                                                   file_size=self.cdrom_size)
+                self.cdrom_orig = create_iso_image(
+                    params, "orig", file_size=self.cdrom_size
+                )
                 self.cdrom_dir = os.path.dirname(self.cdrom_orig)
                 vm = env.get_vm(self.vms[0])
                 vm.destroy()
                 params["start_vm"] = "yes"
-                env_process.process(test, params, env,
-                                    env_process.preprocess_image,
-                                    env_process.preprocess_vm)
+                env_process.process(
+                    test,
+                    params,
+                    env,
+                    env_process.preprocess_image,
+                    env_process.preprocess_vm,
+                )
                 vm = env.get_vm(self.vms[0])
                 vm.wait_for_login(timeout=login_timeout)
             else:
@@ -807,9 +833,8 @@ def run(test, params, env):
                 cleanup_cdrom(self.cdrom_orig)
 
     class test_multihost_locking(Multihost):
-
         def test(self):
-            super(test_multihost_locking, self).test()
+            super().test()
 
             error_context.context("Lock cdrom in VM.", test.log.info)
             # Starts in source
@@ -817,10 +842,9 @@ def run(test, params, env):
                 vm = env.get_vm(params["main_vm"])
                 session = vm.wait_for_login(timeout=login_timeout)
                 cdrom_dev_list = list_guest_cdroms(session)
-                guest_cdrom_device = get_testing_cdrom_device(vm,
-                                                              session,
-                                                              cdrom_dev_list,
-                                                              self.serial_num)
+                guest_cdrom_device = get_testing_cdrom_device(
+                    vm, session, cdrom_dev_list, self.serial_num
+                )
                 test.log.debug("cdrom_dev_list: %s", cdrom_dev_list)
                 device = get_device(vm, self.cdrom_orig)
 
@@ -831,8 +855,9 @@ def run(test, params, env):
                 else:
                     test.fail("Cdrom device should be locked in VM.")
 
-            self.mig._hosts_barrier(self.mig.hosts, self.mig.hosts,
-                                    'cdrom_dev', cdrom_prepare_timeout)
+            self.mig._hosts_barrier(
+                self.mig.hosts, self.mig.hosts, "cdrom_dev", cdrom_prepare_timeout
+            )
 
             self.mig.migrate_wait([self.vms[0]], self.srchost, self.dsthost)
 
@@ -846,23 +871,23 @@ def run(test, params, env):
 
                 locked = check_cdrom_lock(vm, device)
                 if locked:
-                    test.log.debug("Cdrom device stayed locked after "
-                                   "migration in VM.")
+                    test.log.debug(
+                        "Cdrom device stayed locked after " "migration in VM."
+                    )
                 else:
-                    test.fail("Cdrom device should stayed locked"
-                              " after migration in VM.")
+                    test.fail(
+                        "Cdrom device should stayed locked" " after migration in VM."
+                    )
 
                 error_context.context("Unlock cdrom from VM.", test.log.info)
                 cdrom_dev_list = list_guest_cdroms(session)
-                guest_cdrom_device = get_testing_cdrom_device(vm,
-                                                              session,
-                                                              cdrom_dev_list,
-                                                              self.serial_num)
+                guest_cdrom_device = get_testing_cdrom_device(
+                    vm, session, cdrom_dev_list, self.serial_num
+                )
                 session.cmd(params["unlock_cdrom_cmd"] % guest_cdrom_device)
                 locked = check_cdrom_lock(vm, device)
                 if not locked:
-                    test.log.debug("Cdrom device is successfully unlocked"
-                                   " from VM.")
+                    test.log.debug("Cdrom device is successfully unlocked" " from VM.")
                 else:
                     test.fail("Cdrom device should be unlocked in VM.")
 
@@ -872,22 +897,24 @@ def run(test, params, env):
                 vm = env.get_vm(params["main_vm"])
                 locked = check_cdrom_lock(vm, device)
                 if not locked:
-                    test.log.debug("Cdrom device stayed unlocked after "
-                                   "migration in VM.")
+                    test.log.debug(
+                        "Cdrom device stayed unlocked after " "migration in VM."
+                    )
                 else:
-                    test.fail("Cdrom device should stayed unlocked"
-                              " after migration in VM.")
+                    test.fail(
+                        "Cdrom device should stayed unlocked" " after migration in VM."
+                    )
 
-            self.mig._hosts_barrier(self.mig.hosts, self.mig.hosts,
-                                    'Finish_cdrom_test', login_timeout)
+            self.mig._hosts_barrier(
+                self.mig.hosts, self.mig.hosts, "Finish_cdrom_test", login_timeout
+            )
 
         def clean(self):
-            super(test_multihost_locking, self).clean()
+            super().clean()
 
     class test_multihost_ejecting(Multihost):
-
         def test(self):
-            super(test_multihost_ejecting, self).test()
+            super().test()
 
             self.cdrom_new = create_iso_image(params, "new")
 
@@ -902,29 +929,28 @@ def run(test, params, env):
                 cdrom_dev_list = list_guest_cdroms(session)
                 test.log.debug("cdrom_dev_list: %s", cdrom_dev_list)
                 device = get_device(vm, self.cdrom_orig)
-                cdrom = get_testing_cdrom_device(vm,
-                                                 session,
-                                                 cdrom_dev_list,
-                                                 self.serial_num)
+                cdrom = get_testing_cdrom_device(
+                    vm, session, cdrom_dev_list, self.serial_num
+                )
 
                 error_context.context("Eject cdrom.", test.log.info)
                 session.cmd(params["eject_cdrom_cmd"] % cdrom)
                 vm.eject_cdrom(device)
                 time.sleep(2)
                 if get_cdrom_file(vm, device) is not None:
-                    test.fail("Device %s was not ejected" % (cdrom))
+                    test.fail(f"Device {cdrom} was not ejected")
 
                 cdrom = self.cdrom_new
 
                 error_context.context("Change cdrom.", test.log.info)
                 vm.change_media(device, cdrom)
                 if get_cdrom_file(vm, device) != cdrom:
-                    test.fail("It wasn't possible to change "
-                              "cdrom %s" % (cdrom))
+                    test.fail("It wasn't possible to change " f"cdrom {cdrom}")
                 time.sleep(workaround_eject_time)
 
-            self.mig._hosts_barrier(self.mig.hosts, self.mig.hosts,
-                                    'cdrom_dev', cdrom_prepare_timeout)
+            self.mig._hosts_barrier(
+                self.mig.hosts, self.mig.hosts, "cdrom_dev", cdrom_prepare_timeout
+            )
 
             self.mig.migrate_wait([self.vms[0]], self.srchost, self.dsthost)
 
@@ -935,21 +961,18 @@ def run(test, params, env):
         def clean(self):
             if self.is_src:
                 cleanup_cdrom(self.cdrom_new)
-            super(test_multihost_ejecting, self).clean()
+            super().clean()
 
     class test_multihost_copy(Multihost):
-
         def test(self):
             from autotest.client.shared.syncdata import SyncData
 
-            super(test_multihost_copy, self).test()
+            super().test()
             copy_timeout = int(params.get("copy_timeout", 480))
             checksum_timeout = int(params.get("checksum_timeout", 180))
 
             pid = None
-            sync_id = {'src': self.srchost,
-                       'dst': self.dsthost,
-                       "type": "file_trasfer"}
+            sync_id = {"src": self.srchost, "dst": self.dsthost, "type": "file_trasfer"}
             filename = "orig"
             remove_file_cmd = params["remove_file_cmd"] % filename
             dst_file = params["dst_file"] % filename
@@ -960,15 +983,13 @@ def run(test, params, env):
                 session = vm.wait_for_login(timeout=login_timeout)
                 cdrom_dev_list = list_guest_cdroms(session)
                 test.log.debug("cdrom_dev_list: %s", cdrom_dev_list)
-                cdrom = get_testing_cdrom_device(vm,
-                                                 session,
-                                                 cdrom_dev_list,
-                                                 self.serial_num)
+                cdrom = get_testing_cdrom_device(
+                    vm, session, cdrom_dev_list, self.serial_num
+                )
                 mount_point = get_cdrom_mount_point(session, cdrom, params)
                 mount_cmd = params["mount_cdrom_cmd"] % (cdrom, mount_point)
                 src_file = params["src_file"] % (mount_point, filename)
-                copy_file_cmd = params[
-                    "copy_file_cmd"] % (mount_point, filename)
+                copy_file_cmd = params["copy_file_cmd"] % (mount_point, filename)
                 if params["os_type"] != "windows":
                     error_context.context("Mount and copy data", test.log.info)
                     session.cmd(mount_cmd, timeout=30)
@@ -979,8 +1000,13 @@ def run(test, params, env):
 
                 pid = disk_copy(vm, src_file, dst_file, copy_timeout)
 
-            sync = SyncData(self.mig.master_id(), self.mig.hostid,
-                            self.mig.hosts, sync_id, self.mig.sync_server)
+            sync = SyncData(
+                self.mig.master_id(),
+                self.mig.hostid,
+                self.mig.hosts,
+                sync_id,
+                self.mig.sync_server,
+            )
 
             pid = sync.sync(pid, timeout=cdrom_prepare_timeout)[self.srchost]
 
@@ -991,10 +1017,9 @@ def run(test, params, env):
                 session = vm.wait_for_login(timeout=login_timeout)
                 error_context.context("Wait for copy finishing.", test.log.info)
                 cdrom_dev_list = list_guest_cdroms(session)
-                cdrom = get_testing_cdrom_device(vm,
-                                                 session,
-                                                 cdrom_dev_list,
-                                                 self.serial_num)
+                cdrom = get_testing_cdrom_device(
+                    vm, session, cdrom_dev_list, self.serial_num
+                )
                 mount_point = get_cdrom_mount_point(session, cdrom, params)
                 mount_cmd = params["mount_cdrom_cmd"] % (cdrom, mount_point)
                 src_file = params["src_file"] % (mount_point, filename)
@@ -1002,35 +1027,42 @@ def run(test, params, env):
 
                 def is_copy_done():
                     if params["os_type"] == "windows":
-                        cmd = "tasklist /FI \"PID eq %s\"" % pid
+                        cmd = f'tasklist /FI "PID eq {pid}"'
                     else:
-                        cmd = "ps -p %s" % pid
+                        cmd = f"ps -p {pid}"
                     return session.cmd_status(cmd) != 0
 
                 if not utils_misc.wait_for(is_copy_done, timeout=copy_timeout):
                     test.fail("Wait for file copy finish timeout")
 
-                error_context.context("Compare file on disk and on cdrom",
-                                      test.log.info)
-                f1_hash = session.cmd(md5sum_cmd % dst_file,
-                                      timeout=checksum_timeout).split()[0]
-                f2_hash = session.cmd(md5sum_cmd % src_file,
-                                      timeout=checksum_timeout).split()[0]
+                error_context.context(
+                    "Compare file on disk and on cdrom", test.log.info
+                )
+                f1_hash = session.cmd(
+                    md5sum_cmd % dst_file, timeout=checksum_timeout
+                ).split()[0]
+                f2_hash = session.cmd(
+                    md5sum_cmd % src_file, timeout=checksum_timeout
+                ).split()[0]
                 if f1_hash.strip() != f2_hash.strip():
-                    test.fail("On disk and on cdrom files are"
-                              " different, md5 mismatch")
+                    test.fail(
+                        "On disk and on cdrom files are" " different, md5 mismatch"
+                    )
                 session.cmd(remove_file_cmd)
 
-            self.mig._hosts_barrier(self.mig.hosts, self.mig.hosts,
-                                    'Finish_cdrom_test', login_timeout)
+            self.mig._hosts_barrier(
+                self.mig.hosts, self.mig.hosts, "Finish_cdrom_test", login_timeout
+            )
 
         def clean(self):
-            super(test_multihost_copy, self).clean()
+            super().clean()
 
     test_type = params.get("test_type", "test_singlehost")
-    if (test_type in locals()):
+    if test_type in locals():
         tests_group = locals()[test_type]
         tests_group()
     else:
-        test.fail("Test group '%s' is not defined in"
-                  " migration_with_dst_problem test" % test_type)
+        test.fail(
+            f"Test group '{test_type}' is not defined in"
+            " migration_with_dst_problem test"
+        )

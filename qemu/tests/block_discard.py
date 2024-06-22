@@ -1,14 +1,9 @@
 import os
 import re
 
-from avocado.utils import genio
+from avocado.utils import genio, process
 from avocado.utils import path as utils_path
-from avocado.utils import process
-
-from virttest import env_process
-from virttest import error_context
-from virttest import utils_disk
-from virttest import utils_misc
+from virttest import env_process, error_context, utils_disk, utils_misc
 
 
 @error_context.context_aware
@@ -34,14 +29,14 @@ def run(test, params, env):
         Get latest scsi disk which emulated by scsi_debug module.
         """
         scsi_disk_info = process.system_output("lsscsi").decode().splitlines()
-        scsi_debug = [_ for _ in scsi_disk_info if 'scsi_debug' in _][-1]
+        scsi_debug = [_ for _ in scsi_disk_info if "scsi_debug" in _][-1]
         scsi_debug = scsi_debug.split()
         host_id = scsi_debug[0][1:-1]
         device_name = scsi_debug[-1]
         return (host_id, device_name)
 
     def get_guest_discard_disk(session):
-        """"
+        """ "
         Get disk without partitions in guest.
         """
         list_disk_cmd = "ls /dev/[sh]d*|sed 's/[0-9]//p'|uniq -u"
@@ -54,8 +49,8 @@ def run(test, params, env):
         on params for scsi_debug module.
         """
         device_name = os.path.basename(device)
-        path = "/sys/block/%s/device/scsi_disk" % device_name
-        path += "/%s/provisioning_mode" % host_id
+        path = f"/sys/block/{device_name}/device/scsi_disk"
+        path += f"/{host_id}/provisioning_mode"
         return genio.read_one_line(path).strip()
 
     def get_allocation_bitmap():
@@ -65,14 +60,14 @@ def run(test, params, env):
         path = "/sys/bus/pseudo/drivers/scsi_debug/map"
         try:
             return genio.read_one_line(path).strip()
-        except IOError:
+        except OSError:
             test.log.warn("block allocation bitmap not exists")
         return ""
 
     def _check_disk_partitions_number():
-        """ Check the data disk partitions number. """
+        """Check the data disk partitions number."""
         disks = utils_disk.get_linux_disks(session, True)
-        return len(re.findall(r'%s\d+' % device_name[5:], ' '.join(disks))) == 1
+        return len(re.findall(rf"{device_name[5:]}\d+", " ".join(disks))) == 1
 
     # destroy all vms to avoid emulated disk marked drity before start test
     for vm in env.get_all_vms():
@@ -93,14 +88,13 @@ def run(test, params, env):
     vm_name = params["main_vm"]
     test_image = "scsi_debug"
     params["start_vm"] = "yes"
-    params["image_name_%s" % test_image] = disk_name
-    params["image_format_%s" % test_image] = "raw"
-    params["image_raw_device_%s" % test_image] = "yes"
-    params["force_create_image_%s" % test_image] = "no"
+    params[f"image_name_{test_image}"] = disk_name
+    params[f"image_format_{test_image}"] = "raw"
+    params[f"image_raw_device_{test_image}"] = "yes"
+    params[f"force_create_image_{test_image}"] = "no"
     params["images"] = " ".join([params["images"], test_image])
 
-    error_context.context("boot guest with disk '%s'" % disk_name,
-                          test.log.info)
+    error_context.context(f"boot guest with disk '{disk_name}'", test.log.info)
     # boot guest with scsi_debug disk
     env_process.preprocess_vm(test, params, env, vm_name)
     vm = env.get_vm(vm_name)
@@ -108,8 +102,7 @@ def run(test, params, env):
     timeout = float(params.get("login_timeout", 240))
     session = vm.wait_for_login(timeout=timeout)
 
-    error_context.context("Fresh block allocation bitmap before test.",
-                          test.log.info)
+    error_context.context("Fresh block allocation bitmap before test.", test.log.info)
     device_name = get_guest_discard_disk(session)
     rewrite_disk_cmd = params["rewrite_disk_cmd"]
     rewrite_disk_cmd = rewrite_disk_cmd.replace("DISK", device_name)
@@ -120,18 +113,20 @@ def run(test, params, env):
         test.log.debug("bitmap before test: %s", bitmap_before_trim)
         test.fail("bitmap should be continuous before fstrim")
 
-    error_context.context("Create partition on '%s' in guest" % device_name,
-                          test.log.info)
-    session.cmd(params['create_partition_cmd'].replace("DISK", device_name))
+    error_context.context(
+        f"Create partition on '{device_name}' in guest", test.log.info
+    )
+    session.cmd(params["create_partition_cmd"].replace("DISK", device_name))
 
     if not utils_misc.wait_for(_check_disk_partitions_number, 30, step=3.0):
-        test.error('Failed to get a partition on %s.' % device_name)
+        test.error(f"Failed to get a partition on {device_name}.")
 
-    error_context.context("format disk '%s' in guest" % device_name, test.log.info)
+    error_context.context(f"format disk '{device_name}' in guest", test.log.info)
     session.cmd(params["format_disk_cmd"].replace("DISK", device_name))
 
-    error_context.context("mount disk with discard options '%s'" % device_name,
-                          test.log.info)
+    error_context.context(
+        f"mount disk with discard options '{device_name}'", test.log.info
+    )
     mount_disk_cmd = params["mount_disk_cmd"]
     mount_disk_cmd = mount_disk_cmd.replace("DISK", device_name)
     session.cmd(mount_disk_cmd)
@@ -143,7 +138,9 @@ def run(test, params, env):
     bitmap_after_trim = get_allocation_bitmap()
     if not re.match(r"\d+-\d+,.*\d+-\d+$", bitmap_after_trim):
         test.log.debug("bitmap after test: %s", bitmap_before_trim)
-        test.fail("discard command doesn't issue"
-                  "to scsi_debug disk, please report bug for qemu")
+        test.fail(
+            "discard command doesn't issue"
+            "to scsi_debug disk, please report bug for qemu"
+        )
     if vm:
         vm.destroy()

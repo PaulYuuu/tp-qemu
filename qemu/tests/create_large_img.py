@@ -1,9 +1,8 @@
 import os
-import six
 
+import six
 from avocado import TestError
 from avocado.utils import partition as p
-
 from virttest import data_dir
 from virttest.qemu_storage import QemuImg
 
@@ -43,7 +42,7 @@ def run(test, params, env):
             if info in six.text_type(err):
                 break
         else:
-            test.fail("CML failed with unexpected output: %s" % err)
+            test.fail(f"CML failed with unexpected output: {err}")
     else:
         test.fail("There is no error when creating an image with large size.")
     finally:

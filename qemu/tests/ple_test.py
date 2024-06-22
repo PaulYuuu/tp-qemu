@@ -1,10 +1,7 @@
 import re
 
-from avocado.utils import cpu
-from avocado.utils import process
-from virttest import env_process
-from virttest import error_context
-from virttest import utils_package
+from avocado.utils import cpu, process
+from virttest import env_process, error_context, utils_package
 
 
 @error_context.context_aware
@@ -23,12 +20,13 @@ def run(test, params, env):
     :param params: Dictionary with the test parameters
     :param env: Dictionary with test environment.
     """
+
     def reload_module(value):
         """
         Reload module
         """
-        process.system("rmmod %s" % module)
-        cmd = "modprobe %s %s=%s" % (module, mod_param, value)
+        process.system(f"rmmod {module}")
+        cmd = f"modprobe {module} {mod_param}={value}"
         process.system(cmd)
 
     def run_unixbench(cmd):
@@ -37,13 +35,12 @@ def run(test, params, env):
         """
         error_context.context("Run unixbench inside guest", test.log.info)
         output = session.cmd_output_safe(cmd, timeout=4800)
-        scores = re.findall(r"System Benchmarks Index Score\s+(\d+\.?\d+)",
-                            output)
+        scores = re.findall(r"System Benchmarks Index Score\s+(\d+\.?\d+)", output)
         return [float(i) for i in scores]
 
     module = params["module_name"]
     mod_param = params["mod_param"]
-    read_cmd = "cat /sys/module/%s/parameters/%s" % (module, mod_param)
+    read_cmd = f"cat /sys/module/{module}/parameters/{mod_param}"
     origin_ple = process.getoutput(read_cmd)
     error_context.context("Enable ple on host if it's disabled", test.log.info)
     if origin_ple == 0:
@@ -74,11 +71,11 @@ def run(test, params, env):
         session = vm.wait_for_login()
         scores_off = run_unixbench(cmd)
         test.log.info("Unixbench scores are %s when ple is off", scores_off)
-        scores_off = [x*0.96 for x in scores_off]
+        scores_off = [x * 0.96 for x in scores_off]
         if scores_on[0] < scores_off[0] or scores_on[1] < scores_off[1]:
             test.fail("Scores is much lower when ple is on than off")
     finally:
-        session.cmd_output_safe("rm -rf %s" % params["unixbench_dir"])
+        session.cmd_output_safe("rm -rf {}".format(params["unixbench_dir"]))
         session.close()
         vm.destroy()
         reload_module(origin_ple)

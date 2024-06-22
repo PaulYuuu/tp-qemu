@@ -1,6 +1,4 @@
-from virttest import utils_test
-from virttest import error_context
-from virttest import utils_net
+from virttest import error_context, utils_net, utils_test
 from virttest.utils_windows import virtio_win
 
 
@@ -28,8 +26,7 @@ def run(test, params, env):
         param param_name: the netkvm driver parameter to modify
         param param_value: the value to set to
         """
-        error_context.context("Start set %s to %s" % (param_name, param_value),
-                              test.log.info)
+        error_context.context(f"Start set {param_name} to {param_value}", test.log.info)
         utils_net.set_netkvm_param_value(vm, param_name, param_value)
 
         test.log.info("Check value after setting %s", param_name)
@@ -43,10 +40,10 @@ def run(test, params, env):
         guest_ip = vm.get_address()
         status, output = utils_test.ping(guest_ip, 10, timeout=15)
         if status:
-            test.fail("Ping returns non-zero value %s" % output)
+            test.fail(f"Ping returns non-zero value {output}")
         package_lost = utils_test.get_loss_ratio(output)
         if package_lost != 0:
-            test.fail("Ping test got %s package lost" % package_lost)
+            test.fail(f"Ping test got {package_lost} package lost")
 
     def _get_driver_version(session):
         """
@@ -55,8 +52,8 @@ def run(test, params, env):
         """
         query_version_cmd = params["query_version_cmd"]
         output = session.cmd_output(query_version_cmd)
-        version_str = output.strip().split('=')[1]
-        version = version_str.split('.')[-1][0:3]
+        version_str = output.strip().split("=")[1]
+        version = version_str.split(".")[-1][0:3]
         return int(version)
 
     timeout = params.get("timeout", 360)
@@ -66,13 +63,13 @@ def run(test, params, env):
     vm.verify_alive()
 
     session = vm.wait_for_login(timeout=timeout)
-    error_context.context("Check if the driver is installed and "
-                          "verified", test.log.info)
+    error_context.context(
+        "Check if the driver is installed and " "verified", test.log.info
+    )
     driver_verifier = params["driver_verifier"]
-    session = utils_test.qemu.windrv_check_running_verifier(session, vm,
-                                                            test,
-                                                            driver_verifier,
-                                                            timeout)
+    session = utils_test.qemu.windrv_check_running_verifier(
+        session, vm, test, driver_verifier, timeout
+    )
     driver_version = _get_driver_version(session)
     session.close()
 
@@ -82,7 +79,7 @@ def run(test, params, env):
     elif driver_version > 189 and "MTU" in param_names:
         param_names.remove("MTU")
     for name in param_names:
-        attr_name = "param_values_%s" % name
+        attr_name = f"param_values_{name}"
         param_values = params.get(attr_name, param_values_default)
         for value in param_values.split():
             start_test(name, value)

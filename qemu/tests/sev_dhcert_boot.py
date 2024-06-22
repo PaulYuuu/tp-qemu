@@ -1,9 +1,7 @@
 import os
 
 from avocado.utils import process
-from virttest import error_context
-from virttest import env_process
-from virttest import utils_package
+from virttest import env_process, error_context, utils_package
 
 
 @error_context.context_aware
@@ -24,38 +22,36 @@ def run(test, params, env):
 
     sev_module_path = params["sev_module_path"]
     if os.path.exists(sev_module_path):
-        f = open(sev_module_path, "r")
+        f = open(sev_module_path)
         output = f.read().strip()
         f.close()
-        if output not in params.objects('module_status'):
+        if output not in params.objects("module_status"):
             test.cancel("Host sev-es support check fail.")
     else:
         test.cancel("Host sev-es support check fail.")
 
     sev_tool_pkg = params.get("sev_tool_pkg")
-    s, o = process.getstatusoutput("rpm -qa | grep %s" % sev_tool_pkg,
-                                   shell=True)
+    s, o = process.getstatusoutput(f"rpm -qa | grep {sev_tool_pkg}", shell=True)
     if s != 0:
         install_status = utils_package.package_install(sev_tool_pkg)
         if not install_status:
-            test.cancel("Failed to install %s." % sev_tool_pkg)
+            test.cancel(f"Failed to install {sev_tool_pkg}.")
 
     vm_name = params["main_vm"]
     files_remove = []
     try:
         process.system_output("sevctl export --full vm.chain", shell=True)
-        files_remove.append('vm.chain')
-        process.system_output("sevctl session --name " + vm_name +
-                              " vm.chain " + params["vm_sev_policy"],
-                              shell=True)
-        session_files = ['godh.b64', 'session.b64', 'tek.bin', 'tik.bin']
-        files_remove.extend([f'{vm_name}_{name}' for name in session_files])
-        params["vm_sev_dh_cert_file"] = os.path.abspath("%s_godh.b64"
-                                                        % vm_name)
-        params["vm_sev_session_file"] = os.path.abspath("%s_session.b64"
-                                                        % vm_name)
+        files_remove.append("vm.chain")
+        process.system_output(
+            "sevctl session --name " + vm_name + " vm.chain " + params["vm_sev_policy"],
+            shell=True,
+        )
+        session_files = ["godh.b64", "session.b64", "tek.bin", "tik.bin"]
+        files_remove.extend([f"{vm_name}_{name}" for name in session_files])
+        params["vm_sev_dh_cert_file"] = os.path.abspath(f"{vm_name}_godh.b64")
+        params["vm_sev_session_file"] = os.path.abspath(f"{vm_name}_session.b64")
     except Exception as e:
-        test.fail("Insert guest dhcert and session blob failed, %s" % str(e))
+        test.fail(f"Insert guest dhcert and session blob failed, {str(e)}")
 
     env_process.preprocess_vm(test, params, env, vm_name)
     vm = env.get_vm(vm_name)
@@ -66,7 +62,7 @@ def run(test, params, env):
     try:
         session.cmd_output(params["sev_guest_check"], timeout=240)
     except Exception as e:
-        test.fail("Guest sev verify fail: %s" % str(e))
+        test.fail(f"Guest sev verify fail: {str(e)}")
     finally:
         session.close()
         vm.destroy()

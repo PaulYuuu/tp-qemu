@@ -1,14 +1,9 @@
 import os
 import re
-
 from shutil import copyfile
 
 from avocado.utils import process
-
-from virttest import data_dir
-from virttest import error_context
-from virttest import arch
-from virttest import utils_package
+from virttest import arch, data_dir, error_context, utils_package
 
 
 @error_context.context_aware
@@ -29,9 +24,9 @@ def run(test, params, env):
     build_cmd = params.get("build_cmd")
     vm_arch = params["vm_arch_name"]
     host_arch = arch.ARCH
-    src_dir = os.path.join(data_dir.get_deps_dir(), 'million')
-    src_file = os.path.join(src_dir, "million-%s.s" % host_arch)
-    dst_file = os.path.join(tmp_dir, "million-%s.s" % host_arch)
+    src_dir = os.path.join(data_dir.get_deps_dir(), "million")
+    src_file = os.path.join(src_dir, f"million-{host_arch}.s")
+    dst_file = os.path.join(tmp_dir, f"million-{host_arch}.s")
 
     if not utils_package.package_install("perf"):
         test.error("Install dependency packages failed")
@@ -53,9 +48,10 @@ def run(test, params, env):
 
     if not utils_package.package_install("perf", session):
         test.error("Install dependency packages failed")
-    src_file = os.path.join(src_dir, "million-%s.s" % vm_arch)
-    error_context.context("transfer '%s' to guest('%s')" %
-                          (src_file, dst_file), test.log.info)
+    src_file = os.path.join(src_dir, f"million-{vm_arch}.s")
+    error_context.context(
+        f"transfer '{src_file}' to guest('{dst_file}')", test.log.info
+    )
     vm.copy_files_to(src_file, tmp_dir, timeout=timeout)
 
     error_context.context("build binary file 'million' in guest", test.log.info)

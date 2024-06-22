@@ -1,20 +1,20 @@
-import time
 import json
+import time
 
 from provider import backup_utils
 from provider.blockdev_snapshot_base import BlockDevSnapshotTest
 
 
 class BlockDevStreamTest(BlockDevSnapshotTest):
-
     def __init__(self, test, params, env):
-        super(BlockDevStreamTest, self).__init__(test, params, env)
+        super().__init__(test, params, env)
         self._stream_options = {}
-        self._top_device = "drive_%s" % self.snapshot_tag
+        self._top_device = f"drive_{self.snapshot_tag}"
         self._init_stream_options()
         if self.base_tag == self.params.objects("images")[0]:
             self.disks_info[self.base_tag] = [
-                "system", self.params.get("mnt_on_sys_dsk", "/var/tmp")
+                "system",
+                self.params.get("mnt_on_sys_dsk", "/var/tmp"),
             ]
 
     def _init_stream_options(self):
@@ -33,8 +33,7 @@ class BlockDevStreamTest(BlockDevSnapshotTest):
         if self.params.get("backing_file"):
             self._stream_options["backing-file"] = self.params["backing_file"]
         if self.params.get("block_stream_timeout"):
-            self._stream_options["timeout"] = int(
-                self.params["block_stream_timeout"])
+            self._stream_options["timeout"] = int(self.params["block_stream_timeout"])
 
     def snapshot_test(self):
         for info in self.disks_info.values():
@@ -47,8 +46,9 @@ class BlockDevStreamTest(BlockDevSnapshotTest):
         if not self.is_blockdev_mode():
             self._stream_options["base"] = self.base_image.image_filename
             self._top_device = self.params["device"]
-        backup_utils.blockdev_stream(self.main_vm, self._top_device,
-                                     **self._stream_options)
+        backup_utils.blockdev_stream(
+            self.main_vm, self._top_device, **self._stream_options
+        )
         time.sleep(0.5)
 
     def check_backing_file(self):
@@ -56,16 +56,16 @@ class BlockDevStreamTest(BlockDevSnapshotTest):
         out = self.snapshot_image.info(output="json")
         info = json.loads(out)
         backing_file = info.get("backing-filename")
-        assert not backing_file, "Unexpect backing file(%s) found!" % backing_file
+        assert not backing_file, f"Unexpect backing file({backing_file}) found!"
 
     def mount_data_disks(self):
         if self.base_tag != self.params.objects("images")[0]:
-            super(BlockDevStreamTest, self).mount_data_disks()
+            super().mount_data_disks()
 
     def remove_files_from_system_image(self, tmo=60):
         """Remove testing files from system image"""
         if self.base_tag == self.params.objects("images")[0]:
-            files = ["%s/%s" % (info[0], info[1]) for info in self.files_info]
+            files = [f"{info[0]}/{info[1]}" for info in self.files_info]
             if files:
                 self.main_vm = self.main_vm.clone()
                 self.main_vm.create()
@@ -73,7 +73,7 @@ class BlockDevStreamTest(BlockDevSnapshotTest):
 
                 try:
                     session = self.main_vm.wait_for_login()
-                    session.cmd("rm -f %s" % " ".join(files), timeout=tmo)
+                    session.cmd("rm -f {}".format(" ".join(files)), timeout=tmo)
                     session.close()
                 finally:
                     self.main_vm.destroy()

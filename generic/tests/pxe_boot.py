@@ -1,5 +1,4 @@
 import aexpect
-
 from virttest import error_context
 
 
@@ -22,14 +21,15 @@ def run(test, params, env):
     timeout = int(params.get("pxe_timeout", 60))
 
     error_context.context("Snoop packet in the tap device", test.log.info)
-    tcpdump_cmd = "tcpdump -nli %s port '(tftp or bootps)'" % vm.get_ifname()
+    tcpdump_cmd = f"tcpdump -nli {vm.get_ifname()} port '(tftp or bootps)'"
     try:
-        tcpdump_process = aexpect.run_bg(command=tcpdump_cmd,
-                                         output_func=test.log.debug,
-                                         output_prefix="(pxe capture) ")
-        if not tcpdump_process.read_until_output_matches(['tftp'],
-                                                         timeout=timeout):
-            test.fail("Couldn't find any TFTP packets after %s seconds" % timeout)
+        tcpdump_process = aexpect.run_bg(
+            command=tcpdump_cmd,
+            output_func=test.log.debug,
+            output_prefix="(pxe capture) ",
+        )
+        if not tcpdump_process.read_until_output_matches(["tftp"], timeout=timeout):
+            test.fail(f"Couldn't find any TFTP packets after {timeout} seconds")
         test.log.info("Found TFTP packet")
     finally:
         try:

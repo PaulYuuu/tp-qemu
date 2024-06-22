@@ -1,10 +1,7 @@
 import os
 import re
 
-from virttest import error_context
-from virttest import utils_net
-from virttest import utils_netperf
-from virttest import data_dir
+from virttest import data_dir, error_context, utils_net, utils_netperf
 
 
 @error_context.context_aware
@@ -40,17 +37,18 @@ def run(test, params, env):
     error_context.context("Test env prepare", test.log.info)
     netperf_link = params.get("netperf_link")
     if netperf_link:
-        netperf_link = os.path.join(data_dir.get_deps_dir("netperf"),
-                                    netperf_link)
+        netperf_link = os.path.join(data_dir.get_deps_dir("netperf"), netperf_link)
     md5sum = params.get("pkg_md5sum")
     netperf_server_link = params.get("netperf_server_link_win")
     if netperf_server_link:
-        netperf_server_link = os.path.join(data_dir.get_deps_dir("netperf"),
-                                           netperf_server_link)
+        netperf_server_link = os.path.join(
+            data_dir.get_deps_dir("netperf"), netperf_server_link
+        )
     netperf_client_link = params.get("netperf_client_link_win")
     if netperf_client_link:
-        netperf_client_link = os.path.join(data_dir.get_deps_dir("netperf"),
-                                           netperf_client_link)
+        netperf_client_link = os.path.join(
+            data_dir.get_deps_dir("netperf"), netperf_client_link
+        )
 
     server_md5sum = params.get("server_md5sum")
     client_md5sum = params.get("client_md5sum")
@@ -61,12 +59,11 @@ def run(test, params, env):
     client_path_win = params.get("client_path_win", "c:\\")
     guest_username = params.get("username", "")
     guest_password = params.get("password", "")
-    host_password = params.get("hostpassword")
+    params.get("hostpassword")
     client = params.get("shell_client")
     port = params.get("shell_port")
     prompt = params.get("shell_prompt", r"^root@.*[\#\$]\s*$|#")
-    linesep = params.get(
-        "shell_linesep", "\n").encode().decode('unicode_escape')
+    linesep = params.get("shell_linesep", "\n").encode().decode("unicode_escape")
     status_test_command = params.get("status_test_command", "echo $?")
     compile_option_client = params.get("compile_option_client", "")
     compile_option_server = params.get("compile_option_server", "")
@@ -97,10 +94,10 @@ def run(test, params, env):
             server_interface = params.get("netdst", "switch")
             host_nic = utils_net.Interface(server_interface)
             netserver_ip = host_nic.get_ip()
-        s_client = params.get("shell_client_%s" % dsthost, "ssh")
-        s_port = params.get("shell_port_%s" % dsthost, "22")
-        s_username = params.get("username_%s" % dsthost, "root")
-        s_password = params.get("password_%s" % dsthost, "redhat")
+        s_client = params.get(f"shell_client_{dsthost}", "ssh")
+        s_port = params.get(f"shell_port_{dsthost}", "22")
+        s_username = params.get(f"username_{dsthost}", "root")
+        s_password = params.get(f"password_{dsthost}", "redhat")
         s_link = netperf_link
         s_path = server_path
         s_md5sum = md5sum
@@ -114,28 +111,35 @@ def run(test, params, env):
         c_md5sum = md5sum
         c_link = netperf_link
 
-    netperf_client = utils_netperf.NetperfClient(main_vm_ip,
-                                                 c_path,
-                                                 c_md5sum, c_link,
-                                                 client, port,
-                                                 username=guest_username,
-                                                 password=guest_password,
-                                                 prompt=prompt,
-                                                 linesep=linesep,
-                                                 status_test_command=status_test_command,
-                                                 compile_option=compile_option_client)
+    netperf_client = utils_netperf.NetperfClient(
+        main_vm_ip,
+        c_path,
+        c_md5sum,
+        c_link,
+        client,
+        port,
+        username=guest_username,
+        password=guest_password,
+        prompt=prompt,
+        linesep=linesep,
+        status_test_command=status_test_command,
+        compile_option=compile_option_client,
+    )
 
-    netperf_server = utils_netperf.NetperfServer(netserver_ip,
-                                                 s_path,
-                                                 s_md5sum,
-                                                 s_link,
-                                                 s_client, s_port,
-                                                 username=s_username,
-                                                 password=s_password,
-                                                 prompt=prompt,
-                                                 linesep=linesep,
-                                                 status_test_command=status_test_command,
-                                                 compile_option=compile_option_server)
+    netperf_server = utils_netperf.NetperfServer(
+        netserver_ip,
+        s_path,
+        s_md5sum,
+        s_link,
+        s_client,
+        s_port,
+        username=s_username,
+        password=s_password,
+        prompt=prompt,
+        linesep=linesep,
+        status_test_command=status_test_command,
+        compile_option=compile_option_server,
+    )
 
     # Get range of message size.
     message_size = params.get("message_size_range", "580 590 1").split()
@@ -152,7 +156,7 @@ def run(test, params, env):
         msg = "Detail result of netperf test with different packet size.\n"
         for m_size in range(start_size, end_size + 1, step):
             test_protocol = params.get("test_protocol", "UDP_STREAM")
-            test_option = "-t %s -- -m %s" % (test_protocol, m_size)
+            test_option = f"-t {test_protocol} -- -m {m_size}"
             txt = "Run netperf client with protocol: '%s', packet size: '%s'"
             error_context.context(txt % (test_protocol, m_size), test.log.info)
             output = netperf_client.start(netserver_ip, test_option)
@@ -161,8 +165,8 @@ def run(test, params, env):
             try:
                 line_tokens = re.findall(re_str, output)[0].split()
             except IndexError:
-                txt = "Fail to get Throughput for %s." % m_size
-                txt += " netprf client output: %s" % output
+                txt = f"Fail to get Throughput for {m_size}."
+                txt += f" netprf client output: {output}"
                 test.error(txt)
             if not line_tokens:
                 test.error("Output format is not expected")
@@ -185,8 +189,8 @@ def run(test, params, env):
     for i in range(len(throughput) - 1):
         if abs(throughput[i] - throughput[i + 1]) > throughput[i] * failratio:
             txt = "The gap between adjacent throughput is greater than"
-            txt += "%f." % failratio
-            txt += "Please refer to log file for details:\n %s" % msg
+            txt += f"{failratio:f}."
+            txt += f"Please refer to log file for details:\n {msg}"
             test.fail(txt)
     test.log.info("The UDP performance as measured via netperf is ok.")
     test.log.info("Throughput of netperf command: %s", throughput)

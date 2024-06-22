@@ -1,37 +1,32 @@
 import logging
 
 from avocado.utils import memory
-
 from virttest import error_context
 
-from provider import backup_utils
-from provider import blockdev_full_backup_base
+from provider import backup_utils, blockdev_full_backup_base
 
-LOG_JOB = logging.getLogger('avocado.test')
+LOG_JOB = logging.getLogger("avocado.test")
 
 
-class BlockDevFullMirrorTest(
-        blockdev_full_backup_base.BlockdevFullBackupBaseTest):
-
+class BlockDevFullMirrorTest(blockdev_full_backup_base.BlockdevFullBackupBaseTest):
     @error_context.context_aware
     def blockdev_mirror(self):
-        source = "drive_%s" % self.source_disks[0]
-        target = "drive_%s" % self.target_disks[0]
+        source = f"drive_{self.source_disks[0]}"
+        target = f"drive_{self.target_disks[0]}"
         try:
             error_context.context(
-                "backup %s to %s, options: %s" %
-                (source, target, self.backup_options), LOG_JOB.info)
+                f"backup {source} to {target}, options: {self.backup_options}",
+                LOG_JOB.info,
+            )
             backup_utils.blockdev_mirror(
-                self.main_vm,
-                source,
-                target,
-                **self.backup_options)
+                self.main_vm, source, target, **self.backup_options
+            )
         finally:
             memory.drop_caches()
 
     def verify_blockdev_mirror(self):
         out = self.main_vm.monitor.query("block")
-        target_node = "drive_%s" % self.target_disks[0]
+        target_node = f"drive_{self.target_disks[0]}"
         for item in out:
             inserted = item["inserted"]
             if self.is_blockdev_mode():
@@ -40,7 +35,7 @@ class BlockDevFullMirrorTest(
                 device = inserted.get("device")
             if device == target_node:
                 return
-        self.test.fail("target node(%s) is not opening" % target_node)
+        self.test.fail(f"target node({target_node}) is not opening")
 
     @error_context.context_aware
     def do_backup(self):

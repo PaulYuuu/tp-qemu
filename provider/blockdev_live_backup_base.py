@@ -16,8 +16,8 @@ Note:
        granularity: granularity in BlockDirtyInfo
        persistent: persistent in BlockDirtyInfo
 """
-import json
 
+import json
 from functools import partial
 
 from provider.backup_utils import blockdev_batch_backup
@@ -28,11 +28,11 @@ class BlockdevLiveBackupBaseTest(BlockdevBaseTest):
     """Live backup base test module"""
 
     def __init__(self, test, params, env):
-        super(BlockdevLiveBackupBaseTest, self).__init__(test, params, env)
+        super().__init__(test, params, env)
         self.clone_vm = None
         self._target_images = []
         self._source_images = params.objects("source_images")
-        self._source_nodes = ["drive_%s" % src for src in self._source_images]
+        self._source_nodes = [f"drive_{src}" for src in self._source_images]
         self._full_backup_options = self._get_full_backup_options()
         self._full_bk_images = []
         self._full_bk_nodes = []
@@ -43,8 +43,8 @@ class BlockdevLiveBackupBaseTest(BlockdevBaseTest):
         image_params = self.params.object_params(tag)
         image_chain = image_params.objects("image_backup_chain")
         self._full_bk_images.append(image_chain[0])
-        self._full_bk_nodes.append("drive_%s" % image_chain[0])
-        self._bitmaps.append("bitmap_%s" % tag)
+        self._full_bk_nodes.append(f"drive_{image_chain[0]}")
+        self._bitmaps.append(f"bitmap_{tag}")
         self._target_images.append(image_chain[-1])
 
     def _convert_args(self, backup_options):
@@ -60,20 +60,20 @@ class BlockdevLiveBackupBaseTest(BlockdevBaseTest):
         return options
 
     def _configure_system_disk(self, tag):
-        self.disks_info[tag] = [
-            "system", self.params.get("mnt_on_sys_dsk", "/var/tmp")]
+        self.disks_info[tag] = ["system", self.params.get("mnt_on_sys_dsk", "/var/tmp")]
 
     def _configure_data_disk(self, tag):
         self.format_data_disk(tag)
 
     def remove_files_from_system_image(self, tmo=60):
         """Remove testing files from system image"""
-        tag_dir_list = [(t, d[1])
-                        for t, d in self.disks_info.items() if d[0] == "system"]
+        tag_dir_list = [
+            (t, d[1]) for t, d in self.disks_info.items() if d[0] == "system"
+        ]
         if tag_dir_list:
             tag, root_dir = tag_dir_list[0]
-            files = ["%s/%s" % (root_dir, f) for f in self.files_info[tag]]
-            rm_cmd = "rm -f %s" % " ".join(files)
+            files = [f"{root_dir}/{f}" for f in self.files_info[tag]]
+            rm_cmd = "rm -f {}".format(" ".join(files))
 
             if self.clone_vm and self.clone_vm.is_alive():
                 self.clone_vm.destroy()
@@ -93,9 +93,9 @@ class BlockdevLiveBackupBaseTest(BlockdevBaseTest):
             self._configure_system_disk(tag)
         else:
             self._configure_data_disk(tag)
-        self.generate_data_file(tag, filename='base')
+        self.generate_data_file(tag, filename="base")
 
-    def generate_inc_files(self, filename='inc'):
+    def generate_inc_files(self, filename="inc"):
         """Create new files on data disks"""
         f = partial(self.generate_data_file, filename=filename)
         list(map(f, self._source_images))
@@ -112,13 +112,17 @@ class BlockdevLiveBackupBaseTest(BlockdevBaseTest):
         self.clone_vm = self.main_vm.clone(params=clone_params)
         self.clone_vm.create()
         self.clone_vm.verify_alive()
-        self.env.register_vm("%s_clone" % self.clone_vm.name, self.clone_vm)
+        self.env.register_vm(f"{self.clone_vm.name}_clone", self.clone_vm)
 
     def do_full_backup(self):
-        blockdev_batch_backup(self.main_vm, self._source_nodes,
-                              self._full_bk_nodes, self._bitmaps,
-                              **self._full_backup_options)
+        blockdev_batch_backup(
+            self.main_vm,
+            self._source_nodes,
+            self._full_bk_nodes,
+            self._bitmaps,
+            **self._full_backup_options,
+        )
 
     def post_test(self):
         self.remove_files_from_system_image()
-        super(BlockdevLiveBackupBaseTest, self).post_test()
+        super().post_test()

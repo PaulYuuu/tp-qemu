@@ -2,9 +2,8 @@ import json
 import os
 import time
 
-from virttest import error_context
-from virttest import graphical_console
-from virttest import data_dir
+from virttest import data_dir, error_context, graphical_console
+
 from provider import input_event_proxy
 
 
@@ -36,8 +35,8 @@ def key_tap_test(test, params, vm):
         """
         events_queue = listener.events
 
-        if '-' in key:
-            key_lst = [key_check_cfg[k] for k in key.split('-')]
+        if "-" in key:
+            key_lst = [key_check_cfg[k] for k in key.split("-")]
         else:
             key_lst = [key_check_cfg[key]]
         key_num = len(key_lst)
@@ -48,29 +47,33 @@ def key_tap_test(test, params, vm):
             key_event_lst.append((events["keyCode"], events["type"]))
 
         if len(key_event_lst) < 2 * key_num:
-            test.fail("Reveived key events %s were not enough" % key_event_lst)
+            test.fail(f"Reveived key events {key_event_lst} were not enough")
 
         key_down_lst = list()
         for k, v in key_event_lst[:-key_num]:
-            if v != 'KEYDOWN':
-                test.fail("Received key {0} event type {1} was not KEYDOWN").format(k, v)
+            if v != "KEYDOWN":
+                test.fail("Received key {0} event type {1} was not KEYDOWN").format(
+                    k, v
+                )
             key_down_lst.append(k)
 
         if len(key_down_lst) != key_num or set(key_down_lst) != set(key_lst):
-            test.fail("Key down event keycode error, received:{0},"
-                      "expect:{1}").format(key_down_lst, key_lst)
+            test.fail(
+                "Key down event keycode error, received:{0}," "expect:{1}"
+            ).format(key_down_lst, key_lst)
 
         key_up_lst = list()
         for k, v in key_event_lst[-key_num:]:
-            if v != 'KEYUP':
+            if v != "KEYUP":
                 test.fail("Received key {0} event type {1} was not KEYUP").format(k, v)
             key_up_lst.append(k)
 
         if set(key_up_lst) != set(key_lst):
-            test.fail("Key up event keycode error, received:{0},"
-                      "expect:{1}").format(key_up_lst, key_lst)
+            test.fail("Key up event keycode error, received:{0}," "expect:{1}").format(
+                key_up_lst, key_lst
+            )
 
-    key_table_file = params.get('key_table_file')
+    key_table_file = params.get("key_table_file")
     key_check_cfg = get_keycode_cfg(key_table_file)
     wait_time = float(params.get("wait_time", 0.2))
 
@@ -79,10 +82,11 @@ def key_tap_test(test, params, vm):
 
     console = graphical_console.GraphicalConsole(vm)
     for key in key_check_cfg.keys():
-        error_context.context("Send %s key tap to guest" % key, test.log.info)
+        error_context.context(f"Send {key} key tap to guest", test.log.info)
         console.key_tap(key)
-        error_context.context("Check %s key tap event received"
-                              "correct in guest" % key, test.log.info)
+        error_context.context(
+            f"Check {key} key tap event received" "correct in guest", test.log.info
+        )
         time.sleep(wait_time)
         key_check(key)
 

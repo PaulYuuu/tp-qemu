@@ -1,13 +1,11 @@
 """sg_write_same command testing for discard feature"""
+
 import os
 
 from avocado.utils import process
-from virttest import data_dir
-from virttest import env_process
-from virttest import error_context
-from virttest import storage
-from virttest.utils_misc import get_linux_drive_path
+from virttest import data_dir, env_process, error_context, storage
 from virttest import data_dir as virttest_data_dir
+from virttest.utils_misc import get_linux_drive_path
 
 
 @error_context.context_aware
@@ -35,14 +33,13 @@ def run(test, params, env):
         host_file = os.path.join(deps_dir, file_name)
         guest_file = guest_dir + file_name
         vm.copy_files_to(host_file, guest_dir)
-        status, output = session.cmd_status_output(
-            "$SHELL " + guest_file + " " + dev)
+        status, output = session.cmd_status_output("$SHELL " + guest_file + " " + dev)
         if status != 0:
             test.fail("run sg_write_same failed:" + output)
         test.log.debug(output)
 
     def _get_scsi_debug_disk(guest_session=None):
-        """"
+        """ "
         Get scsi debug disk on host or guest which created as scsi-block.
         """
         cmd = "lsblk -S -n -p|grep scsi_debug"
@@ -58,7 +55,7 @@ def run(test, params, env):
         return output.split()[0]
 
     def _get_sha1sum(target, guest_session=None):
-        cmd = "sha1sum %s | awk '{print $1}'" % target
+        cmd = f"sha1sum {target} | awk '{{print $1}}'"
         if guest_session:
             return guest_session.cmd_output(cmd).strip()
         return process.system_output(cmd, shell=True).decode()
@@ -79,21 +76,19 @@ def run(test, params, env):
     if scsi_debug == "yes":
         params["start_vm"] = "yes"
         disk_name = _get_scsi_debug_disk()
-        params["image_name_%s" % data_tag] = disk_name
+        params[f"image_name_{data_tag}"] = disk_name
         # boot guest with scsi_debug disk
         env_process.preprocess_vm(test, params, env, vm_name)
     else:
         image_params = params.object_params(data_tag)
-        disk_name = storage.get_image_filename(image_params,
-                                               data_dir.get_data_dir())
+        disk_name = storage.get_image_filename(image_params, data_dir.get_data_dir())
 
     vm = env.get_vm(vm_name)
     vm.verify_alive()
     timeout = float(params.get("login_timeout", 240))
     session = vm.wait_for_login(timeout=timeout)
 
-    error_context.context("Boot guest with disk '%s'" % disk_name,
-                          test.log.info)
+    error_context.context(f"Boot guest with disk '{disk_name}'", test.log.info)
     guest_disk_drive = get_linux_drive_path(session, disk_serial)
     if not guest_disk_drive:
         test.fail("Can not get data disk in guest.")
@@ -111,4 +106,4 @@ def run(test, params, env):
     host_sha1sum = _get_sha1sum(disk_name)
 
     if guest_sha1sum != host_sha1sum:
-        test.fail("Unmatched sha1sum %s:%s" % (guest_sha1sum, host_sha1sum))
+        test.fail(f"Unmatched sha1sum {guest_sha1sum}:{host_sha1sum}")

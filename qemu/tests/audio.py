@@ -20,7 +20,8 @@ def run(test, params, env):
     audio_device = params.get("audio_device")
 
     error_context.context("Verifying whether /dev/dsp is present")
-    session.cmd("test -c %s" % audio_device)
+    session.cmd(f"test -c {audio_device}")
     error_context.context("Trying to write to the device")
-    session.cmd("dd if=/dev/urandom of=%s bs=%s count=1" %
-                (audio_device, random_content_size))
+    session.cmd(
+        f"dd if=/dev/urandom of={audio_device} bs={random_content_size} count=1"
+    )

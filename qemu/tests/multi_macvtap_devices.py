@@ -2,40 +2,37 @@ import logging
 import time
 
 import aexpect
-
 from avocado.utils import process
+from virttest import env_process, error_context, utils_net
 
-from virttest import error_context
-from virttest import utils_net
-from virttest import env_process
-
-LOG_JOB = logging.getLogger('avocado.test')
+LOG_JOB = logging.getLogger("avocado.test")
 
 
-def guest_ping(test, session, dst_ip, count=None, os_type="linux",
-               p_size=1472, timeout=360):
+def guest_ping(
+    test, session, dst_ip, count=None, os_type="linux", p_size=1472, timeout=360
+):
     """
     Do ping test in guest
     """
     ping_cmd = "ping"
     if os_type == "linux":
         if count:
-            ping_cmd += " -c %s" % count
-        ping_cmd += " -s %s %s" % (p_size, dst_ip)
+            ping_cmd += f" -c {count}"
+        ping_cmd += f" -s {p_size} {dst_ip}"
     else:
         if not count:
             ping_cmd += " -t "
-        ping_cmd += " -l %s %s" % (p_size, dst_ip)
+        ping_cmd += f" -l {p_size} {dst_ip}"
     try:
         LOG_JOB.debug("Ping dst vm with cmd: '%s'", ping_cmd)
         session.cmd(ping_cmd, timeout=timeout)
     except aexpect.ShellTimeoutError as err:
         if count:
-            test.error("Error during ping guest ip, %s" % err)
+            test.error(f"Error during ping guest ip, {err}")
 
 
 def wait_guest_network_up(test, session, dst_ip, timeout=180):
-    txt = "Check whether guest network up by ping %s " % dst_ip
+    txt = f"Check whether guest network up by ping {dst_ip} "
     error_context.context(txt, LOG_JOB.info)
     end_time = time.time() + timeout
     while time.time() < end_time:
@@ -76,19 +73,20 @@ def run(test, params, env):
     try:
         ext_host = process.system_output(ext_host_get_cmd, shell=True)
     except process.CmdError:
-        test.log.warn("Can't get specified host with cmd '%s',"
-                      " Fallback to default host '%s'",
-                      ext_host_get_cmd, default_host)
+        test.log.warn(
+            "Can't get specified host with cmd '%s'," " Fallback to default host '%s'",
+            ext_host_get_cmd,
+            default_host,
+        )
         ext_host = default_host
     try:
-        txt = "Create and up %s macvtap devices in setting mode." % macvtap_num
+        txt = f"Create and up {macvtap_num} macvtap devices in setting mode."
         error_context.context(txt, test.log.info)
         for num in range(macvtap_num):
             mac = utils_net.generate_mac_address_simple()
-            ifname = "%s_%s" % (macvtap_mode, num)
-            tapfd = utils_net.create_and_open_macvtap(ifname, macvtap_mode,
-                                                      1, netdst, mac)
-            check_cmd = "ip -d link show %s" % ifname
+            ifname = f"{macvtap_mode}_{num}"
+            utils_net.create_and_open_macvtap(ifname, macvtap_mode, 1, netdst, mac)
+            check_cmd = f"ip -d link show {ifname}"
             output = process.system_output(check_cmd)
             test.log.debug(output)
             macvtap_ifnames.append(ifname)
@@ -102,18 +100,17 @@ def run(test, params, env):
             vm.verify_alive()
             session = vm.wait_for_serial_login(timeout=timeout)
             if wait_guest_network_up(test, session, ext_host, timeout=timeout):
-                txt = " Ping from guests to %s for %s counts." % (ext_host,
-                                                                  ping_count)
+                txt = f" Ping from guests to {ext_host} for {ping_count} counts."
                 error_context.context(txt, test.log.info)
                 guest_ping(test, session, ext_host, 100)
             else:
                 ipconfig_cmd = params.get("ipconfig_cmd", "ifconfig -a")
                 out = session.cmd(ipconfig_cmd)
                 msg = "Could not ping %s successful after %ss."
-                msg += "Guest network status (%s): %s" % (ipconfig_cmd, out)
+                msg += f"Guest network status ({ipconfig_cmd}): {out}"
                 test.fail(msg)
     finally:
         error_context.context("Delete all macvtap interfaces.", test.log.info)
         for ifname in macvtap_ifnames:
-            del_cmd = "ip link delete %s" % ifname
+            del_cmd = f"ip link delete {ifname}"
             process.system(del_cmd, ignore_status=True)

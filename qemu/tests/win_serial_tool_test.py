@@ -1,11 +1,10 @@
 import re
 
-from virttest import error_context
-from virttest import utils_test
-from virttest import utils_misc
+from virttest import error_context, utils_misc, utils_test
 from virttest.utils_virtio_port import VirtioPortTest
-from qemu.tests.virtio_driver_sign_check import get_driver_file_path
+
 from provider import win_driver_utils
+from qemu.tests.virtio_driver_sign_check import get_driver_file_path
 
 
 @error_context.context_aware
@@ -33,7 +32,7 @@ def run(test, params, env):
         port.sock.sendall(transfer_data)
         output = session.cmd_output(guest_receive_cmd)
         if not re.findall(guest_pattern, output, re.M):
-            test.fail("Guest fails to receive data, output is: %s" % output)
+            test.fail(f"Guest fails to receive data, output is: {output}")
         port.close()
 
     def transfer_from_guest_to_host(port):
@@ -48,14 +47,14 @@ def run(test, params, env):
         output = session.cmd_output(guest_send_cmd)
         if params.get("check_from_guest", "no") == "yes":
             if not re.findall(guest_pattern, output, re.M):
-                test.fail("Guest fails to send data, output is %s" % output)
+                test.fail(f"Guest fails to send data, output is {output}")
         else:
             try:
                 tmp = port.sock.recv(1024)[:-1]
-            except IOError as failure_detail:
+            except OSError as failure_detail:
                 test.log.warn("Got err while recv: %s", failure_detail)
             if tmp != transfer_data:
-                test.fail("Incorrect data: '%s' != '%s'" % (transfer_data, tmp))
+                test.fail(f"Incorrect data: '{transfer_data}' != '{tmp}'")
         port.close()
 
     vm = env.get_vm(params["main_vm"])
@@ -74,12 +73,12 @@ def run(test, params, env):
         guest_send_cmd = guest_send_cmd % path
     elif path == "WIN_UTILS":
         session = vm.wait_for_serial_login()
-        guest_receive_cmd = utils_misc.set_winutils_letter(session,
-                                                           guest_receive_cmd)
+        guest_receive_cmd = utils_misc.set_winutils_letter(session, guest_receive_cmd)
         guest_send_cmd = utils_misc.set_winutils_letter(session, guest_send_cmd)
 
-    session = utils_test.qemu.windrv_check_running_verifier(session, vm,
-                                                            test, driver_name)
+    session = utils_test.qemu.windrv_check_running_verifier(
+        session, vm, test, driver_name
+    )
     port = VirtioPortTest(test, env, params).get_virtio_ports(vm)[1][0]
 
     error_context.context("Tranfer data from host to guest", test.log.info)

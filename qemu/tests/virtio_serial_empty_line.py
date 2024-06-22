@@ -13,8 +13,8 @@ def get_device_name_of_port(session, port_name):
     :return: The device name of the port
     """
     virtio_port_dev_path = "/dev/virtio-ports/"
-    port_path = "%s%s" % (virtio_port_dev_path, port_name)
-    device_name = session.cmd_output_safe("readlink %s" % port_path)
+    port_path = f"{virtio_port_dev_path}{port_name}"
+    device_name = session.cmd_output_safe(f"readlink {port_path}")
     return device_name.strip("../\n")
 
 
@@ -46,14 +46,14 @@ def get_port_info(session):
     """
     virtio_ports_debug_path = "/sys/kernel/debug/virtio-ports/"
     info_dict = {}
-    port_devs = session.cmd_output_safe(
-        "ls %s" % virtio_ports_debug_path).split()
+    port_devs = session.cmd_output_safe(f"ls {virtio_ports_debug_path}").split()
     for port_dev in port_devs:
-        port_infos = session.cmd_output("cat %s%s" % (
-            virtio_ports_debug_path, port_dev)).splitlines()
+        port_infos = session.cmd_output(
+            f"cat {virtio_ports_debug_path}{port_dev}"
+        ).splitlines()
         port_dict = {}
         for line in port_infos:
-            option, value = line.split(':')
+            option, value = line.split(":")
             port_dict.update({option: value.strip()})
         info_dict.update({port_dev: port_dict})
     return info_dict
@@ -84,31 +84,32 @@ def run(test, params, env):
             # Send empty line('\n') from guest to host
             port.open()
             # 'echo' automatically adds '\n' in the end of each writing
-            send_data_command = 'echo "" > /dev/%s' % device_name
+            send_data_command = f'echo "" > /dev/{device_name}'
             session.cmd(send_data_command, timeout=120)
             received_data = port.sock.recv(10)
             if received_data != b"\n":
-                test.fail("Received data is not same as the data sent,"
-                          " received %s, while expected '\n'"
-                          % received_data)
+                test.fail(
+                    "Received data is not same as the data sent,"
+                    f" received {received_data}, while expected '\n'"
+                )
             check_option = {"bytes_sent": "1"}
         else:
             # Send empty line('\n') from host to guest
             port.open()
-            port.sock.send(b'\n')
-            guest_worker.cmd("virt.open('%s')" % port.name)
-            guest_worker.cmd("virt.recv('%s', 0, mode=False)" % port.name)
+            port.sock.send(b"\n")
+            guest_worker.cmd(f"virt.open('{port.name}')")
+            guest_worker.cmd(f"virt.recv('{port.name}', 0, mode=False)")
             check_option = {"bytes_received": "1"}
         # Check options byte_sent or bytes_received
         check = check_port_info(session, device_name, check_option)
         if check is False:
-            test.error("The debug info of %s is not found" % device_name)
+            test.error(f"The debug info of {device_name} is not found")
         elif check:
-            error_msg = ''
+            error_msg = ""
             for option, value in check.items():
-                error_msg += "Option %s is %s," % (option, value[0])
-                error_msg += " while expectation is: %s; " % value[1]
-            test.fail("Check info mismatch: %s " % error_msg)
+                error_msg += f"Option {option} is {value[0]},"
+                error_msg += f" while expectation is: {value[1]}; "
+            test.fail(f"Check info mismatch: {error_msg} ")
     finally:
         virtio_test.cleanup(vm, guest_worker)
         session.close()

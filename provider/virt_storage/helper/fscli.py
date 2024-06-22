@@ -4,8 +4,7 @@ import shutil
 from avocado.utils import process
 
 
-class FsCli(object):
-
+class FsCli:
     def __init__(self, dir_path):
         self.dir_path = dir_path
         self._is_export = None
@@ -23,7 +22,7 @@ class FsCli(object):
 
     @staticmethod
     def remove_file(path):
-        return process.system("rm -f %s" % path, shell=True)
+        return process.system(f"rm -f {path}", shell=True)
 
     def get_path_by_name(self, name):
         path = os.path.join(self.dir_path, name)
@@ -58,10 +57,10 @@ class FsCli(object):
 
     def path_to_url(self, path):
         """Get url schema path"""
-        return "%s%s" % (self._protocol, os.path.realpath(path))
+        return f"{self._protocol}{os.path.realpath(path)}"
 
     def url_to_path(self, url):
-        return url[len(self._protocol):]
+        return url[len(self._protocol) :]
 
     @property
     def is_exists(self):
@@ -71,12 +70,12 @@ class FsCli(object):
 
     @property
     def capacity(self):
-        cmd = "df -k --output=size %s |tail -n1" % self.dir_path
+        cmd = f"df -k --output=size {self.dir_path} |tail -n1"
         output = process.system_output(cmd, shell=True)
         return int(output) * 1024
 
     @property
     def available(self):
-        cmd = "df -k --output=avail %s |tail -n1" % self.dir_path
+        cmd = f"df -k --output=avail {self.dir_path} |tail -n1"
         output = process.system_output(cmd, shell=True)
         return int(output) * 1024

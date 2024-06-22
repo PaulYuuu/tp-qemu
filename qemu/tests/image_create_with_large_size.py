@@ -1,5 +1,4 @@
 from avocado.core import exceptions
-
 from virttest import data_dir
 from virttest.qemu_storage import QemuImg
 
@@ -29,7 +28,7 @@ def run(test, params, env):
         large.create(large.params)
     except exceptions.TestError as err:
         if create_err_info not in str(err) or large_filename not in str(err):
-            test.fail("CML failed with unexpected output: %s" % err)
+            test.fail(f"CML failed with unexpected output: {err}")
     else:
         test.fail("There is no error when creating an image with large size.")
 
@@ -40,4 +39,4 @@ def run(test, params, env):
     if status == 0:
         test.fail("There is no error when resizing an image with large size.")
     elif resize_err_info not in output:
-        test.fail("CML failed with unexpected output: %s" % output)
+        test.fail(f"CML failed with unexpected output: {output}")

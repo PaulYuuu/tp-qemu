@@ -18,5 +18,5 @@ def run(test, params, env):
         session = vm.wait_for_login()
         test.log.debug("Performing %s on VM %s", cmd, vm.name)
         if session.cmd_status(cmd, timeout=timeout) != 0:
-            test.fail("Failed to update VM %s using %s" % (vm.name, cmd))
+            test.fail(f"Failed to update VM {vm.name} using {cmd}")
         session.close()

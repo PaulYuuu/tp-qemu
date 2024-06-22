@@ -1,20 +1,19 @@
 import os
-import time
 import re
 import sys
-import six
+import time
 
 import aexpect
-
-from avocado.utils import data_factory
-from avocado.utils import process
-
-from virttest import error_context
-from virttest import env_process
-from virttest import utils_misc
-from virttest import utils_numeric
-from virttest import qemu_storage
-from virttest import data_dir
+import six
+from avocado.utils import data_factory, process
+from virttest import (
+    data_dir,
+    env_process,
+    error_context,
+    qemu_storage,
+    utils_misc,
+    utils_numeric,
+)
 
 
 @error_context.context_aware
@@ -53,19 +52,16 @@ def run(test, params, env):
     mount_path = None
     while mount_path is None or os.path.exists(mount_path):
         test_rand = data_factory.generate_random_string(3)
-        mount_path = ("%s/ni_mount_%s" %
-                      (data_dir.get_data_dir(), test_rand))
+        mount_path = f"{data_dir.get_data_dir()}/ni_mount_{test_rand}"
 
     mig_dst = os.path.join(mount_path, "mig_dst")
 
-    migration_exec_cmd_src = params.get("migration_exec_cmd_src",
-                                        "gzip -c > %s")
-    migration_exec_cmd_src = (migration_exec_cmd_src % (mig_dst))
+    migration_exec_cmd_src = params.get("migration_exec_cmd_src", "gzip -c > %s")
+    migration_exec_cmd_src = migration_exec_cmd_src % (mig_dst)
 
-    class MiniSubtest(object):
-
+    class MiniSubtest:
         def __new__(cls, *args, **kargs):
-            self = super(MiniSubtest, cls).__new__(cls)
+            self = super().__new__(cls)
             ret = None
             exc_info = None
             if args is None:
@@ -95,23 +91,20 @@ def run(test, params, env):
         :param action: action with service (start|stop|restart)
         :param init_service: name of service for old service control.
         """
-        status = utils_misc.get_guest_service_status(session, service,
-                                                     service_former=init_service)
+        status = utils_misc.get_guest_service_status(
+            session, service, service_former=init_service
+        )
         if action == "start" and status == "active":
-            test.log.debug("%s already started, no need start it again.",
-                           service)
+            test.log.debug("%s already started, no need start it again.", service)
             return
         if action == "stop" and status == "inactive":
-            test.log.debug("%s already stopped, no need stop it again.",
-                           service)
+            test.log.debug("%s already stopped, no need stop it again.", service)
             return
         try:
             session.cmd("systemctl --version", timeout=timeout)
-            session.cmd("systemctl %s %s.service" % (action, service),
-                        timeout=timeout)
+            session.cmd(f"systemctl {action} {service}.service", timeout=timeout)
         except:
-            session.cmd("service %s %s" % (init_service, action),
-                        timeout=timeout)
+            session.cmd(f"service {init_service} {action}", timeout=timeout)
 
     def set_nfs_server(vm, share_cfg):
         """
@@ -120,7 +113,7 @@ def run(test, params, env):
         :param vm: Virtual machine for vm.
         """
         session = vm.wait_for_login(timeout=login_timeout)
-        cmd = "echo '%s' > /etc/exports" % (share_cfg)
+        cmd = f"echo '{share_cfg}' > /etc/exports"
         control_service(session, "nfs-server", "nfs", "stop")
         session.cmd(cmd)
         control_service(session, "nfs-server", "nfs", "start")
@@ -133,7 +126,7 @@ def run(test, params, env):
 
         :param mount_path: path where nfs dir will be placed.
         """
-        process.run("umount -f %s" % (mount_path))
+        process.run(f"umount -f {mount_path}")
 
     def create_file_disk(dst_path, size):
         """
@@ -142,8 +135,8 @@ def run(test, params, env):
         :param dst_path: Path to file.
         :param size: Size of file in MB
         """
-        process.run("dd if=/dev/zero of=%s bs=1M count=%s" % (dst_path, size))
-        process.run("mkfs.ext3 -F %s" % (dst_path))
+        process.run(f"dd if=/dev/zero of={dst_path} bs=1M count={size}")
+        process.run(f"mkfs.ext3 -F {dst_path}")
 
     def mount(disk_path, mount_path, options=None):
         """
@@ -156,9 +149,9 @@ def run(test, params, env):
         if options is None:
             options = ""
         else:
-            options = "%s" % options
+            options = f"{options}"
 
-        process.run("mount %s %s %s" % (options, disk_path, mount_path))
+        process.run(f"mount {options} {disk_path} {mount_path}")
 
     def find_disk_vm(vm, disk_serial):
         """
@@ -172,7 +165,7 @@ def run(test, params, env):
         session = vm.wait_for_login(timeout=login_timeout)
 
         disk_path = os.path.join("/", "dev", "disk", "by-id")
-        disks = session.cmd("ls %s" % disk_path).split("\n")
+        disks = session.cmd(f"ls {disk_path}").split("\n")
         session.close()
         disk = list(filter(lambda x: x.endswith(disk_serial), disks))
         if not disk:
@@ -187,8 +180,8 @@ def run(test, params, env):
         :param disk_path: Path to disk in guest system.
         """
         session = vm.wait_for_login(timeout=login_timeout)
-        session.cmd("mkfs.ext3 -F %s" % (disk_path))
-        session.cmd("mount %s %s" % (disk_path, mount_path))
+        session.cmd(f"mkfs.ext3 -F {disk_path}")
+        session.cmd(f"mount {disk_path} {mount_path}")
         session.close()
 
     def disk_load(vm, src_path, dst_path, copy_timeout=None, dsize=None):
@@ -204,14 +197,14 @@ def run(test, params, env):
         if dsize is None:
             dsize = 100
         session = vm.wait_for_login(timeout=login_timeout)
-        cmd = ("nohup /bin/bash -c 'while true; do dd if=%s of=%s bs=1M "
-               "count=%s; done;' 2> /dev/null &" % (src_path, dst_path, dsize))
-        pid = re.search(r"\[.+\] (.+)",
-                        session.cmd_output(cmd, timeout=copy_timeout))
+        cmd = (
+            f"nohup /bin/bash -c 'while true; do dd if={src_path} of={dst_path} bs=1M "
+            f"count={dsize}; done;' 2> /dev/null &"
+        )
+        pid = re.search(r"\[.+\] (.+)", session.cmd_output(cmd, timeout=copy_timeout))
         return pid.group(1)
 
-    class IscsiServer_tgt(object):
-
+    class IscsiServer_tgt:
         """
         Class for set and start Iscsi server.
         """
@@ -237,14 +230,12 @@ def run(test, params, env):
             """
             session = vm_ds.wait_for_login(timeout=login_timeout)
 
-            session.cmd("dd if=/dev/zero of=%s bs=1M count=%s" % (disk_path,
-                                                                  disk_size))
+            session.cmd(f"dd if=/dev/zero of={disk_path} bs=1M count={disk_size}")
             status, output = session.cmd_status_output("setenforce 0")
             if status not in [0, 127]:
                 test.log.warn("Function setenforce fails.\n %s", output)
 
-            config = self.config % (self.server_name, disk_path,
-                                    self.user, self.passwd)
+            config = self.config % (self.server_name, disk_path, self.user, self.passwd)
             cmd = "cat > /etc/tgt/conf.d/virt.conf << EOF" + config + "EOF"
             control_service(session, "tgtd", "tgtd", "stop")
             session.sendline(cmd)
@@ -254,7 +245,7 @@ def run(test, params, env):
 
         def find_disk(self):
             disk_path = os.path.join("/", "dev", "disk", "by-path")
-            disks = process.run("ls %s" % disk_path).stdout.split("\n")
+            disks = process.run(f"ls {disk_path}").stdout.split("\n")
             disk = list(filter(lambda x: self.server_name in x, disks))
             if not disk:
                 return None
@@ -269,27 +260,33 @@ def run(test, params, env):
             :return: path where disk is connected.
             """
             ip_dst = vm_ds.get_address()
-            process.run("iscsiadm -m discovery -t st -p %s" % (ip_dst))
+            process.run(f"iscsiadm -m discovery -t st -p {ip_dst}")
 
-            server_ident = ('iscsiadm -m node --targetname "%s:dev01"'
-                            ' --portal %s' % (self.server_name, ip_dst))
-            process.run("%s --op update --name node.session.auth.authmethod"
-                        " --value CHAP" % (server_ident))
-            process.run("%s --op update --name node.session.auth.username"
-                        " --value %s" % (server_ident, self.user))
-            process.run("%s --op update --name node.session.auth.password"
-                        " --value %s" % (server_ident, self.passwd))
-            process.run("%s --login" % (server_ident))
+            server_ident = (
+                f'iscsiadm -m node --targetname "{self.server_name}:dev01"'
+                f" --portal {ip_dst}"
+            )
+            process.run(
+                f"{server_ident} --op update --name node.session.auth.authmethod"
+                " --value CHAP"
+            )
+            process.run(
+                f"{server_ident} --op update --name node.session.auth.username"
+                f" --value {self.user}"
+            )
+            process.run(
+                f"{server_ident} --op update --name node.session.auth.password"
+                f" --value {self.passwd}"
+            )
+            process.run(f"{server_ident} --login")
             time.sleep(1.0)
             return self.find_disk()
 
         def disconnect(self):
-            server_ident = ('iscsiadm -m node --targetname "%s:dev01"' %
-                            (self.server_name))
-            process.run("%s --logout" % (server_ident))
+            server_ident = f'iscsiadm -m node --targetname "{self.server_name}:dev01"'
+            process.run(f"{server_ident} --logout")
 
-    class IscsiServer(object):
-
+    class IscsiServer:
         """
         Iscsi server implementation interface.
         """
@@ -303,10 +300,9 @@ def run(test, params, env):
         def __getattr__(self, name):
             if self.ic:
                 return self.ic.__getattribute__(name)
-            raise AttributeError("Cannot find attribute %s in class" % name)
+            raise AttributeError(f"Cannot find attribute {name} in class")
 
     class test_read_only_dest(MiniSubtest):
-
         """
         Migration to read-only destination by using a migration to file.
 
@@ -326,7 +322,7 @@ def run(test, params, env):
             vm_guest = env.get_vm("virt_test_vm1_guest")
             ro_timeout = int(params.get("read_only_timeout", "480"))
             exp_str = r".*Read-only file system.*"
-            process.run("mkdir -p %s" % (mount_path))
+            process.run(f"mkdir -p {mount_path}")
 
             vm_ds.verify_alive()
             vm_guest.create()
@@ -334,19 +330,24 @@ def run(test, params, env):
 
             set_nfs_server(vm_ds, "/mnt *(ro,async,no_root_squash)")
 
-            mount_src = "%s:/mnt" % (vm_ds.get_address())
-            mount(mount_src, mount_path,
-                  "-o hard,timeo=14,rsize=8192,wsize=8192")
-            vm_guest.migrate(mig_timeout, mig_protocol,
-                             not_wait_for_migration=True,
-                             migration_exec_cmd_src=migration_exec_cmd_src,
-                             env=env)
+            mount_src = f"{vm_ds.get_address()}:/mnt"
+            mount(mount_src, mount_path, "-o hard,timeo=14,rsize=8192,wsize=8192")
+            vm_guest.migrate(
+                mig_timeout,
+                mig_protocol,
+                not_wait_for_migration=True,
+                migration_exec_cmd_src=migration_exec_cmd_src,
+                env=env,
+            )
 
-            if not utils_misc.wait_for(lambda: process_output_check(
-                                       vm_guest.process, exp_str),
-                                       timeout=ro_timeout, first=2):
-                test.fail("The Read-only file system warning not"
-                          " come in time limit.")
+            if not utils_misc.wait_for(
+                lambda: process_output_check(vm_guest.process, exp_str),
+                timeout=ro_timeout,
+                first=2,
+            ):
+                test.fail(
+                    "The Read-only file system warning not" " come in time limit."
+                )
 
         def clean(self):
             if os.path.exists(mig_dst):
@@ -356,7 +357,6 @@ def run(test, params, env):
                 os.rmdir(mount_path)
 
     class test_low_space_dest(MiniSubtest):
-
         """
         Migrate to destination with low space.
 
@@ -371,15 +371,16 @@ def run(test, params, env):
             self.disk_path = None
             while self.disk_path is None or os.path.exists(self.disk_path):
                 self.disk_path = (
-                    "%s/disk_%s" %
-                    (test.tmpdir, data_factory.generate_random_string(3)))
+                    f"{test.tmpdir}/disk_{data_factory.generate_random_string(3)}"
+                )
 
-            disk_size = int(utils_misc.normalize_data_size(
-                params.get("disk_size", "10M"), "M"))
+            disk_size = int(
+                utils_misc.normalize_data_size(params.get("disk_size", "10M"), "M")
+            )
 
             exp_str = r".*gzip: stdout: No space left on device.*"
             vm_guest = env.get_vm("virt_test_vm1_guest")
-            process.run("mkdir -p %s" % (mount_path))
+            process.run(f"mkdir -p {mount_path}")
 
             vm_guest.verify_alive()
             vm_guest.wait_for_login(timeout=login_timeout)
@@ -387,16 +388,23 @@ def run(test, params, env):
             create_file_disk(self.disk_path, disk_size)
             mount(self.disk_path, mount_path, "-o loop")
 
-            vm_guest.migrate(mig_timeout, mig_protocol,
-                             not_wait_for_migration=True,
-                             migration_exec_cmd_src=migration_exec_cmd_src,
-                             env=env)
+            vm_guest.migrate(
+                mig_timeout,
+                mig_protocol,
+                not_wait_for_migration=True,
+                migration_exec_cmd_src=migration_exec_cmd_src,
+                env=env,
+            )
 
-            if not utils_misc.wait_for(lambda: process_output_check(
-                                       vm_guest.process, exp_str),
-                                       timeout=60, first=1):
-                test.fail("The migration to destination with low "
-                          "storage space didn't fail as it should.")
+            if not utils_misc.wait_for(
+                lambda: process_output_check(vm_guest.process, exp_str),
+                timeout=60,
+                first=1,
+            ):
+                test.fail(
+                    "The migration to destination with low "
+                    "storage space didn't fail as it should."
+                )
 
         def clean(self):
             if os.path.exists(mount_path):
@@ -406,7 +414,6 @@ def run(test, params, env):
                 os.remove(self.disk_path)
 
     class test_extensive_io(MiniSubtest):
-
         """
         Migrate after extensive_io abstract class. This class only define
         basic funtionaly and define interface. For other tests.
@@ -430,36 +437,39 @@ def run(test, params, env):
             if params.get("nettype") != "bridge":
                 test.cancel("Unable start test without params nettype=bridge.")
 
-            self.disk_serial = params.get("drive_serial_image2_vm1",
-                                          "nfs-disk-image2-vm1")
-            self.disk_serial_src = params.get("drive_serial_image1_vm1",
-                                              "root-image1-vm1")
+            self.disk_serial = params.get(
+                "drive_serial_image2_vm1", "nfs-disk-image2-vm1"
+            )
+            self.disk_serial_src = params.get(
+                "drive_serial_image1_vm1", "root-image1-vm1"
+            )
             self.guest_mount_path = params.get("guest_disk_mount_path", "/mnt")
             self.copy_timeout = int(params.get("copy_timeout", "1024"))
 
-            self.copy_block_size = int(utils_numeric.normalize_data_size(
-                params.get("copy_block_size", "100M"), "M"))
-            self.disk_size = "%sM" % int(self.copy_block_size * 1.4)
+            self.copy_block_size = int(
+                utils_numeric.normalize_data_size(
+                    params.get("copy_block_size", "100M"), "M"
+                )
+            )
+            self.disk_size = f"{int(self.copy_block_size * 1.4)}M"
 
-            self.server_recover_timeout = (
-                int(params.get("server_recover_timeout", "240")))
+            self.server_recover_timeout = int(
+                params.get("server_recover_timeout", "240")
+            )
 
-            process.run("mkdir -p %s" % (mount_path))
+            process.run(f"mkdir -p {mount_path}")
 
             self.test_params()
             self.config()
 
             self.vm_guest_params = params.copy()
             self.vm_guest_params["images_base_dir_image2_vm1"] = mount_path
-            self.vm_guest_params["image_name_image2_vm1"] = "ni_mount_%s/test" % (test_rand)
+            self.vm_guest_params["image_name_image2_vm1"] = f"ni_mount_{test_rand}/test"
             self.vm_guest_params["image_size_image2_vm1"] = self.disk_size
             self.vm_guest_params = self.vm_guest_params.object_params("vm1")
-            self.image2_vm_guest_params = (self.vm_guest_params.
-                                           object_params("image2"))
+            self.image2_vm_guest_params = self.vm_guest_params.object_params("image2")
 
-            env_process.preprocess_image(test,
-                                         self.image2_vm_guest_params,
-                                         env)
+            env_process.preprocess_image(test, self.image2_vm_guest_params, env)
             self.vm_guest.create(params=self.vm_guest_params)
 
             self.vm_guest.verify_alive()
@@ -497,8 +507,13 @@ def run(test, params, env):
 
             disk_path_src = find_disk_vm(self.vm_guest, self.disk_serial_src)
             dst_path = os.path.join(self.guest_mount_path, "test.data")
-            self.copier_pid = disk_load(self.vm_guest, disk_path_src, dst_path,
-                                        self.copy_timeout, self.copy_block_size)
+            self.copier_pid = disk_load(
+                self.vm_guest,
+                disk_path_src,
+                dst_path,
+                self.copy_timeout,
+                self.copy_block_size,
+            )
 
         def restart_server(self):
             raise NotImplementedError()
@@ -514,26 +529,31 @@ def run(test, params, env):
                 try:
                     if self.vm_guest.is_alive():
                         session = self.vm_guest.wait_for_login(timeout=login_timeout)
-                        session.cmd("kill -9 %s" % (self.copier_pid))
+                        session.cmd(f"kill -9 {self.copier_pid}")
                 except:
-                    test.log.warn("It was impossible to stop copier. Something "
-                                  "probably happened with GUEST or NFS server.")
+                    test.log.warn(
+                        "It was impossible to stop copier. Something "
+                        "probably happened with GUEST or NFS server."
+                    )
 
             if params.get("kill_vm") == "yes":
                 if self.vm_guest.is_alive():
                     self.vm_guest.destroy()
-                    utils_misc.wait_for(lambda: self.vm_guest.is_dead(), 30,
-                                        2, 2, "Waiting for dying of guest.")
-                qemu_img = qemu_storage.QemuImg(self.image2_vm_guest_params,
-                                                mount_path,
-                                                None)
-                qemu_img.check_image(self.image2_vm_guest_params,
-                                     mount_path)
+                    utils_misc.wait_for(
+                        lambda: self.vm_guest.is_dead(),
+                        30,
+                        2,
+                        2,
+                        "Waiting for dying of guest.",
+                    )
+                qemu_img = qemu_storage.QemuImg(
+                    self.image2_vm_guest_params, mount_path, None
+                )
+                qemu_img.check_image(self.image2_vm_guest_params, mount_path)
 
             self.clean_test()
 
     class test_extensive_io_nfs(test_extensive_io):
-
         """
         Migrate after extensive io.
 
@@ -563,28 +583,28 @@ def run(test, params, env):
 
             set_nfs_server(vm_ds, "/mnt *(rw,async,no_root_squash)")
 
-            mount_src = "%s:/mnt" % (vm_ds.get_address())
-            mount(mount_src, mount_path,
-                  "-o hard,timeo=14,rsize=8192,wsize=8192")
+            mount_src = f"{vm_ds.get_address()}:/mnt"
+            mount(mount_src, mount_path, "-o hard,timeo=14,rsize=8192,wsize=8192")
 
         def restart_server(self):
             time.sleep(10)  # Wait for wail until copy start working.
-            control_service(self.control_session_ds, "nfs-server",
-                            "nfs", "stop")  # Stop NFS server
+            control_service(
+                self.control_session_ds, "nfs-server", "nfs", "stop"
+            )  # Stop NFS server
             time.sleep(5)
-            control_service(self.control_session_ds, "nfs-server",
-                            "nfs", "start")  # Start NFS server
+            control_service(
+                self.control_session_ds, "nfs-server", "nfs", "start"
+            )  # Start NFS server
 
             """
             Touch waits until all previous requests are invalidated
             (NFS grace period). Without grace period qemu start takes
             to long and timers for machine creation dies.
             """
-            qemu_img = qemu_storage.QemuImg(self.image2_vm_guest_params,
-                                            mount_path,
-                                            None)
-            process.run("touch %s" % (qemu_img.image_filename),
-                        self.server_recover_timeout)
+            qemu_img = qemu_storage.QemuImg(
+                self.image2_vm_guest_params, mount_path, None
+            )
+            process.run(f"touch {qemu_img.image_filename}", self.server_recover_timeout)
 
         def clean_test(self):
             if os.path.exists(mount_path):
@@ -592,7 +612,6 @@ def run(test, params, env):
                 os.rmdir(mount_path)
 
     class test_extensive_io_iscsi(test_extensive_io):
-
         """
         Migrate after extensive io.
 
@@ -628,30 +647,32 @@ def run(test, params, env):
 
             self.isci_server = IscsiServer("tgt")
             disk_path = os.path.join(self.guest_mount_path, "disk1")
-            self.isci_server.set_iscsi_server(vm_ds, disk_path,
-                                              (int(float(self.disk_size) * 1.1) / (1024 * 1024)))
+            self.isci_server.set_iscsi_server(
+                vm_ds, disk_path, (int(float(self.disk_size) * 1.1) / (1024 * 1024))
+            )
             self.host_disk_path = self.isci_server.connect(vm_ds)
 
-            process.run("mkfs.ext3 -F %s" % (self.host_disk_path))
+            process.run(f"mkfs.ext3 -F {self.host_disk_path}")
             mount(self.host_disk_path, mount_path)
 
         def restart_server(self):
             time.sleep(10)  # Wait for wail until copy start working.
-            control_service(self.control_session_ds, "tgtd",
-                            "tgtd", "stop", 240)  # Stop Iscsi server
+            control_service(
+                self.control_session_ds, "tgtd", "tgtd", "stop", 240
+            )  # Stop Iscsi server
             time.sleep(5)
-            control_service(self.control_session_ds, "tgtd",
-                            "tgtd", "start", 240)  # Start Iscsi server
+            control_service(
+                self.control_session_ds, "tgtd", "tgtd", "start", 240
+            )  # Start Iscsi server
 
             """
             Wait for iscsi server after restart and will be again
             accessible.
             """
-            qemu_img = qemu_storage.QemuImg(self.image2_vm_guest_params,
-                                            mount_path,
-                                            None)
-            process.run("touch %s" % (qemu_img.image_filename),
-                        self.server_recover_timeout)
+            qemu_img = qemu_storage.QemuImg(
+                self.image2_vm_guest_params, mount_path, None
+            )
+            process.run(f"touch {qemu_img.image_filename}", self.server_recover_timeout)
 
         def clean_test(self):
             if os.path.exists(mount_path):
@@ -661,9 +682,11 @@ def run(test, params, env):
                 self.isci_server.disconnect()
 
     test_type = params.get("test_type")
-    if (test_type in locals()):
+    if test_type in locals():
         tests_group = locals()[test_type]
         tests_group()
     else:
-        test.fail("Test group '%s' is not defined in"
-                  " migration_with_dst_problem test" % test_type)
+        test.fail(
+            f"Test group '{test_type}' is not defined in"
+            " migration_with_dst_problem test"
+        )

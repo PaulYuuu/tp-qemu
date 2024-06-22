@@ -1,11 +1,7 @@
 import time
 
 from avocado.utils import process
-
-from virttest import error_context
-from virttest import utils_misc
-from virttest import utils_test
-from virttest import data_dir
+from virttest import data_dir, error_context, utils_misc, utils_test
 
 
 def run(test, params, env):
@@ -31,7 +27,7 @@ def run(test, params, env):
         """
         error_context.context("Creating live snapshot ...", test.log.info)
         block_info = vm.monitor.info("block")
-        if vm.monitor.protocol == 'qmp':
+        if vm.monitor.protocol == "qmp":
             device = block_info[0]["device"]
         else:
             device = "".join(block_info).split(":")[0]
@@ -44,7 +40,7 @@ def run(test, params, env):
             test.log.error(snapshot_info)
             test.fail("Snapshot doesn't exist")
 
-    snapshot_file = "images/%s" % params.get("snapshot_file")
+    snapshot_file = "images/{}".format(params.get("snapshot_file"))
     snapshot_file = utils_misc.get_path(data_dir.get_data_dir(), snapshot_file)
     timeout = int(params.get("login_timeout", 360))
     dd_timeout = int(params.get("dd_timeout", 900))
@@ -57,7 +53,7 @@ def run(test, params, env):
         try:
             clean_cmd = params.get("clean_cmd")
             file_create = params.get("file_create")
-            clean_cmd += " %s" % file_create
+            clean_cmd += f" {file_create}"
             test.log.info("Clean file before creation")
             session.cmd(clean_cmd)  # pylint: disable=E0606
 
@@ -97,8 +93,8 @@ def run(test, params, env):
     def installation_test():
         args = (test, params, env)
         bg = utils_misc.InterruptedThread(
-            utils_test.run_virt_sub_test, args,
-            {"sub_type": "unattended_install"})
+            utils_test.run_virt_sub_test, args, {"sub_type": "unattended_install"}
+        )
         bg.start()
         if bg.is_alive():
             sleep_time = int(params.get("sleep_time", 60))
@@ -108,8 +104,9 @@ def run(test, params, env):
                 bg.join()
             except Exception:
                 raise
+
     try:
         subcommand = params.get("subcommand")
-        eval("%s_test()" % subcommand)
+        eval(f"{subcommand}_test()")
     finally:
-        process.system("rm -f %s" % snapshot_file)
+        process.system(f"rm -f {snapshot_file}")

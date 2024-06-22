@@ -1,7 +1,6 @@
 import random
 
-from virttest import utils_misc
-from virttest import utils_qemu
+from virttest import utils_misc, utils_qemu
 from virttest.qemu_monitor import QMPCmdError
 from virttest.utils_version import VersionInterval
 
@@ -36,7 +35,7 @@ class BlkdevStreamtoInvalidnode(BlockDevCommitTest):
             if qmp_error_msg not in str(e.data):
                 self.test.fail(str(e))
         else:
-            self.test.fail("Can stream to an invalid node:%s" % device_node)
+            self.test.fail(f"Can stream to an invalid node:{device_node}")
 
     def run_test(self):
         self.pre_test()
@@ -49,11 +48,11 @@ class BlkdevStreamtoInvalidnode(BlockDevCommitTest):
 
 def run(test, params, env):
     """
- Block stream to an invalid node
+    Block stream to an invalid node
 
-    1. boot guest and create 4 snapshots and save file in each snapshot
-    2. do block commit and wait for block job completed
-    3. Random choice a node name in the snapshot chain, stream to it.
+       1. boot guest and create 4 snapshots and save file in each snapshot
+       2. do block commit and wait for block job completed
+       3. Random choice a node name in the snapshot chain, stream to it.
     """
 
     block_test = BlkdevStreamtoInvalidnode(test, params, env)

@@ -1,23 +1,22 @@
-import re
 import logging
+import re
 
-from avocado.utils import process
-
-from virttest import data_dir
-from virttest import env_process
-from virttest import error_context
-from virttest import storage
-from virttest import qemu_storage
-from virttest import utils_test
-from virttest import utils_misc
-from virttest import error_context
 from avocado.core import exceptions
+from avocado.utils import process
+from virttest import (
+    data_dir,
+    env_process,
+    error_context,
+    qemu_storage,
+    storage,
+    utils_misc,
+    utils_test,
+)
 
-LOG_JOB = logging.getLogger('avocado.test')
+LOG_JOB = logging.getLogger("avocado.test")
 
 
 class QemuImgTest(qemu_storage.QemuImg):
-
     def __init__(self, test, params, env, tag):
         self.vm = None
         self.test = test
@@ -27,7 +26,7 @@ class QemuImgTest(qemu_storage.QemuImg):
         self.data_dir = data_dir.get_data_dir()
         self.trash = []
         t_params = params.object_params(tag)
-        super(QemuImgTest, self).__init__(t_params, self.data_dir, tag)
+        super().__init__(t_params, self.data_dir, tag)
 
     @error_context.context_aware
     def create_snapshot(self, t_params=None):
@@ -42,7 +41,7 @@ class QemuImgTest(qemu_storage.QemuImg):
             return {}
         snapshot = storage.get_image_filename(params, self.data_dir)
         storage.file_remove(params, snapshot)
-        super(QemuImgTest, self).create(params)
+        super().create(params)
         self.trash.append(snapshot)
         return params
 
@@ -59,7 +58,8 @@ class QemuImgTest(qemu_storage.QemuImg):
             cmds.extend(["-t", cache_mode])
         if base:
             base_image_filename = storage.get_image_filename(
-                self.params.object_params(base), self.root_dir)
+                self.params.object_params(base), self.root_dir
+            )
             cmds.extend(["-b", base_image_filename])
         cmds.extend(["-f", self.image_format, self.image_filename])
         LOG_JOB.info("Commit image %s", self.image_filename)
@@ -77,8 +77,8 @@ class QemuImgTest(qemu_storage.QemuImg):
         base_image = params.get("images", "image1").split()[0]
         params["start_vm"] = "yes"
         try:
-            del params["image_name_%s" % base_image]
-            del params["image_format_%s" % base_image]
+            del params[f"image_name_{base_image}"]
+            del params[f"image_format_{base_image}"]
         except KeyError:
             pass
         vm_name = params["main_vm"]
@@ -109,7 +109,7 @@ class QemuImgTest(qemu_storage.QemuImg):
         login_timeout = int(self.params.get("login_timeout", 360))
         session = self.vm.wait_for_login(timeout=login_timeout)
         md5bin = self.params.get("md5sum_bin", "md5sum")
-        cmd = "%s %s" % (md5bin, dst)
+        cmd = f"{md5bin} {dst}"
         status, output = session.cmd_status_output(cmd, timeout=300)
         if status != 0:
             LOG_JOB.error("Execute '%s' with failures('%s') ", cmd, output)
@@ -121,8 +121,7 @@ class QemuImgTest(qemu_storage.QemuImg):
     def save_file(self, dst):
         login_timeout = int(self.params.get("login_timeout", 360))
         cmd = self.params.get("sync_bin", "sync")
-        error_context.context("save file('%s') md5sum in guest" % dst,
-                              LOG_JOB.info)
+        error_context.context(f"save file('{dst}') md5sum in guest", LOG_JOB.info)
         self.__create_file(dst)
         session = self.vm.wait_for_login(timeout=login_timeout)
         LOG_JOB.info("sync guest data")
@@ -136,12 +135,12 @@ class QemuImgTest(qemu_storage.QemuImg):
 
     @error_context.context_aware
     def check_file(self, dst, md5):
-        error_context.context("check file('%s') md5sum in guest" % dst,
-                              LOG_JOB.info)
+        error_context.context(f"check file('{dst}') md5sum in guest", LOG_JOB.info)
         if md5 != self.__md5sum(dst):
-            err = ("Md5 value does not match. "
-                   "Expected value: %s Actual value: %s" %
-                   (md5, self.__md5sum(dst)))
+            err = (
+                "Md5 value does not match. "
+                f"Expected value: {md5} Actual value: {self.__md5sum(dst)}"
+            )
             LOG_JOB.error(err)
             return False
         return True
@@ -155,15 +154,16 @@ class QemuImgTest(qemu_storage.QemuImg):
 
     @error_context.context_aware
     def check_image(self, t_params=None):
-        error_context.context("check image file ('%s')" % self.image_filename,
-                              LOG_JOB.info)
+        error_context.context(
+            f"check image file ('{self.image_filename}')", LOG_JOB.info
+        )
         t_params = t_params or {}
-        return super(QemuImgTest, self).check_image(t_params, self.data_dir)
+        return super().check_image(t_params, self.data_dir)
 
     @error_context.context_aware
     def get_info(self):
-        error_context.context("get image file ('%s')" % self.image_filename)
-        return super(QemuImgTest, self).info()
+        error_context.context(f"get image file ('{self.image_filename}')")
+        return super().info()
 
     @error_context.context_aware
     def verify_info(self, params=None):
@@ -195,34 +195,34 @@ class QemuImgTest(qemu_storage.QemuImg):
             else:
                 evalue = params.get(option)
             if avalue is not None and avalue != evalue:
-                msg = "Get wrong %s from image %s!" % (option, image_filename)
-                msg += "Expect: %s, actual: %s" % (evalue, avalue)
+                msg = f"Get wrong {option} from image {image_filename}!"
+                msg += f"Expect: {evalue}, actual: {avalue}"
                 self.test.fail(msg)
 
     @error_context.context_aware
     def check_backingfile(self):
-        error_context.context("check image('%s') backing file" %
-                              self.image_filename, LOG_JOB.info)
+        error_context.context(
+            f"check image('{self.image_filename}') backing file", LOG_JOB.info
+        )
         out = self.get_info()
         try:
-            backingfile = re.search(r'backing file: +(.*)', out, re.M).group(1)
+            backingfile = re.search(r"backing file: +(.*)", out, re.M).group(1)
             if not self.base_tag or self.base_tag == "null":
-                msg = ("Expected backing file is null")
-                msg += " Actual backing file: %s" % backingfile
+                msg = "Expected backing file is null"
+                msg += f" Actual backing file: {backingfile}"
                 raise exceptions.TestFail(msg)
             else:
                 base_params = self.params.object_params(self.base_tag)
                 base_image_repr = qemu_storage.get_image_repr(
-                    self.base_tag, base_params, self.root_dir)
+                    self.base_tag, base_params, self.root_dir
+                )
                 if base_image_repr != backingfile:
-                    msg = ("Expected backing file: %s" %
-                           self.base_image_filename)
-                    msg += " Actual backing file: %s" % backingfile
+                    msg = f"Expected backing file: {self.base_image_filename}"
+                    msg += f" Actual backing file: {backingfile}"
                     raise exceptions.TestFail(msg)
         except AttributeError:
             if self.base_tag and self.base_tag != "null":
-                msg = ("Could not find backing file for image '%s'" %
-                       self.image_filename)
+                msg = f"Could not find backing file for image '{self.image_filename}'"
                 raise exceptions.TestFail(msg)
 
     @error_context.context_aware
@@ -230,7 +230,7 @@ class QemuImgTest(qemu_storage.QemuImg):
         error_context.context("clean up useless images")
         self.destroy_vm()
         for temp in self.trash:
-            process.run("rm -f %s" % temp)
+            process.run(f"rm -f {temp}")
 
 
 def run(test, params, env):
@@ -246,7 +246,6 @@ def generate_base_snapshot_pair(image_chain):
     image_chain = image_chain.split()
     n = len(image_chain)
     if n < 2:
-        raise ValueError("Image_chain should contain at"
-                         "least 2 items, got %s." % n)
+        raise ValueError("Image_chain should contain at" f"least 2 items, got {n}.")
     for i in range(1, n):
         yield [image_chain[i - 1], image_chain[i]]

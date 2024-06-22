@@ -1,13 +1,8 @@
 import random
 
 from avocado.utils import process
-
-from virttest import utils_test
-from virttest import utils_net
-from virttest import virt_vm
-from virttest import utils_misc
+from virttest import error_context, utils_misc, utils_net, utils_test, virt_vm
 from virttest.qemu_devices import qdevices
-from virttest import error_context
 
 
 @error_context.context_aware
@@ -39,41 +34,42 @@ def run(test, params, env):
     :param params: Dictionary with the test parameters.
     :param env:    Dictionary with test environment.
     """
+
     def renew_ip_address(session, mac, is_linux_guest=True):
         if not is_linux_guest:
-            utils_net.restart_windows_guest_network_by_key(session,
-                                                           "macaddress",
-                                                           mac)
+            utils_net.restart_windows_guest_network_by_key(session, "macaddress", mac)
             return None
         ifname = utils_net.get_linux_ifname(session, mac)
         if params.get("make_change") == "yes":
-            p_cfg = "/etc/sysconfig/network-scripts/ifcfg-%s" % ifname
-            cfg_con = "DEVICE=%s\nBOOTPROTO=dhcp\nONBOOT=yes" % ifname
-            make_conf = "test -f %s || echo '%s' > %s" % (p_cfg, cfg_con, p_cfg)
+            p_cfg = f"/etc/sysconfig/network-scripts/ifcfg-{ifname}"
+            cfg_con = f"DEVICE={ifname}\nBOOTPROTO=dhcp\nONBOOT=yes"
+            make_conf = f"test -f {p_cfg} || echo '{cfg_con}' > {p_cfg}"
         else:
-            make_conf = "nmcli connection add type ethernet con-name %s ifname" \
-                        " %s autoconnect yes" % (ifname, ifname)
+            make_conf = (
+                f"nmcli connection add type ethernet con-name {ifname} ifname"
+                f" {ifname} autoconnect yes"
+            )
         arp_clean = "arp -n|awk '/^[1-9]/{print \"arp -d \" $1}'|sh"
         session.cmd_output_safe(make_conf)
-        session.cmd_output_safe("ip link set dev %s up" % ifname)
+        session.cmd_output_safe(f"ip link set dev {ifname} up")
         session.cmd_output_safe("dhclient -r", timeout=240)
-        session.cmd_output_safe("dhclient %s" % ifname, timeout=240)
+        session.cmd_output_safe(f"dhclient {ifname}", timeout=240)
         session.cmd_output_safe(arp_clean)
         return None
 
     def get_hotplug_nic_ip(vm, nic, session, is_linux_guest=True):
         def __get_address():
             try:
-                index = [
-                    _idx for _idx, _nic in enumerate(
-                        vm.virtnet) if _nic == nic][0]
+                index = [_idx for _idx, _nic in enumerate(vm.virtnet) if _nic == nic][0]
                 return vm.wait_for_get_address(index, timeout=90)
             except IndexError:
                 test.error(
-                    "Nic '%s' not exists in VM '%s'" %
-                    (nic["nic_name"], vm.name))
-            except (virt_vm.VMIPAddressMissingError,
-                    virt_vm.VMAddressVerificationError):
+                    "Nic '{}' not exists in VM '{}'".format(nic["nic_name"], vm.name)
+                )
+            except (
+                virt_vm.VMIPAddressMissingError,
+                virt_vm.VMAddressVerificationError,
+            ):
                 renew_ip_address(session, nic["mac"], is_linux_guest)
             return
 
@@ -93,8 +89,8 @@ def run(test, params, env):
             if not is_linux_guest:
                 return status, output
             ifname = utils_net.get_linux_ifname(session, mac)
-            add_route_cmd = "route add %s dev %s" % (ip, ifname)
-            del_route_cmd = "route del %s dev %s" % (ip, ifname)
+            add_route_cmd = f"route add {ip} dev {ifname}"
+            del_route_cmd = f"route del {ip} dev {ifname}"
             test.log.warning("Failed to ping %s from host.")
             test.log.info("Add route and try again")
             session.cmd_output_safe(add_route_cmd)
@@ -110,21 +106,17 @@ def run(test, params, env):
         :param netdev: netdev id for virtual device
         :param device_id: device id for virtual device
         """
-        pci_add_cmd = "device_add id=%s, driver=%s, netdev=%s" % (device_id,
-                                                                  pci_model,
-                                                                  netdev)
-        bus = vm.devices.get_buses({'aobject': params.get('nic_bus', 'pci.0')})[0]
+        pci_add_cmd = f"device_add id={device_id}, driver={pci_model}, netdev={netdev}"
+        bus = vm.devices.get_buses({"aobject": params.get("nic_bus", "pci.0")})[0]
         if isinstance(bus, qdevices.QPCIEBus):
             root_port_id = bus.get_free_root_port()
             if root_port_id:
-                pci_add_cmd += ",bus=%s" % root_port_id
+                pci_add_cmd += f",bus={root_port_id}"
                 if used_sameid != "yes":
                     root_port = vm.devices.get_buses({"aobject": root_port_id})[0]
-                    root_port.insert(qdevices.QBaseDevice(pci_model,
-                                                          aobject=device_id))
+                    root_port.insert(qdevices.QBaseDevice(pci_model, aobject=device_id))
             else:
-                test.error("No free root port for device %s to plug."
-                           % device_id)
+                test.error(f"No free root port for device {device_id} to plug.")
 
         add_output = vm.monitor.send_args_cmd(pci_add_cmd)
         return add_output
@@ -138,7 +130,7 @@ def run(test, params, env):
         :return: whether vm was successfully shut-down
                  if needed
         """
-        sub_type = params.get("sub_type_%s" % plug_tag)
+        sub_type = params.get(f"sub_type_{plug_tag}")
         login_timeout = params.get_numeric("login_timeout", 360)
         session = vm.wait_for_serial_login(timeout=login_timeout)
         shutdown_method = params.get("shutdown_method", "shell")
@@ -146,8 +138,9 @@ def run(test, params, env):
         if sub_type == "reboot":
             test.log.info("Running sub test '%s' %s", sub_type, plug_tag)
             if params.get("reboot_method"):
-                vm.reboot(session, params["reboot_method"], 0,
-                          login_timeout, serial=True)
+                vm.reboot(
+                    session, params["reboot_method"], 0, login_timeout, serial=True
+                )
         elif sub_type == "shutdown":
             test.log.info("Running sub test '%s' %s", sub_type, plug_tag)
             if shutdown_method == "shell":
@@ -162,26 +155,27 @@ def run(test, params, env):
     vm = env.get_vm(params["main_vm"])
     vm.verify_alive()
     primary_nic = [nic for nic in vm.virtnet]
-    guest_is_linux = ("linux" == params.get("os_type", ""))
+    guest_is_linux = "linux" == params.get("os_type", "")
     host_ip_addr = utils_net.get_host_ip_address(params)
     if guest_is_linux:
         # Modprobe the module if specified in config file
         module = params.get("modprobe_module")
         if module:
             s_session = vm.wait_for_serial_login(timeout=login_timeout)
-            s_session.cmd_output_safe("modprobe %s" % module)
+            s_session.cmd_output_safe(f"modprobe {module}")
             s_session.close()
 
     for iteration in range(repeat_times):
-        error_context.context("Start test iteration %s" % (iteration + 1),
-                              test.log.info)
+        error_context.context(
+            "Start test iteration %s" % (iteration + 1), test.log.info
+        )
         nic_hotplug_count = int(params.get("nic_hotplug_count", 1))
         nic_hotplugged = []
         for nic_index in range(1, nic_hotplug_count + 1):
             # need to reconnect serial port after
             # guest reboot for windows guest
             s_session = vm.wait_for_serial_login(timeout=login_timeout)
-            nic_name = "hotplug_nic%s" % nic_index
+            nic_name = f"hotplug_nic{nic_index}"
             nic_params = params.object_params(nic_name)
             nic_model = nic_params["pci_model"]
             nic_params["nic_model"] = nic_model
@@ -199,8 +193,10 @@ def run(test, params, env):
                         s_session.close()
                         return
                     else:
-                        test.fail("Hot-plug error message is not as expected: "
-                                  "%s" % str(err_msg))
+                        test.fail(
+                            "Hot-plug error message is not as expected: "
+                            f"{str(err_msg)}"
+                        )
                 else:
                     test.fail("Qemu should failed hot-plugging nic with error")
             else:
@@ -209,31 +205,33 @@ def run(test, params, env):
                 for nic in disable_nic_list:
                     if guest_is_linux:
                         ifname = utils_net.get_linux_ifname(s_session, nic["mac"])
-                        s_session.cmd_output_safe("ifconfig %s 0.0.0.0" % ifname)
+                        s_session.cmd_output_safe(f"ifconfig {ifname} 0.0.0.0")
                     else:
                         s_session.cmd_output_safe("ipconfig /release all")
                     vm.set_link(nic.device_id, up=False)
 
-            test.log.debug("Hotplug %sth '%s' nic named '%s'",
-                           nic_index, nic_model, nic_name)
+            test.log.debug(
+                "Hotplug %sth '%s' nic named '%s'", nic_index, nic_model, nic_name
+            )
             hotplug_nic = vm.hotplug_nic(**nic_params)
             test.log.info("Check if new interface gets ip address")
-            hotnic_ip = get_hotplug_nic_ip(vm, hotplug_nic,
-                                           s_session, guest_is_linux)
+            hotnic_ip = get_hotplug_nic_ip(vm, hotplug_nic, s_session, guest_is_linux)
             if not hotnic_ip:
                 test.log.info("Reboot vm after hotplug nic")
                 # reboot vm via serial port since some guest can't auto up
                 # hotplug nic and next step will check is hotplug nic works.
                 s_session = vm.reboot(session=s_session, serial=True)
                 vm.verify_alive()
-                hotnic_ip = get_hotplug_nic_ip(vm, hotplug_nic,
-                                               s_session, guest_is_linux)
+                hotnic_ip = get_hotplug_nic_ip(
+                    vm, hotplug_nic, s_session, guest_is_linux
+                )
                 if not hotnic_ip:
                     test.fail("Hotplug nic still can't get ip after reboot vm")
             test.log.info("Got the ip address of new nic: %s", hotnic_ip)
             test.log.info("Ping guest's new ip from host")
-            status, output = ping_hotplug_nic(host_ip_addr, hotplug_nic["mac"],
-                                              s_session, guest_is_linux)
+            status, output = ping_hotplug_nic(
+                host_ip_addr, hotplug_nic["mac"], s_session, guest_is_linux
+            )
             if status:
                 err_msg = "New nic failed ping test, error info: '%s'"
                 test.fail(err_msg % output)
@@ -243,11 +241,12 @@ def run(test, params, env):
             test.log.info("Resume vm")
             vm.resume()
             test.log.info("Ping guest's new ip after resume")
-            status, output = ping_hotplug_nic(host_ip_addr, hotplug_nic["mac"],
-                                              s_session, guest_is_linux)
+            status, output = ping_hotplug_nic(
+                host_ip_addr, hotplug_nic["mac"], s_session, guest_is_linux
+            )
             if status:
                 err_msg = "New nic failed ping test after stop/cont, "
-                err_msg += "error info: '%s'" % output
+                err_msg += f"error info: '{output}'"
                 test.fail(err_msg)
 
             # random hotunplug nic

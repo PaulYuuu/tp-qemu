@@ -1,5 +1,4 @@
 from avocado.utils import process
-
 from virttest import data_dir
 from virttest.qemu_storage import QemuImg
 
@@ -19,11 +18,13 @@ def run(test, params, env):
     test_filename = test_image.image_filename
     lock_err_info = 'Failed to get "consistent read" lock'
     try:
-        process.run("qemu-img create -f raw -o preallocation=full %s 1G & "
-                    "sleep 0.5;qemu-io -c info -c close -r %s"
-                    % (test_filename, test_filename), shell=True)
+        process.run(
+            f"qemu-img create -f raw -o preallocation=full {test_filename} 1G & "
+            f"sleep 0.5;qemu-io -c info -c close -r {test_filename}",
+            shell=True,
+        )
     except process.CmdError as err:
         if lock_err_info in err.result.stderr.decode():
-            test.fail("Image lock not released: %s" % err)
+            test.fail(f"Image lock not released: {err}")
         else:
-            test.error("Command line failed: %s" % err)
+            test.error(f"Command line failed: {err}")

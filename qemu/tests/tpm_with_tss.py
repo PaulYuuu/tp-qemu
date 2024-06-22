@@ -1,7 +1,6 @@
 import re
 
-from virttest import error_context
-from virttest import utils_package
+from virttest import error_context, utils_package
 
 
 @error_context.context_aware
@@ -34,7 +33,7 @@ def run(test, params, env):
     session = vm.wait_for_login()
 
     error_context.context("Check if TPM2 device exists", test.log.info)
-    if session.cmd_status("test -c %s" % tpm_device) != 0:
+    if session.cmd_status(f"test -c {tpm_device}") != 0:
         test.error("Cannot find the TPM2 device inside guest")
 
     test.log.info("Install required packages in VM")
@@ -44,21 +43,18 @@ def run(test, params, env):
     try:
         error_context.context("Compile the tpm2-tss test suite", test.log.info)
         test.log.info("Clone the tpm2-tss repo...")
-        session.cmd("git clone --depth=1 %s %s" % (tpm2_tss_repo,
-                                                   tpm2_tss_path))
+        session.cmd(f"git clone --depth=1 {tpm2_tss_repo} {tpm2_tss_path}")
         test.log.info("Configure tpm2-tss...")
         session.cmd(configure_cmd, timeout=180)
 
         error_context.context("Check test result of tpm2-tss", test.log.info)
         status, output = session.cmd_status_output(make_check_cmd, timeout=600)
         if status != 0:
-            test.fail("tpm2-tss test suite execution failed, output is:\n%s"
-                      % output)
+            test.fail(f"tpm2-tss test suite execution failed, output is:\n{output}")
         result = session.cmd_output(check_log_cmd)
-        t_total, t_pass = re.findall(r"^# (?:TOTAL|PASS): +(\d+)$", result,
-                                     re.M)
+        t_total, t_pass = re.findall(r"^# (?:TOTAL|PASS): +(\d+)$", result, re.M)
         if t_total != t_pass:
             test.fail("The count of TOTAL and PASS do not match")
     finally:
-        session.cmd("rm -rf %s" % tpm2_tss_path, ignore_all_errors=True)
+        session.cmd(f"rm -rf {tpm2_tss_path}", ignore_all_errors=True)
         session.close()

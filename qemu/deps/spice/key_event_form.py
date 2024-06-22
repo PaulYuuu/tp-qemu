@@ -2,9 +2,8 @@ import gtk
 
 
 class TestForm(gtk.Window):
-
     def __init__(self):
-        super(TestForm, self).__init__()
+        super().__init__()
 
         self.set_title("Key test")
         self.set_size_request(200, 200)
@@ -28,7 +27,7 @@ class TestForm(gtk.Window):
     def on_key_press_event(self, widget, event):
         # Store caught keycodes into text file
         input_file = open("/tmp/autotest-rv_input", "a")
-        input_file.write("{0} ".format(event.keyval))
+        input_file.write(f"{event.keyval} ")
         input_file.close()
 
 

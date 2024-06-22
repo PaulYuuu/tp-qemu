@@ -1,13 +1,14 @@
 """VDPA blk vhost vdpa test"""
+
+from aexpect import ShellCmdError
 from avocado.core import exceptions
 from avocado.utils import process
-
-from provider.block_devices_plug import BlockDevicesPlug
-from provider.vdpa_sim_utils import VhostVdpaBlkSimulatorTest
 from virttest import env_process, utils_disk, utils_misc, virt_vm
 from virttest.utils_misc import get_linux_drive_path
 from virttest.utils_windows.drive import get_disk_props_by_serial_number
-from aexpect import ShellCmdError
+
+from provider.block_devices_plug import BlockDevicesPlug
+from provider.vdpa_sim_utils import VhostVdpaBlkSimulatorTest
 
 
 def run(test, params, env):
@@ -41,7 +42,7 @@ def run(test, params, env):
     def _setup_vdpa_disks():
         for img in vdpa_blk_images:
             dev = vdpa_blk_test.add_dev(img)
-            logger.debug("Add vhost device %s %s" % (img, dev))
+            logger.debug(f"Add vhost device {img} {dev}")
 
     def _cleanup_vdpa_disks():
         for img in vdpa_blk_images:
@@ -51,22 +52,22 @@ def run(test, params, env):
         idx_info = get_disk_props_by_serial_number(session, serial, ["Index"])
         if idx_info:
             return idx_info["Index"]
-        test.fail("Not find expected disk %s" % serial)
+        test.fail(f"Not find expected disk {serial}")
 
     def _check_disk_in_guest(img):
         os_type = params["os_type"]
-        logger.debug("Check disk %s in guest" % img)
-        if os_type == 'windows':
-            img_size = params.get("image_size_%s" % img)
+        logger.debug(f"Check disk {img} in guest")
+        if os_type == "windows":
+            img_size = params.get(f"image_size_{img}")
             cmd = utils_misc.set_winutils_letter(session, guest_cmd)
             disk = _get_window_disk_index_by_serial(img)
             utils_disk.update_windows_disk_attributes(session, disk)
             logger.info("Clean disk:%s", disk)
             utils_disk.clean_partition_windows(session, disk)
             logger.info("Formatting disk:%s", disk)
-            driver = \
-                utils_disk.configure_empty_disk(session, disk, img_size,
-                                                os_type)[0]
+            driver = utils_disk.configure_empty_disk(session, disk, img_size, os_type)[
+                0
+            ]
             output_path = driver + ":\\test.dat"
             cmd = cmd.format(output_path)
         else:
@@ -89,7 +90,7 @@ def run(test, params, env):
 
     def discard_test():
         for img in vdpa_blk_images:
-            cmd = "blkdiscard -f %s && echo 'it works!' " % vdpa_blk_info[img]
+            cmd = f"blkdiscard -f {vdpa_blk_info[img]} && echo 'it works!' "
             process.run(cmd, shell=True)
 
     logger = test.log
@@ -116,11 +117,11 @@ def run(test, params, env):
 
         locals_var = locals()
         if host_operation:
-            logger.debug("Execute operation %s" % host_operation)
+            logger.debug(f"Execute operation {host_operation}")
             locals_var[host_operation]()
 
         logger.debug("Ready boot VM...")
-        params["start_vm"] = 'yes'
+        params["start_vm"] = "yes"
         login_timeout = params.get_numeric("login_timeout", 360)
         env_process.preprocess_vm(test, params, env, params.get("main_vm"))
         vm = env.get_vm(params["main_vm"])
@@ -128,7 +129,7 @@ def run(test, params, env):
         session = vm.wait_for_login(timeout=login_timeout)
 
         if guest_operation:
-            logger.debug("Execute guest operation %s" % guest_operation)
+            logger.debug(f"Execute guest operation {guest_operation}")
             locals_var[guest_operation]()
 
         logger.debug("Destroy VM...")
@@ -136,9 +137,9 @@ def run(test, params, env):
         vm.destroy()
         vm = None
     except (virt_vm.VMCreateError, ShellCmdError) as e:
-        logger.debug("Find exception %s" % e)
+        logger.debug(f"Find exception {e}")
         if expect_to_fail == "yes" and err_msg in e.output:
-            logger.info("%s is expected " % err_msg)
+            logger.info(f"{err_msg} is expected ")
             # reset expect_to_fail
             expect_to_fail = "no"
         else:
@@ -153,4 +154,4 @@ def run(test, params, env):
             vdpa_blk_test.cleanup()
 
         if expect_to_fail != "no":
-            raise exceptions.TestFail("Expected '%s' not happened" % err_msg)
+            raise exceptions.TestFail(f"Expected '{err_msg}' not happened")

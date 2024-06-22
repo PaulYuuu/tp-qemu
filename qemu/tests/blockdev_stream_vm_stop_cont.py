@@ -1,5 +1,5 @@
-import time
 import random
+import time
 
 from provider.blockdev_stream_parallel import BlockdevStreamParallelTest
 
@@ -10,12 +10,12 @@ class BlockdevStreamVMStopContTest(BlockdevStreamParallelTest):
     def stop_cont_vm(self):
         """Stop VM for a while, then resume it"""
         self.main_vm.pause()
-        t = int(random.choice(self.params.objects('vm_stop_time_list')))
+        t = int(random.choice(self.params.objects("vm_stop_time_list")))
         time.sleep(t)
         self.main_vm.resume()
 
     def do_test(self):
-        super(BlockdevStreamVMStopContTest, self).do_test()
+        super().do_test()
         self.clone_vm.destroy()
         self.remove_files_from_system_image()
 

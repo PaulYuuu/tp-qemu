@@ -1,4 +1,5 @@
 """qemu-io with unaligned offset"""
+
 from avocado.utils import process
 
 
@@ -11,7 +12,7 @@ def run(test, params, env):
     """
     logger = test.log
     io_cmd = params["io_cmd"]
-    cmd = "cat %s" % params["loop_dev"]
+    cmd = "cat {}".format(params["loop_dev"])
     loop_dev = process.system_output(cmd, shell=True).decode()
     logger.debug("Create loop device on:%s", loop_dev)
 

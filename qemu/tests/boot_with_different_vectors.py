@@ -1,10 +1,6 @@
 import re
 
-from virttest import error_context
-from virttest import utils_test
-from virttest import env_process
-from virttest import virt_vm
-from virttest import utils_net
+from virttest import env_process, error_context, utils_net, utils_test, virt_vm
 
 from provider import netperf_test
 
@@ -27,8 +23,7 @@ def run(test, params, env):
     """
 
     def boot_guest_with_vectors(vectors):
-        error_context.context("Boot guest with vectors = %s" % vectors,
-                              test.log.info)
+        error_context.context(f"Boot guest with vectors = {vectors}", test.log.info)
         params["vectors"] = vectors
         params["start_vm"] = "yes"
         try:
@@ -40,7 +35,7 @@ def run(test, params, env):
                     return
         if int(vectors) < 0:
             msg = "Qemu did not raise correct error"
-            msg += " when vectors = %s" % vectors
+            msg += f" when vectors = {vectors}"
             test.fail(msg)
 
         vm = env.get_vm(params["main_vm"])
@@ -51,8 +46,9 @@ def run(test, params, env):
         vectors = int(params["vectors"])
         if params["os_type"] == "linux":
             devices = session.cmd_output("lspci | grep Eth").strip()
-            error_context.context("Check if vnic inside guest support msi.",
-                                  test.log.info)
+            error_context.context(
+                "Check if vnic inside guest support msi.", test.log.info
+            )
             for device in devices.split("\n"):
                 if not device:
                     continue
@@ -60,7 +56,7 @@ def run(test, params, env):
                 msi_check_cmd = params["msi_check_cmd"] % d_id
                 status, output = session.cmd_status_output(msi_check_cmd)
                 if vectors == 0 and output:
-                    if (re.findall("MSI-X: Enable+", output)):
+                    if re.findall("MSI-X: Enable+", output):
                         test.fail("Guest don't support msi when vectors=0")
                     test.log.info("Guest works well when vectors=0")
                 elif vectors != 0 and status:
@@ -69,43 +65,45 @@ def run(test, params, env):
                     test.fail("msg")
                 elif vectors == 1 and output:
                     if not (re.findall("MSI-X: Enable-", output)):
-                        msg = "Command %s get wrong output." % msi_check_cmd
+                        msg = f"Command {msi_check_cmd} get wrong output."
                         msg += " when vectors = 1"
                         test.fail(msg)
                     test.log.info("MSI-X is disabled")
                 elif 2 <= vectors and output:
                     if not (re.findall("MSI-X: Enable+", output)):
-                        msg = "Command %s get wrong output." % msi_check_cmd
+                        msg = f"Command {msi_check_cmd} get wrong output."
                         msg += " when vectors = %d" % vectors
                         test.fail(msg)
                     test.log.info("MSI-X is enabled")
         else:
-            error_context.context("Check if the driver is installed and "
-                                  "verified", test.log.info)
+            error_context.context(
+                "Check if the driver is installed and " "verified", test.log.info
+            )
             driver_verifier = params["driver_verifier"]
-            utils_test.qemu.windrv_check_running_verifier(session, vm,
-                                                          test,
-                                                          driver_verifier,
-                                                          cmd_timeout)
+            utils_test.qemu.windrv_check_running_verifier(
+                session, vm, test, driver_verifier, cmd_timeout
+            )
             msis, queues = utils_net.get_msis_and_queues_windows(params, vm)
             if msis == 0 and vectors == 0:
                 test.log.info("Guest works well when vectors=0")
             elif vectors == 0 and msis != 0:
                 test.fail("Can't get msi status when vectors=0")
             if 1 <= vectors and vectors != msis:
-                test.fail("Msis should equal to vectors(%s), "
-                          "but guest is %s" % (vectors, msis))
+                test.fail(
+                    f"Msis should equal to vectors({vectors}), " f"but guest is {msis}"
+                )
 
     def check_interrupt(session, vectors):
-        error_context.context("Check the cpu interrupt of virito",
-                              test.log.info)
+        error_context.context("Check the cpu interrupt of virito", test.log.info)
         vectors = int(vectors)
         irq_check_cmd = params["irq_check_cmd"]
         output = session.cmd_output(irq_check_cmd).strip()
         if vectors == 0 or vectors == 1:
-            if not (re.findall("IO-APIC.*fasteoi|XICS.*Level|XIVE.*Level|"
-                               "GIC.*Level",
-                               output)):
+            if not (
+                re.findall(
+                    "IO-APIC.*fasteoi|XICS.*Level|XIVE.*Level|" "GIC.*Level", output
+                )
+            ):
                 msg = "Could not find interrupt controller for virito device"
                 msg += " when vectors = %d" % vectors
                 test.fail(msg)
@@ -113,14 +111,16 @@ def run(test, params, env):
             if not re.findall("virtio[0-9]-virtqueues", output):
                 msg = "Could not find the virtio device for MSI-X interrupt"
                 msg += " when vectors = %d " % vectors
-                msg += "Command %s got output %s" % (irq_check_cmd, output)
+                msg += f"Command {irq_check_cmd} got output {output}"
                 test.fail(msg)
         elif vectors == 9 or vectors == 10:
-            if not (re.findall("virtio[0-9]-input", output) and
-                    re.findall("virtio[0-9]-output", output)):
+            if not (
+                re.findall("virtio[0-9]-input", output)
+                and re.findall("virtio[0-9]-output", output)
+            ):
                 msg = "Could not find the virtio device for MSI-X interrupt"
                 msg += " when vectors = %d " % vectors
-                msg += "Command %s got output %s" % (irq_check_cmd, output)
+                msg += f"Command {irq_check_cmd} got output {output}"
                 test.fail(msg)
 
     vectors_list = params["vectors_list"]

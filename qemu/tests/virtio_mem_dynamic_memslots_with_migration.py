@@ -1,8 +1,8 @@
 import time
 
 from virttest import error_context
-
 from virttest.utils_misc import normalize_data_size
+
 from provider import virtio_mem_utils
 
 
@@ -29,7 +29,7 @@ def run(test, params, env):
     mem_object_id = params["mem_devs"]
     timeout = params.get_numeric("timeout", 10)
 
-    device_id = "virtio_mem-%s" % mem_object_id
+    device_id = f"virtio_mem-{mem_object_id}"
 
     req_size_normalized = int(float(normalize_data_size(requested_size_vmem_test, "B")))
     vm.monitor.qom_set(device_id, "requested-size", req_size_normalized)

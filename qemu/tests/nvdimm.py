@@ -1,18 +1,15 @@
-import os
 import logging
+import os
 import time
 
 from avocado.utils import process
-
-from virttest import env_process
-from virttest import error_context
-from virttest import utils_package
+from virttest import env_process, error_context, utils_package
 from virttest.utils_test.qemu import MemoryHotplugTest
 
-LOG_JOB = logging.getLogger('avocado.test')
+LOG_JOB = logging.getLogger("avocado.test")
 
 
-class NvdimmTest(object):
+class NvdimmTest:
     """
     Class for NVDIMM test
     """
@@ -39,7 +36,7 @@ class NvdimmTest(object):
         """
         status, output = self.session.cmd_status_output(cmd, timeout=timeout)
         if check_status and status != 0:
-            self.test.fail("Execute command '%s' failed, output: %s" % (cmd, output))
+            self.test.fail(f"Execute command '{cmd}' failed, output: {output}")
         return output.strip()
 
     def verify_nvdimm(self, vm, mems):
@@ -49,13 +46,15 @@ class NvdimmTest(object):
         :params vm: VM object
         :params mems: memory objects
         """
-        dimms_expect = set("dimm-%s" % mem for mem in mems)
+        dimms_expect = set(f"dimm-{mem}" for mem in mems)
         LOG_JOB.info("Check if dimm %s in memory-devices", dimms_expect)
-        dimms_monitor = set([info["data"]["id"] for info in vm.monitor.info("memory-devices")])
+        dimms_monitor = set(
+            [info["data"]["id"] for info in vm.monitor.info("memory-devices")]
+        )
         if not dimms_expect.issubset(dimms_monitor):
             invisible_dimms = dimms_expect - dimms_monitor
-            self.test.fail("%s dimms are invisible in monitor" % invisible_dimms)
-        check_cmd = "test -b %s" % self.params.get("dev_path", "/dev/pmem0")
+            self.test.fail(f"{invisible_dimms} dimms are invisible in monitor")
+        check_cmd = "test -b {}".format(self.params.get("dev_path", "/dev/pmem0"))
         self.run_guest_cmd(check_cmd)
 
     def format_nvdimm(self):
@@ -80,7 +79,7 @@ class NvdimmTest(object):
         """
         Umount nvdimm device in guest.
         """
-        umount_cmd = "umount %s" % self.params["dev_path"]
+        umount_cmd = "umount {}".format(self.params["dev_path"])
         self.run_guest_cmd(umount_cmd)
 
     def md5_hash(self, file):
@@ -90,7 +89,7 @@ class NvdimmTest(object):
         :param file: A file with fullpath
         :return: The md5 value of the file
         """
-        cmd = "md5sum %s" % file
+        cmd = f"md5sum {file}"
         return self.run_guest_cmd(cmd)
 
 
@@ -127,8 +126,10 @@ def run(test, params, env):
                 test.error("ndctl is not available in host!")
             ndctl_ver = process.system_output("ndctl -v", shell=True)
             if float(ndctl_ver) < 56:
-                test.cancel("ndctl version should be equal or greater than 56!"
-                            "Current ndctl version is %s." % ndctl_ver)
+                test.cancel(
+                    "ndctl version should be equal or greater than 56!"
+                    f"Current ndctl version is {ndctl_ver}."
+                )
             try:
                 process.system(params["create_dax_cmd"], shell=True)
             except process.CmdError:
@@ -136,7 +137,7 @@ def run(test, params, env):
         if not os.path.exists(params["nv_backend"]):
             test.fail("Check nv_backend in host failed!")
         params["start_vm"] = "yes"
-        vm_name = params['main_vm']
+        vm_name = params["main_vm"]
         env_process.preprocess_vm(test, params, env, vm_name)
 
     nvdimm_test = NvdimmTest(test, params, env)
@@ -173,9 +174,12 @@ def run(test, params, env):
             nvdimm_test.run_guest_cmd(params["run_test"], timeout=3600)
             return
         nv_file = params.get("nv_file", "/mnt/nv")
-        error_context.context("Create a file in nvdimm mount dir in guest, and get "
-                              "original md5 of the file", test.log.info)
-        dd_cmd = "dd if=/dev/urandom of=%s bs=1K count=200" % nv_file
+        error_context.context(
+            "Create a file in nvdimm mount dir in guest, and get "
+            "original md5 of the file",
+            test.log.info,
+        )
+        dd_cmd = f"dd if=/dev/urandom of={nv_file} bs=1K count=200"
         nvdimm_test.run_guest_cmd(dd_cmd)
         orig_md5 = nvdimm_test.md5_hash(nv_file)
         nvdimm_test.umount_nvdimm()
@@ -186,8 +190,9 @@ def run(test, params, env):
         new_md5 = nvdimm_test.md5_hash(nv_file)
         error_context.context("Compare current md5 to original md5", test.log.info)
         if new_md5 != orig_md5:
-            test.fail("'%s' changed. The original md5 is '%s', current md5 is '%s'"
-                      % (nv_file, orig_md5, new_md5))
+            test.fail(
+                f"'{nv_file}' changed. The original md5 is '{orig_md5}', current md5 is '{new_md5}'"
+            )
         nvdimm_test.umount_nvdimm()
         error_context.context("Check if error and calltrace in guest", test.log.info)
         vm.verify_kernel_crash()
@@ -195,7 +200,7 @@ def run(test, params, env):
     finally:
         if nvdimm_test.session:
             if params.get("nvml_dir"):
-                nvdimm_test.run_guest_cmd("rm -rf %s" % params.get("nvml_dir"))
+                nvdimm_test.run_guest_cmd("rm -rf {}".format(params.get("nvml_dir")))
             nvdimm_test.session.close()
         vm.destroy()
         if params.get("nvdimm_dax") == "yes":

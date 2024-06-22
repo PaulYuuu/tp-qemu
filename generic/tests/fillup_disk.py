@@ -28,8 +28,7 @@ def run(test, params, env):
     number = 0
 
     try:
-        error_context.context("Start filling the disk in %s" % fill_dir,
-                              test.log.info)
+        error_context.context(f"Start filling the disk in {fill_dir}", test.log.info)
         cmd = params.get("fillup_cmd")
         while not filled:
             # As we want to test the backing file, so bypass the cache
@@ -40,7 +39,7 @@ def run(test, params, env):
                 test.log.debug("Successfully filled up the disk")
                 filled = True
             elif s != 0:
-                test.fail("Command dd failed to execute: %s" % o)
+                test.fail(f"Command dd failed to execute: {o}")
             number += 1
     finally:
         error_context.context("Cleaning the temporary files...", test.log.info)

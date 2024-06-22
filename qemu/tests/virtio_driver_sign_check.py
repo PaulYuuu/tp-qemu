@@ -1,7 +1,6 @@
 import re
 
-from virttest import error_context
-from virttest import utils_misc
+from virttest import error_context, utils_misc
 from virttest.utils_windows import virtio_win
 
 
@@ -17,17 +16,17 @@ def get_driver_file_path(session, params):
     """
     driver_path = params["tested_driver"]
     media_type = params["virtio_win_media_type"]
-    get_drive_letter = getattr(virtio_win, "drive_letter_%s" % media_type)
+    get_drive_letter = getattr(virtio_win, f"drive_letter_{media_type}")
     drive_letter = get_drive_letter(session)
-    get_product_dirname = getattr(virtio_win,
-                                  "product_dirname_%s" % media_type)
+    get_product_dirname = getattr(virtio_win, f"product_dirname_{media_type}")
     guest_name = get_product_dirname(session)
-    get_arch_dirname = getattr(virtio_win, "arch_dirname_%s" % media_type)
+    get_arch_dirname = getattr(virtio_win, f"arch_dirname_{media_type}")
     guest_arch = get_arch_dirname(session)
-    path = ("{letter}\\{driver}\\{name}\\{arch}\\" if media_type == "iso"
-            else "{letter}\\{arch}\\{name}\\{driver}").format(
-        letter=drive_letter, driver=driver_path,
-        name=guest_name, arch=guest_arch)
+    path = (
+        "{letter}\\{driver}\\{name}\\{arch}\\"
+        if media_type == "iso"
+        else "{letter}\\{arch}\\{name}\\{driver}"
+    ).format(letter=drive_letter, driver=driver_path, name=guest_name, arch=guest_arch)
     return drive_letter, path
 
 
@@ -53,24 +52,22 @@ def run(test, params, env):
     verify_option = params["verify_option"]
 
     try:
-        error_context.context("Running SignTool check test in guest...",
-                              test.log.info)
+        error_context.context("Running SignTool check test in guest...", test.log.info)
         file_type = [".cat", ".sys", ".inf", "Wdf"]
         # Add a workaround for pvpanic, as there are pvpanic-pci files
         # include in the latest prewhql version,
         # they are for arm support and we no need to test them currently.
         if "pvpanic" in drv_name:
-            file_type = ["%s.cat" % drv_name, ".sys", "%s.inf" % drv_name, "Wdf"]
+            file_type = [f"{drv_name}.cat", ".sys", f"{drv_name}.inf", "Wdf"]
         tested_list = []
         viowin_letter, path = get_driver_file_path(session, params)
         for ftype in file_type:
             cmd = list_files_cmd % (viowin_letter, path, ftype)
             list_file = session.cmd_output(cmd, timeout)
-            driver_file = re.findall(r".*%s$" % ftype, list_file, re.M)
+            driver_file = re.findall(rf".*{ftype}$", list_file, re.M)
             tested_list.extend(driver_file)
         if (len(tested_list) < 3) or (".cat" not in tested_list[0]):
-            test.fail("The tested files were not included in %s disk"
-                      % viowin_letter)
+            test.fail(f"The tested files were not included in {viowin_letter} disk")
         signtool_cmd = utils_misc.set_winutils_letter(session, signtool_cmd)
         check_info = "Number of files successfully Verified: (1)"
         for driver_file in tested_list[1:]:
@@ -78,7 +75,8 @@ def run(test, params, env):
             status, output = session.cmd_status_output(test_cmd)
             sign_num = re.findall(check_info, output)[0]
             if (status != 0) or (int(sign_num) != 1):
-                test.fail("%s signtool verify failed, check the output details:\n %s"
-                          % (driver_file, output))
+                test.fail(
+                    f"{driver_file} signtool verify failed, check the output details:\n {output}"
+                )
     finally:
         session.close()

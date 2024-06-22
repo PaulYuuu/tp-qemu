@@ -1,5 +1,5 @@
-from virttest import base_installer
 from avocado.utils import linux_modules
+from virttest import base_installer
 
 
 def run(test, params, env):
@@ -13,19 +13,19 @@ def run(test, params, env):
         if vm:
             vm.destroy()
             env.unregister_vm(vm.name)
-    installer_object = base_installer.NoopInstaller('noop',
-                                                    'module_probe',
-                                                    test, params)
-    test.log.debug('installer object: %r', installer_object)
+    installer_object = base_installer.NoopInstaller(
+        "noop", "module_probe", test, params
+    )
+    test.log.debug("installer object: %r", installer_object)
     submodules = []
     modules_str = " "
     for module in installer_object.module_list:
-        if " %s " % module in modules_str:
+        if f" {module} " in modules_str:
             continue
         tmp_list = [module]
         if linux_modules.module_is_loaded(module):
             tmp_list += linux_modules.get_submodules(module)
-        modules_str += "%s " % " ".join(tmp_list)
+        modules_str += "{} ".format(" ".join(tmp_list))
         if len(tmp_list) > 1:
             for _ in submodules:
                 if _[0] in tmp_list:
@@ -48,8 +48,9 @@ def run(test, params, env):
                 test.log.error(e)
                 break
             except Exception as e:
-                test.fail("Failed to load modules [%r]: %s" %
-                          (installer_object.module_list, e))
+                test.fail(
+                    f"Failed to load modules [{installer_object.module_list!r}]: {e}"
+                )
             installer_object.unload_modules()
     finally:
         try:

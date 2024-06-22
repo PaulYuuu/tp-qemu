@@ -1,12 +1,13 @@
+import re
 import subprocess
 import sys
-import re
 
 # Ensure paramiko is installed
-for pip in ['pip3', 'pip']:
+for pip in ["pip3", "pip"]:
     try:
-        subprocess.check_call([pip, 'install', '--default-timeout=100', 'paramiko'])
+        subprocess.check_call([pip, "install", "--default-timeout=100", "paramiko"])
         import paramiko
+
         break
     except ImportError:
         continue
@@ -23,7 +24,7 @@ def install_dpdk(params, session):
     :param session: the session of guest or host
     """
 
-    cmd = 'yum install -y %s' % params.get("env_pkg")
+    cmd = "yum install -y {}".format(params.get("env_pkg"))
     session.cmd(cmd, timeout=360, ignore_all_errors=True)
 
 
@@ -57,14 +58,14 @@ def bind_pci_device_to_vfio(session, pci_id):
     :param pci_id: PCI ID of the device to bind
     """
 
-    cmd = "dpdk-devbind.py --bind=vfio-pci %s" % pci_id
+    cmd = f"dpdk-devbind.py --bind=vfio-pci {pci_id}"
     status, output = session.cmd_status_output(cmd)
     if status == 0:
-        print("PCI device %s bound to vfio-pci successfully." % pci_id)
+        print(f"PCI device {pci_id} bound to vfio-pci successfully.")
     elif "already bound to driver vfio-pci" in output:
-        print("PCI device %s is already bound to vfio-pci." % pci_id)
+        print(f"PCI device {pci_id} is already bound to vfio-pci.")
     else:
-        print("Failed to bind PCI device %s to vfio-pci" % pci_id)
+        print(f"Failed to bind PCI device {pci_id} to vfio-pci")
 
 
 class TestPMD:
@@ -95,7 +96,7 @@ class TestPMD:
         while True:
             data = self.dpdk_channel.recv(16384).decode()
             output += data
-            print(data, end='')
+            print(data, end="")
 
             if "testpmd>" in output:
                 return output
@@ -128,19 +129,23 @@ class TestPMD:
         self.session.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         try:
-            self.session.connect(self.host, username=self.username, password=self.password)
-            print("Successfully logged in to %s." % self.host)
+            self.session.connect(
+                self.host, username=self.username, password=self.password
+            )
+            print(f"Successfully logged in to {self.host}.")
             return self.session
         except paramiko.AuthenticationException:
-            print("Failed to authenticate with SSH on %s." % self.host)
+            print(f"Failed to authenticate with SSH on {self.host}.")
         except paramiko.SSHException as e:
-            print("SSH error occurred while connecting to %s: %s" % (self.host, str(e)))
+            print(f"SSH error occurred while connecting to {self.host}: {str(e)}")
         except paramiko.ssh_exception.NoValidConnectionsError:
-            print("Failed to connect to %s." % self.host)
+            print(f"Failed to connect to {self.host}.")
         except Exception as e:
-            print("Error occurred while logging in to %s: %s" % (self.host, str(e)))
+            print(f"Error occurred while logging in to {self.host}: {str(e)}")
 
-    def launch_testpmd(self, dpdk_tool_path, cpu_cores, pci_id, forward_mode, queue, pkts, mac=None):
+    def launch_testpmd(
+        self, dpdk_tool_path, cpu_cores, pci_id, forward_mode, queue, pkts, mac=None
+    ):
         """
         Launch the testpmd tool with the specified parameters.
 
@@ -153,22 +158,31 @@ class TestPMD:
         :param mac: MAC address (optional)
         """
 
-        base_cmd = ("{} -l 0-{} -a {} --file-prefix {} -- "
-                    "--port-topology=chained --disable-rss -i "
-                    "--rxq={} --txq={} --rxd=256 --txd=256 "
-                    "--nb-cores={} --burst=64 --auto-start "
-                    "--forward-mode={} --{}pkts={} ")
+        base_cmd = (
+            "{} -l 0-{} -a {} --file-prefix {} -- "
+            "--port-topology=chained --disable-rss -i "
+            "--rxq={} --txq={} --rxd=256 --txd=256 "
+            "--nb-cores={} --burst=64 --auto-start "
+            "--forward-mode={} --{}pkts={} "
+        )
 
-        eth_peer = "--eth-peer={} ".format(mac) if mac else ""
+        eth_peer = f"--eth-peer={mac} " if mac else ""
 
-        cmd = base_cmd.format(dpdk_tool_path, int(cpu_cores) - 1,
-                              pci_id,
-                              'tx' if forward_mode == 'txonly' else 'rx',
-                              queue, queue,
-                              int(cpu_cores) - 1, forward_mode,
-                              'tx' if forward_mode == 'txonly' else 'rx',
-                              pkts
-                              ) + eth_peer
+        cmd = (
+            base_cmd.format(
+                dpdk_tool_path,
+                int(cpu_cores) - 1,
+                pci_id,
+                "tx" if forward_mode == "txonly" else "rx",
+                queue,
+                queue,
+                int(cpu_cores) - 1,
+                forward_mode,
+                "tx" if forward_mode == "txonly" else "rx",
+                pkts,
+            )
+            + eth_peer
+        )
 
         if forward_mode == "txonly":
             cmd += "--txonly-multi-flow "

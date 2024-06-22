@@ -1,5 +1,4 @@
-from virttest import error_context
-from virttest import utils_package
+from virttest import error_context, utils_package
 
 
 @error_context.context_aware
@@ -29,13 +28,13 @@ def run(test, params, env):
         for cmd in cmds:
             s, o = session.cmd_status_output(cmd, timeout=600)
             if s:
-                test.error("Failed to run cmd '%s', output: %s" % (cmd, o))
+                test.error(f"Failed to run cmd '{cmd}', output: {o}")
         error_context.context("Run redis test in guest", test.log.info)
         s, o = session.cmd_status_output(params["run_test"], timeout=3600)
         if s:
-            test.fail("Run redis test failed, output: %s" % o)
+            test.fail(f"Run redis test failed, output: {o}")
         vm.verify_kernel_crash()
     finally:
         if session:
-            session.cmd_output_safe('rm -rf %s' % params["redis_dir"])
+            session.cmd_output_safe("rm -rf {}".format(params["redis_dir"]))
         vm.destroy()

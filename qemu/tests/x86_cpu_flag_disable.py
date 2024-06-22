@@ -1,7 +1,6 @@
 import random
 
-from virttest import env_process
-from virttest import error_context
+from virttest import env_process, error_context
 
 from provider.cpu_utils import check_cpu_flags
 
@@ -22,25 +21,25 @@ def run(test, params, env):
     flags_list = params.objects("flags_list")
     params["flags"] = params["no_flags"] = random.choice(flags_list)
     flag = params["flags"]
-    params["cpu_model_flags"] += ",-%s" % flag
+    params["cpu_model_flags"] += f",-{flag}"
 
     check_host_flags = params.get_boolean("check_host_flags")
     if check_host_flags:
         check_cpu_flags(params, flag, test)
 
     params["start_vm"] = "yes"
-    vm_name = params['main_vm']
+    vm_name = params["main_vm"]
     env_process.preprocess_vm(test, params, env, vm_name)
 
     vm = env.get_vm(vm_name)
     error_context.context("Try to log into guest", test.log.info)
     session = vm.wait_for_login()
-    check_cpu_flags(params, '', test, session)
+    check_cpu_flags(params, "", test, session)
 
-    if flag == 'kvmclock':
+    if flag == "kvmclock":
         check_clock = params.get("check_clock")
         vm_clock_out = session.cmd_output(check_clock).split()
-        if 'kvmclock' in vm_clock_out:
+        if "kvmclock" in vm_clock_out:
             test.fail("kvmclock shouldn't be found inside geust")
 
     vm.verify_kernel_crash()

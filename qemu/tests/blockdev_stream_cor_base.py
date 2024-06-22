@@ -1,19 +1,18 @@
 import json
 import time
 
-from virttest import data_dir
-from virttest import qemu_storage
+from virttest import data_dir, qemu_storage
 
+from provider import backup_utils
 from provider.blockdev_stream_base import BlockDevStreamTest
 from provider.virt_storage.storage_admin import sp_admin
-from provider import backup_utils
 
 
 class BlockdevStreamCORBase(BlockDevStreamTest):
-    """Do block-stream with copy-on-read filter as base """
+    """Do block-stream with copy-on-read filter as base"""
 
     def __init__(self, test, params, env):
-        super(BlockdevStreamCORBase, self).__init__(test, params, env)
+        super().__init__(test, params, env)
         self.snapshot_chain = params["snapshot_chain"].split()
 
     def prepare_snapshot_file(self):
@@ -26,8 +25,12 @@ class BlockdevStreamCORBase(BlockDevStreamTest):
             self.trash.append(image)
 
     def _is_same_file(self, file_params, file_opts):
-        mapping = {"gluster": "path", "iscsi": "lun",
-                   "nbd": "server.port", "rbd": "image"}
+        mapping = {
+            "gluster": "path",
+            "iscsi": "lun",
+            "nbd": "server.port",
+            "rbd": "image",
+        }
         option = mapping.get(file_params["driver"], "filename")
         return file_params[option] == file_opts[option]
 
@@ -46,7 +49,7 @@ class BlockdevStreamCORBase(BlockDevStreamTest):
         opts = backing["file"]["file"] if is_cor else backing["file"]
         file_opts = qemu_storage.filename_to_file_opts(filename)
         if not self._is_same_file(opts, file_opts):
-            self.test.fail("file %s not in backing" % filename)
+            self.test.fail(f"file {filename} not in backing")
 
     def check_backing_chain(self):
         out = self.main_vm.monitor.query("block")
@@ -54,8 +57,9 @@ class BlockdevStreamCORBase(BlockDevStreamTest):
             if self.base_tag in item["qdev"]:
                 backing = item["inserted"].get("backing_file")
                 if not backing:
-                    self.test.fail("Failed to get backing_file for qdev %s"
-                                   % self.base_tag)
+                    self.test.fail(
+                        f"Failed to get backing_file for qdev {self.base_tag}"
+                    )
                 backing_dict = json.loads(backing[5:])
                 backing_depth = len(self.backing_chain)
                 for image_tag in self.backing_chain:
@@ -64,7 +68,7 @@ class BlockdevStreamCORBase(BlockDevStreamTest):
                     backing_depth -= 1
                 break
         else:
-            self.test.fail("Failed to find %s" % self.base_tag)
+            self.test.fail(f"Failed to find {self.base_tag}")
 
     def create_snapshot(self):
         self.backing_chain = [self.base_tag]
@@ -72,20 +76,21 @@ class BlockdevStreamCORBase(BlockDevStreamTest):
         cmd = "blockdev-snapshot"
         arguments = self.params.copy_from_keys(options)
         for snapshot_tag in self.snapshot_chain:
-            arguments["overlay"] = "drive_%s" % snapshot_tag
+            arguments["overlay"] = f"drive_{snapshot_tag}"
             self.main_vm.monitor.cmd(cmd, dict(arguments))
-            arguments["node"] = "drive_%s" % snapshot_tag
+            arguments["node"] = f"drive_{snapshot_tag}"
             if snapshot_tag != self.snapshot_chain[-1]:
                 self.backing_chain.append(snapshot_tag)
-        self._top_device = "drive_%s" % self.snapshot_chain[-1]
+        self._top_device = f"drive_{self.snapshot_chain[-1]}"
         self.check_backing_chain()
 
     def blockdev_stream(self):
-        backup_utils.blockdev_stream(self.main_vm, self._top_device,
-                                     **self._stream_options)
+        backup_utils.blockdev_stream(
+            self.main_vm, self._top_device, **self._stream_options
+        )
         time.sleep(0.5)
         index = self.backing_chain.index(self.params["base_tag"])
-        del self.backing_chain[index+1:]
+        del self.backing_chain[index + 1 :]
         self.check_backing_chain()
 
     def do_test(self):

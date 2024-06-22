@@ -1,41 +1,39 @@
 import logging
 
-from virttest import data_dir
-from virttest import error_context
+from virttest import data_dir, error_context
 
 from provider.blockdev_snapshot_base import BlockDevSnapshotTest
 from provider.virt_storage.storage_admin import sp_admin
 
-LOG_JOB = logging.getLogger('avocado.test')
+LOG_JOB = logging.getLogger("avocado.test")
 
 
 class BlockdevSnapshotChainsTest(BlockDevSnapshotTest):
-
     def __init__(self, test, params, env):
         self.snapshot_num = int(params.get("snapshot_num", 1))
         self.snapshot_chains = []
-        super(BlockdevSnapshotChainsTest, self).__init__(test, params, env)
+        super().__init__(test, params, env)
 
     def prepare_snapshot_file(self):
         for index in range(self.snapshot_num + 1):
-            snapshot_tag = "sn%s" % index
+            snapshot_tag = f"sn{index}"
             if snapshot_tag not in self.snapshot_chains:
                 self.snapshot_chains.append(snapshot_tag)
             params = self.params.copy()
             params.setdefault("target_path", data_dir.get_data_dir())
-            params["image_size_%s" % snapshot_tag] = self.base_image.size
-            params["image_name_%s" % snapshot_tag] = snapshot_tag
-            self.params["image_name_%s" % snapshot_tag] = snapshot_tag
+            params[f"image_size_{snapshot_tag}"] = self.base_image.size
+            params[f"image_name_{snapshot_tag}"] = snapshot_tag
+            self.params[f"image_name_{snapshot_tag}"] = snapshot_tag
             snapshot_format = params.get("snapshot_format", "qcow2")
-            params["image_format_%s" % snapshot_tag] = snapshot_format
-            self.params["image_format_%s" % snapshot_tag] = snapshot_format
+            params[f"image_format_{snapshot_tag}"] = snapshot_format
+            self.params[f"image_format_{snapshot_tag}"] = snapshot_format
             if self.params["image_backend"] == "iscsi_direct":
-                self.params.update({"enable_iscsi_%s" % snapshot_tag: "no"})
-                self.params.update({"image_raw_device_%s" % snapshot_tag: "no"})
+                self.params.update({f"enable_iscsi_{snapshot_tag}": "no"})
+                self.params.update({f"image_raw_device_{snapshot_tag}": "no"})
             elif self.params["image_backend"] == "ceph":
-                self.params.update({"enable_ceph_%s" % snapshot_tag: "no"})
+                self.params.update({f"enable_ceph_{snapshot_tag}": "no"})
             elif self.params["image_backend"] == "nbd":
-                self.params.update({"enable_nbd_%s" % snapshot_tag: "no"})
+                self.params.update({f"enable_nbd_{snapshot_tag}": "no"})
             image = sp_admin.volume_define_by_params(snapshot_tag, params)
             image.hotplug(self.main_vm)
 
@@ -45,7 +43,7 @@ class BlockdevSnapshotChainsTest(BlockDevSnapshotTest):
         cmd = "blockdev-snapshot"
         arguments = self.params.copy_from_keys(options)
         for snapshot_tag in self.snapshot_chains:
-            overlay = "drive_%s" % snapshot_tag
+            overlay = f"drive_{snapshot_tag}"
             arguments.update({"overlay": overlay})
             self.main_vm.monitor.cmd(cmd, dict(arguments))
             arguments["node"] = arguments["overlay"]
@@ -56,8 +54,7 @@ class BlockdevSnapshotChainsTest(BlockDevSnapshotTest):
             snapshot_tag = self.snapshot_tag
         else:
             snapshot_tag = self.snapshot_chains[-1]
-        images = self.params["images"].replace(
-            self.base_tag, snapshot_tag)
+        images = self.params["images"].replace(self.base_tag, snapshot_tag)
         vm_params["images"] = images
         return self.main_vm.clone(params=vm_params)
 
@@ -66,7 +63,7 @@ class BlockdevSnapshotChainsTest(BlockDevSnapshotTest):
             self.main_vm.destroy()
         base_tag = self.base_tag
         base_format = self.base_image.get_format()
-        self.params["image_format_%s" % base_tag] = base_format
+        self.params[f"image_format_{base_tag}"] = base_format
         for snapshot_tag in self.snapshot_chains:
             snapshot_image = self.get_image_by_tag(snapshot_tag)
             base_image = self.get_image_by_tag(base_tag)

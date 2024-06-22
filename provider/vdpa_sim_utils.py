@@ -1,26 +1,27 @@
 """
 Module for VDPA block/net device interfaces.
 """
-import logging
-import time
+
 import glob
+import logging
 import os
+import time
 
 from aexpect.utils import wait
 from avocado.utils import process
-from virttest.vdpa_blk import get_image_filename
 from virttest.utils_kernel_module import KernelModuleHandler
+from virttest.vdpa_blk import get_image_filename
 
-LOG = logging.getLogger('avocado.test')
+LOG = logging.getLogger("avocado.test")
 
 
 class VDPABlkNetSimulatorError(Exception):
-    """ General VDPA BLK/Net error"""
+    """General VDPA BLK/Net error"""
+
     pass
 
 
-class VDPABlkNetSimulatorTest(object):
-
+class VDPABlkNetSimulatorTest:
     def __init__(self):
         self._modules = []
 
@@ -59,12 +60,12 @@ class VDPABlkNetSimulatorTest(object):
         Remove vDPA device
         :param name: device name
         """
-        cmd = "vdpa dev del %s" % name
+        cmd = f"vdpa dev del {name}"
         process.run(cmd, shell=True, ignore_status=True)
-        cmd = "vdpa dev list -jp %s" % name
+        cmd = f"vdpa dev list -jp {name}"
         cmd_result = process.run(cmd, shell=True, ignore_status=True)
         if cmd_result.exit_status == 0:
-            raise VDPABlkNetSimulatorError("The vdpa device %s still exist" % name)
+            raise VDPABlkNetSimulatorError(f"The vdpa device {name} still exist")
 
     def setup(self, opts={}):
         """
@@ -84,8 +85,8 @@ class VDPABlkNetSimulatorTest(object):
 
 class VhostVdpaBlkSimulatorTest(VDPABlkNetSimulatorTest):
     def __init__(self):
-        super(VhostVdpaBlkSimulatorTest, self).__init__()
-        self._modules = ['vhost-vdpa', 'vdpa-sim-blk']
+        super().__init__()
+        self._modules = ["vhost-vdpa", "vdpa-sim-blk"]
 
     def add_dev(self, name):
         """
@@ -94,24 +95,23 @@ class VhostVdpaBlkSimulatorTest(VDPABlkNetSimulatorTest):
         :return : host device name ,eg. /dev/vhost-vdpa-X
         """
 
-        cmd = "vdpa dev add mgmtdev vdpasim_blk name %s" % name
+        cmd = f"vdpa dev add mgmtdev vdpasim_blk name {name}"
         process.run(cmd, shell=True)
-        cmd = "vdpa dev list -jp %s" % name
+        cmd = f"vdpa dev list -jp {name}"
         process.run(cmd, shell=True)
 
         time.sleep(2)
         try:
             dev = get_image_filename(name).replace("vdpa://", "")
         except Exception as e:
-            raise VDPABlkNetSimulatorError(
-                "vdpa dev add %s failed:%s" % (name, str(e)))
+            raise VDPABlkNetSimulatorError(f"vdpa dev add {name} failed:{str(e)}")
         return dev
 
 
 class VirtioVdpaBlkSimulatorTest(VDPABlkNetSimulatorTest):
     def __init__(self):
-        super(VirtioVdpaBlkSimulatorTest, self).__init__()
-        self._modules = ['virtio-vdpa', 'vdpa-sim-blk']
+        super().__init__()
+        self._modules = ["virtio-vdpa", "vdpa-sim-blk"]
 
     def add_dev(self, name):
         """
@@ -123,23 +123,23 @@ class VirtioVdpaBlkSimulatorTest(VDPABlkNetSimulatorTest):
         disk_cmd = "lsblk -nd -o name "
         disks = process.system_output(disk_cmd, shell=True).decode().split()
         dev_before = set(disks)
-        cmd = "vdpa dev add mgmtdev vdpasim_blk name %s" % name
+        cmd = f"vdpa dev add mgmtdev vdpasim_blk name {name}"
         process.run(cmd, shell=True)
-        cmd = "vdpa dev list -jp %s" % name
+        cmd = f"vdpa dev list -jp {name}"
         process.run(cmd, shell=True)
         time.sleep(2)
         disks = process.system_output(disk_cmd, shell=True).decode().split()
         dev_after = set(disks)
         host_dev = list(dev_after - dev_before)
         if not host_dev:
-            raise VDPABlkNetSimulatorError("vdpa dev add %s failed" % name)
+            raise VDPABlkNetSimulatorError(f"vdpa dev add {name} failed")
         return host_dev[0]
 
 
 class VhostVdpaNetSimulatorTest(VDPABlkNetSimulatorTest):
     def __init__(self):
-        super(VhostVdpaNetSimulatorTest, self).__init__()
-        self._modules = ['vhost-vdpa', 'vdpa-sim', 'vdpa-sim-net']
+        super().__init__()
+        self._modules = ["vhost-vdpa", "vdpa-sim", "vdpa-sim-net"]
 
     def add_dev(self, name, mac):
         """
@@ -149,24 +149,23 @@ class VhostVdpaNetSimulatorTest(VDPABlkNetSimulatorTest):
         :return : host device name ,eg. /dev/vhost-vdpa-X
         """
 
-        cmd = "vdpa dev add name %s mgmtdev vdpasim_net mac %s" % (name, mac)
+        cmd = f"vdpa dev add name {name} mgmtdev vdpasim_net mac {mac}"
         process.run(cmd, shell=True)
-        cmd = "vdpa dev list -jp %s" % name
+        cmd = f"vdpa dev list -jp {name}"
         process.run(cmd, shell=True)
 
         time.sleep(2)
         try:
             dev = get_image_filename(name).replace("vdpa://", "")
         except Exception as e:
-            raise VDPABlkNetSimulatorError(
-                "vdpa dev add %s failed:%s" % (name, str(e)))
+            raise VDPABlkNetSimulatorError(f"vdpa dev add {name} failed:{str(e)}")
         return dev
 
 
 class VirtioVdpaNetSimulatorTest(VDPABlkNetSimulatorTest):
     def __init__(self):
-        super(VirtioVdpaNetSimulatorTest, self).__init__()
-        self._modules = ['vdpa', 'virtio-vdpa', 'vdpa_sim', 'vdpa-sim-net']
+        super().__init__()
+        self._modules = ["vdpa", "virtio-vdpa", "vdpa_sim", "vdpa-sim-net"]
 
     def add_dev(self, name, mac):
         """
@@ -176,13 +175,13 @@ class VirtioVdpaNetSimulatorTest(VDPABlkNetSimulatorTest):
         :return : host device name ,eg. eth0
         """
 
-        cmd = "vdpa dev add name %s mgmtdev vdpasim_net mac %s" % (name, mac)
+        cmd = f"vdpa dev add name {name} mgmtdev vdpasim_net mac {mac}"
         process.run(cmd, shell=True)
-        cmd = "vdpa dev list -jp %s" % name
+        cmd = f"vdpa dev list -jp {name}"
         process.run(cmd, shell=True)
-        virtio_dir = "/sys/bus/vdpa/devices/{}/virtio*/net/*".format(name)
+        virtio_dir = f"/sys/bus/vdpa/devices/{name}/virtio*/net/*"
         virtio_path = wait.wait_for(lambda: glob.glob(virtio_dir), 2)
         if virtio_path:
             return os.path.basename(virtio_path[0])
         else:
-            raise VDPABlkNetSimulatorError("vdpa dev add %s failed:%s" % name)
+            raise VDPABlkNetSimulatorError("vdpa dev add {} failed:{}".format(*name))

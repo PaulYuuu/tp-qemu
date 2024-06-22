@@ -1,5 +1,5 @@
-import re
 import json
+import re
 
 from avocado.utils import process
 from virttest import error_context
@@ -42,7 +42,7 @@ def run(test, params, env):
         :param file_list: query files command output
         """
         err_str = "The 'filename' element in meta-file point to an "
-        err_str += "invalid file. The invalid file is '%s'" % filename
+        err_str += f"invalid file. The invalid file is '{filename}'"
         test.assertIn(filename, file_list, err_str)
 
     def check_element_mode(mode, expected_mode):
@@ -58,18 +58,21 @@ def run(test, params, env):
         test.assertTrue(mode == expected_mode, err_str % (expected_mode, mode))
 
     query_package = params["query_package"]
-    error_context.context("Check edk2-ovmf package has been "
-                          "installed already", test.log.info)
-    status, output = process.getstatusoutput(query_package,
-                                             ignore_status=True,
-                                             shell=True)
+    error_context.context(
+        "Check edk2-ovmf package has been " "installed already", test.log.info
+    )
+    status, output = process.getstatusoutput(
+        query_package, ignore_status=True, shell=True
+    )
     if status:
         test.error("Please install edk2-ovmf package on host.")
     package_name = params["ovmf_package_name"]
     ovmf_package = re.findall(package_name, output, re.S)
     if not ovmf_package:
-        test.error("Not found right edk2-ovmf package on host. "
-                   "The actual output is '%s'" % output)
+        test.error(
+            "Not found right edk2-ovmf package on host. "
+            f"The actual output is '{output}'"
+        )
     query_files = params["query_files"] % ovmf_package[0]
     file_suffix = params["file_suffix"]
     meta_files = []
@@ -78,14 +81,19 @@ def run(test, params, env):
         if line.endswith(file_suffix):
             meta_files.append(line)
     if len(meta_files) > int(params["number_of_files"]):
-        test.fail("The number of JSON files should be less than or "
-                  "equal to %s. The actual file list is %s",
-                  params["number_of_files"], meta_files)
-    error_context.context("Check the 'filename' elements in both json"
-                          " files point to valid files.", test.log.info)
+        test.fail(
+            "The number of JSON files should be less than or "
+            "equal to %s. The actual file list is %s",
+            params["number_of_files"],
+            meta_files,
+        )
+    error_context.context(
+        "Check the 'filename' elements in both json" " files point to valid files.",
+        test.log.info,
+    )
     for meta_file in meta_files:
-        test.log.info("Checking the meta file '%s'" % meta_file)
-        with open(meta_file, "r") as f:
+        test.log.info(f"Checking the meta file '{meta_file}'")
+        with open(meta_file) as f:
             content = json.load(f)
         filename = content["mapping"]["executable"]["filename"]
         check_element_filename(filename, output)

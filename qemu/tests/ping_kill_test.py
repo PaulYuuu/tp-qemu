@@ -1,11 +1,8 @@
 import time
 
 import aexpect
-
 from avocado.utils import process
-
-from virttest import error_context
-from virttest import utils_net
+from virttest import error_context, utils_net
 
 
 @error_context.context_aware
@@ -19,15 +16,16 @@ def run(test, params, env):
     :param params: Dictionary with the test parameters
     :param env: Dictionary with test environment.
     """
+
     def kill_and_check(vm):
         """
         Kill the vm and check vm is dead
         """
         qemu_pid = vm.get_pid()
-        cmd = "kill -9 %s" % qemu_pid
+        cmd = f"kill -9 {qemu_pid}"
         process.system(cmd)
         if not vm.wait_until_dead(timeout=10):
-            test.fail("VM is not dead, 10s after '%s' sent." % cmd)
+            test.fail(f"VM is not dead, 10s after '{cmd}' sent.")
         test.log.info("Vm is dead as expected")
 
     def guest_ping(session, dst_ip, count=None):
@@ -42,18 +40,18 @@ def run(test, params, env):
         ping_cmd = "ping"
         if os_type == "linux":
             if count:
-                ping_cmd += " -c %s" % count
-            ping_cmd += " -s %s %s" % (packetsize, dst_ip)
+                ping_cmd += f" -c {count}"
+            ping_cmd += f" -s {packetsize} {dst_ip}"
         else:
             if not count:
                 ping_cmd += " -t "
-            ping_cmd += " -l %s %s" % (packetsize, dst_ip)
+            ping_cmd += f" -l {packetsize} {dst_ip}"
         try:
             test.log.debug("Ping dst vm with cmd: '%s'", ping_cmd)
             test_runner(ping_cmd)
         except aexpect.ShellTimeoutError as err:
             if count:
-                test.error("Error during ping guest ip, %s" % err)
+                test.error(f"Error during ping guest ip, {err}")
 
     def ping_is_alive(session):
         """
@@ -61,7 +59,7 @@ def run(test, params, env):
         else return False
         """
         os_type = params.get("os_type")
-        if os_type == 'linux':
+        if os_type == "linux":
             return not session.cmd_status("pidof ping")
         else:
             return not session.cmd_status("tasklist | findstr /I ping.exe")
@@ -72,7 +70,7 @@ def run(test, params, env):
         """
         os_type = params.get("os_type", "linux")
         if os_type == "linux":
-            shut_down_cmd = "ifconfig %s " % ifname
+            shut_down_cmd = f"ifconfig {ifname} "
             if disabled:
                 shut_down_cmd += " down"
             else:
@@ -104,18 +102,17 @@ def run(test, params, env):
         error_context.context("Ping dst guest", test.log.info)
         guest_ping(session, dst_ip, count=4)
 
-        error_context.context("Disable the dst guest nic interface",
-                              test.log.info)
+        error_context.context("Disable the dst guest nic interface", test.log.info)
         macaddress = dst_vm.get_mac_address()
         if params.get("os_type") == "linux":
             ifname = utils_net.get_linux_ifname(session_serial, macaddress)
         else:
-            ifname = utils_net.get_windows_nic_attribute(session_serial,
-                                                         "macaddress", macaddress, "netconnectionid")
+            ifname = utils_net.get_windows_nic_attribute(
+                session_serial, "macaddress", macaddress, "netconnectionid"
+            )
         manage_guest_nic(session_serial, ifname)
 
-        error_context.context("Ping dst guest after disabling it's nic",
-                              test.log.info)
+        error_context.context("Ping dst guest after disabling it's nic", test.log.info)
         ping_timeout = float(params.get("ping_timeout", 21600))
         guest_ping(session, dst_ip)
         # This test need do infinite ping for a long time(6h)
@@ -126,7 +123,7 @@ def run(test, params, env):
                 if not ping_is_alive(check_sess):
                     test.cancel("Ping process is not alive")
             except Exception as err:
-                test.error("Check ping status error '%s'" % err)
+                test.error(f"Check ping status error '{err}'")
             else:
                 time.sleep(60)
 

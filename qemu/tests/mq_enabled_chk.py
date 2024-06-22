@@ -1,9 +1,6 @@
 import re
 
-from virttest import env_process
-from virttest import error_context
-from virttest import utils_net
-from virttest import utils_test
+from virttest import env_process, error_context, utils_net, utils_test
 
 
 @error_context.context_aware
@@ -31,16 +28,15 @@ def run(test, params, env):
 
         :return: queues status list
         """
-        mq_get_cmd = "ethtool -l %s" % ifname
-        nic_mq_info = session.cmd_output(mq_get_cmd, timeout=timeout,
-                                         safe=True)
+        mq_get_cmd = f"ethtool -l {ifname}"
+        nic_mq_info = session.cmd_output(mq_get_cmd, timeout=timeout, safe=True)
         queues_reg = re.compile(r"Combined:\s+(\d)", re.I)
         queues_info = queues_reg.findall(" ".join(nic_mq_info.splitlines()))
         if len(queues_info) != 2:
             err_msg = "Oops, get guest queues info failed, "
             err_msg += "make sure your guest support MQ.\n"
-            err_msg += "Check cmd is: '%s', " % mq_get_cmd
-            err_msg += "Command output is: '%s'." % nic_mq_info
+            err_msg += f"Check cmd is: '{mq_get_cmd}', "
+            err_msg += f"Command output is: '{nic_mq_info}'."
             test.cancel(err_msg)
         return [int(x) for x in queues_info]
 
@@ -59,17 +55,18 @@ def run(test, params, env):
         queues_status_list = get_queues_status(session, ifname)
 
         session.close()
-        if not queues_status_list[0] == queues or \
-                not queues_status_list[1] == min(queues, int(vm.cpuinfo.smp)):
+        if not queues_status_list[0] == queues or not queues_status_list[1] == min(
+            queues, int(vm.cpuinfo.smp)
+        ):
             txt = "Pre-set maximums Combined should equals to queues in qemu"
             txt += " cmd line.\n"
             txt += "Current hardware settings Combined should be the min of "
             txt += "queues and smp.\n"
-            txt += "Pre-set maximum Combined is: %s, " % queues_status_list[0]
-            txt += " queues in qemu cmd line is: %s.\n" % queues
+            txt += f"Pre-set maximum Combined is: {queues_status_list[0]}, "
+            txt += f" queues in qemu cmd line is: {queues}.\n"
             txt += "Current hardware settings Combined "
-            txt += "is: %s, " % queues_status_list[1]
-            txt += " smp in qemu cmd line is: %s." % int(vm.cpuinfo.smp)
+            txt += f"is: {queues_status_list[1]}, "
+            txt += f" smp in qemu cmd line is: {int(vm.cpuinfo.smp)}."
             test.fail(txt)
 
     error_context.context("Init the guest and try to login", test.log.info)
@@ -85,8 +82,7 @@ def run(test, params, env):
 
         chk_mq_enabled(vm, int(queues))
         guest_ip = vm.get_address()
-        status, output = utils_net.ping(guest_ip, 10, session=None,
-                                        timeout=20)
+        status, output = utils_net.ping(guest_ip, 10, session=None, timeout=20)
         if utils_test.get_loss_ratio(output) > 0:
             test.fail("Packet lost while doing ping test")
 

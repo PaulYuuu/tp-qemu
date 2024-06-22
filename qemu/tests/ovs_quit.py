@@ -1,9 +1,11 @@
-from virttest import data_dir
-from virttest import env_process
-from virttest import error_context
-from virttest import virt_vm
-from virttest import utils_misc
-from virttest import utils_net
+from virttest import (
+    data_dir,
+    env_process,
+    error_context,
+    utils_misc,
+    utils_net,
+    virt_vm,
+)
 
 
 @error_context.context_aware
@@ -22,7 +24,7 @@ def run(test, params, env):
 
     netdst = params.get("netdst")
     if not utils_net.ovs_br_exists(netdst):
-        test.cancel("%s isn't an openvswith bridge" % netdst)
+        test.cancel(f"{netdst} isn't an openvswith bridge")
 
     host_bridge = utils_net.find_bridge_manager(netdst)
     deps_dir = data_dir.get_deps_dir("ovs")
@@ -45,6 +47,6 @@ def run(test, params, env):
         if ports:
             for p in ports:
                 host_bridge.del_port(netdst, p)
-            test.fail("%s not delete after qemu quit." % ports)
+            test.fail(f"{ports} not delete after qemu quit.")
     else:
         test.fail("Qemu should quit with error")

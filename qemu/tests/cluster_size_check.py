@@ -45,35 +45,34 @@ def run(test, params, env):
         image_name = params.get("images")
         status_error = "yes" == params.get("status_error", "no")
         image_params = params.object_params(image_name)
-        image = qemu_disk_img.QemuImgTest(test, image_params, env,
-                                          image_name)
+        image = qemu_disk_img.QemuImgTest(test, image_params, env, image_name)
 
         filename, result = image.create(image_params, ignore_errors=True)
 
         if status_error:
             if result.exit_status == 0:
-                test.log.error("Create image sucessfully with invalid size: %s",
-                               csize_set)
+                test.log.error(
+                    "Create image sucessfully with invalid size: %s", csize_set
+                )
                 cfail += 1
                 fail_log += "Succeed in creating image unexpectedly.\n"
         else:
             output = image.info()
-            error_context.context("Check the cluster size from output",
-                                  test.log.info)
+            error_context.context("Check the cluster size from output", test.log.info)
             cluster_size = re.findall(parttern, output)
             if cluster_size:
                 if cluster_size[0] != expect:
-                    test.log.error("Cluster size %s is not expected value %s",
-                                   cluster_size, expect)
+                    test.log.error(
+                        "Cluster size %s is not expected value %s", cluster_size, expect
+                    )
                     cfail += 1
                     fail_log += "Cluster size mismatch the specified value "
-                    fail_log += "%s.\n" % csize_set
+                    fail_log += f"{csize_set}.\n"
             else:
-                test.log.error("Can not get the cluster size from command: %s",
-                               output)
+                test.log.error("Can not get the cluster size from command: %s", output)
                 cfail += 1
                 fail_log += "Can not get the cluster size from command:"
-                fail_log += " %s\n" % output
+                fail_log += f" {output}\n"
 
         return cfail, fail_log
 
@@ -91,14 +90,14 @@ def run(test, params, env):
             params["image_cluster_size"] = cluster_size
             csize_expect = str(memory_size(cluster_size))
             csize_set = cluster_size
-        error_context.context("Check cluster size as cluster size set to %s"
-                              % cluster_size)
+        error_context.context(
+            f"Check cluster size as cluster size set to {cluster_size}"
+        )
 
-        c_fail, log = check_cluster_size(csize_parttern, csize_expect,
-                                         csize_set)
+        c_fail, log = check_cluster_size(csize_parttern, csize_expect, csize_set)
         fail += c_fail
         fail_log += log
 
     error_context.context("Finally result check")
     if fail > 0:
-        test.fail("Cluster size check failed %s times:\n%s" % (fail, fail_log))
+        test.fail(f"Cluster size check failed {fail} times:\n{fail_log}")

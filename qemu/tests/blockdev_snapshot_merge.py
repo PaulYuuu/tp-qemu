@@ -5,7 +5,7 @@ from virttest import data_dir
 from provider.blockdev_snapshot_base import BlockDevSnapshotTest
 from provider.virt_storage.storage_admin import sp_admin
 
-LOG_JOB = logging.getLogger('avocado.test')
+LOG_JOB = logging.getLogger("avocado.test")
 
 
 class BlockdevSnapshotMergeTest(BlockDevSnapshotTest):
@@ -17,17 +17,17 @@ class BlockdevSnapshotMergeTest(BlockDevSnapshotTest):
             self.configure_data_disk()
 
     def prepare_snapshot_file(self):
-        self.params["image_size_%s" % self.snapshot_tag] = self.base_image.size
-        self.params["image_name_%s" % self.snapshot_tag] = 'images/' + self.snapshot_tag
+        self.params[f"image_size_{self.snapshot_tag}"] = self.base_image.size
+        self.params[f"image_name_{self.snapshot_tag}"] = "images/" + self.snapshot_tag
         snapshot_format = self.params.get("snapshot_format", "qcow2")
-        self.params["image_format_%s" % self.snapshot_tag] = snapshot_format
+        self.params[f"image_format_{self.snapshot_tag}"] = snapshot_format
         if self.params["image_backend"] == "iscsi_direct":
-            self.params.update({"enable_iscsi_%s" % self.snapshot_tag: "no"})
-            self.params.update({"image_raw_device_%s" % self.snapshot_tag: "no"})
+            self.params.update({f"enable_iscsi_{self.snapshot_tag}": "no"})
+            self.params.update({f"image_raw_device_{self.snapshot_tag}": "no"})
         elif self.params["image_backend"] == "ceph":
-            self.params.update({"enable_ceph_%s" % self.snapshot_tag: "no"})
+            self.params.update({f"enable_ceph_{self.snapshot_tag}": "no"})
         elif self.params["image_backend"] == "nbd":
-            self.params.update({"enable_nbd_%s" % self.snapshot_tag: "no"})
+            self.params.update({f"enable_nbd_{self.snapshot_tag}": "no"})
         params = self.params.copy()
         params.setdefault("target_path", data_dir.get_data_dir())
         image = sp_admin.volume_define_by_params(self.snapshot_tag, params)
@@ -60,13 +60,13 @@ class BlockdevSnapshotMergeTest(BlockDevSnapshotTest):
         self.snapshot_images = []
         self.snapshot_tags = [self.base_tag]
         for index in range(1, snapshot_nums + 1):
-            self.snapshot_tag = "sn%s" % index
+            self.snapshot_tag = f"sn{index}"
             if self.snapshot_tag not in self.snapshot_tags:
                 self.snapshot_tags.append(self.snapshot_tag)
             snapshot_image = self.prepare_snapshot_file()
             self.snapshot_images.append(snapshot_image)
 
-            self.params["overlay"] = "drive_%s" % self.snapshot_tag
+            self.params["overlay"] = f"drive_{self.snapshot_tag}"
             self.create_snapshot()
             self.params["node"] = self.params["overlay"]
             dd_filename = self.params.get("dd_filename") % index

@@ -2,10 +2,7 @@ import os
 import re
 
 from avocado.utils import process
-
-from virttest import error_context
-from virttest import utils_misc
-from virttest import env_process
+from virttest import env_process, error_context, utils_misc
 
 
 @error_context.context_aware
@@ -28,7 +25,7 @@ def run(test, params, env):
         """
         test.log.info("creating test cdrom")
         process.run("dd if=/dev/urandom of=test bs=10M count=1")
-        process.run("mkisofs -o %s test" % cdrom_test)
+        process.run(f"mkisofs -o {cdrom_test} test")
         process.run("rm -f test")
 
     def cleanup_cdroms(cdrom_test):
@@ -55,7 +52,7 @@ def run(test, params, env):
         return output
 
     timeout = int(params.get("login_timeout", 360))
-    boot_menu_key = params.get("boot_menu_key", 'esc')
+    boot_menu_key = params.get("boot_menu_key", "esc")
     boot_menu_hint = params["boot_menu_hint"]
     boot_entry_info = params["boot_entry_info"]
     boot_dev = params.get("boot_dev")
@@ -72,8 +69,7 @@ def run(test, params, env):
 
     try:
         if boot_dev:
-            if not utils_misc.wait_for(lambda: boot_check(boot_menu_hint),
-                                       timeout, 1):
+            if not utils_misc.wait_for(lambda: boot_check(boot_menu_hint), timeout, 1):
                 test.fail("Could not get boot menu message")
 
             # Send boot menu key in monitor.
@@ -87,18 +83,17 @@ def run(test, params, env):
 
             for i, v in enumerate(boot_list, start=1):
                 if re.search(boot_dev, v, re.I):
-                    msg = "Start guest from boot entry '%s'" % boot_dev
+                    msg = f"Start guest from boot entry '{boot_dev}'"
                     error_context.context(msg, test.log.info)
                     vm.send_key(str(i))
                     break
             else:
-                msg = "Could not get boot entry match pattern '%s'" % boot_dev
+                msg = f"Could not get boot entry match pattern '{boot_dev}'"
                 test.fail(msg)
 
         error_context.context("Check boot result", test.log.info)
-        if not utils_misc.wait_for(lambda: boot_check(boot_entry_info),
-                                   timeout, 1):
-            test.fail("Could not boot from '%s'" % dev_name)
+        if not utils_misc.wait_for(lambda: boot_check(boot_entry_info), timeout, 1):
+            test.fail(f"Could not boot from '{dev_name}'")
     finally:
         if dev_name == "cdrom":
             cleanup_cdroms(cdrom_test)

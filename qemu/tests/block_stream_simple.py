@@ -4,13 +4,12 @@ from virttest import error_context
 
 from qemu.tests import blk_stream
 
-LOG_JOB = logging.getLogger('avocado.test')
+LOG_JOB = logging.getLogger("avocado.test")
 
 
 class BlockStreamSimple(blk_stream.BlockStream):
-
     def __init__(self, test, params, env, tag):
-        super(BlockStreamSimple, self).__init__(test, params, env, tag)
+        super().__init__(test, params, env, tag)
 
     @error_context.context_aware
     def query_status(self):

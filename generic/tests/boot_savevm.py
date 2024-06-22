@@ -1,10 +1,8 @@
-import time
-import tempfile
 import os
+import tempfile
+import time
 
-from virttest import qemu_storage
-from virttest import data_dir
-from virttest import utils_misc
+from virttest import data_dir, qemu_storage, utils_misc
 
 
 def run(test, params, env):
@@ -25,14 +23,16 @@ def run(test, params, env):
     vm = env.get_vm(params["main_vm"])
     if params.get("with_floppy") == "yes":
         floppy_name = params.get("floppies", "fl")
-        floppy_params = {"image_format": params.get("floppy_format", "qcow2"),
-                         "image_size": params.get("floppy_size", "1.4M"),
-                         "image_name": params.get("%s_name" % floppy_name,
-                                                  "images/test"),
-                         "vm_type": params.get("vm_type"),
-                         "qemu_img_binary": utils_misc.get_qemu_img_binary(params)}
-        floppy = qemu_storage.QemuImg(floppy_params,
-                                      data_dir.get_data_dir(), floppy_name)
+        floppy_params = {
+            "image_format": params.get("floppy_format", "qcow2"),
+            "image_size": params.get("floppy_size", "1.4M"),
+            "image_name": params.get(f"{floppy_name}_name", "images/test"),
+            "vm_type": params.get("vm_type"),
+            "qemu_img_binary": utils_misc.get_qemu_img_binary(params),
+        }
+        floppy = qemu_storage.QemuImg(
+            floppy_params, data_dir.get_data_dir(), floppy_name
+        )
         floppy.create(floppy_params)
         floppy_orig_info = floppy.snapshot_list()
         vm.create(params=params)
@@ -43,8 +43,8 @@ def run(test, params, env):
     savevm_login_timeout = float(params["savevm_timeout"])
     savevm_statedir = params.get("savevm_statedir", tempfile.gettempdir())
     fd, savevm_statefile = tempfile.mkstemp(
-        suffix='.img', prefix=vm.name + '-',
-        dir=savevm_statedir)
+        suffix=".img", prefix=vm.name + "-", dir=savevm_statedir
+    )
     os.close(fd)  # save_to_file doesn't need the file open
     start_time = time.time()
     cycles = 0
@@ -54,7 +54,7 @@ def run(test, params, env):
         test.log.info("Save/Restore cycle %d", cycles + 1)
         time.sleep(savevm_delay)
         vm.pause()
-        if params['save_method'] == 'save_to_file':
+        if params["save_method"] == "save_to_file":
             vm.save_to_file(savevm_statefile)  # Re-use same filename
             vm.restore_from_file(savevm_statefile)
         else:
@@ -74,7 +74,7 @@ def run(test, params, env):
     time_elapsed = int(time.time() - start_time)
     info = "after %s s, %d load/save cycles" % (time_elapsed, cycles + 1)
     if not successful_login:
-        test.fail("Can't log on '%s' %s" % (vm.name, info))
+        test.fail(f"Can't log on '{vm.name}' {info}")
     else:
         test.log.info("Test ended %s", info)
 
@@ -82,7 +82,8 @@ def run(test, params, env):
         vm.destroy()
         floppy_info = floppy.snapshot_list()
         if floppy_info == floppy_orig_info:
-            test.fail("savevm didn't create snapshot in floppy."
-                      "    original snapshot list is: %s"
-                      "    now snapshot list is: %s"
-                      % (floppy_orig_info, floppy_info))
+            test.fail(
+                "savevm didn't create snapshot in floppy."
+                f"    original snapshot list is: {floppy_orig_info}"
+                f"    now snapshot list is: {floppy_info}"
+            )

@@ -1,10 +1,7 @@
 import re
 
-from virttest import qemu_storage
-from virttest import error_context
-from virttest import data_dir
-
 from avocado.utils import process
+from virttest import data_dir, error_context, qemu_storage
 
 
 @error_context.context_aware
@@ -21,8 +18,7 @@ def run(test, params, env):
     :param env: Dictionary with test environment
     """
     rebase_chain = params.get("rebase_list", "").split(";")
-    error_context.context("Change the backing file of snapshot",
-                          test.log.info)
+    error_context.context("Change the backing file of snapshot", test.log.info)
     for images in rebase_chain:
         output = ""
         images = re.split(r"\s*>\s*", images)
@@ -33,42 +29,39 @@ def run(test, params, env):
             msg = "Invalid format of'rebase_chain' params \n"
             msg += "format like: 'image > base;image> base2'"
             test.error(msg)
-        negtive_test = params.get("negtive_test_%s" % image, "no")
+        negtive_test = params.get(f"negtive_test_{image}", "no")
         params["image_chain"] = " ".join([base, image])
         params["base_image_filename"] = image
         t_params = params.object_params(image)
         cache_mode = t_params.get("cache_mode", None)
-        rebase_test = qemu_storage.QemuImg(t_params,
-                                           data_dir.get_data_dir(), image)
+        rebase_test = qemu_storage.QemuImg(t_params, data_dir.get_data_dir(), image)
         try:
             rebase_test.rebase(t_params, cache_mode)
             if negtive_test == "yes":
-                msg = "Fail to trigger negative image('%s') rebase" % image
+                msg = f"Fail to trigger negative image('{image}') rebase"
                 test.fail(msg)
         except process.CmdError as err:
             output = err.result.stderr.decode()
-            test.log.info("Rebase image('%s') failed: %s.",
-                          image, output)
+            test.log.info("Rebase image('%s') failed: %s.", image, output)
             if negtive_test == "no":
-                msg = "Fail to rebase image('%s'): %s" % (image, output)
+                msg = f"Fail to rebase image('{image}'): {output}"
                 test.fail(msg)
             if "(core dumped)" in output:
                 msg = "qemu-img core dumped when change"
-                msg += " image('%s') backing file to %s" % (image, base)
+                msg += f" image('{image}') backing file to {base}"
                 test.fail(msg)
         image_info = rebase_test.info()
         if not image_info:
-            msg = "Fail to get image('%s') info" % image
+            msg = f"Fail to get image('{image}') info"
             test.fail(msg)
-        backingfile = re.search(r'backing file: +(.*)',
-                                image_info, re.M)
+        backingfile = re.search(r"backing file: +(.*)", image_info, re.M)
         base_name = rebase_test.base_image_filename
         if not output:
             if not backingfile:
-                msg = "Expected backing file: %s" % base_name
+                msg = f"Expected backing file: {base_name}"
                 msg += " Actual backing file is null!"
                 test.fail(msg)
             elif base_name not in backingfile.group(0):
-                msg = "Expected backing file: %s" % base_name
-                msg += " Actual backing file: %s" % backingfile
+                msg = f"Expected backing file: {base_name}"
+                msg += f" Actual backing file: {backingfile}"
                 test.fail(msg)

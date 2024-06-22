@@ -21,7 +21,7 @@ def run(test, params, env):
     if mount_dir is None:
         test.log.info("User Variable for mount dir is not set")
     else:
-        session.cmd("mkdir -p %s" % mount_dir)
+        session.cmd(f"mkdir -p {mount_dir}")
 
         mount_option = " trans=virtio"
 
@@ -37,19 +37,19 @@ def run(test, params, env):
             mount_option += ",posixacl"
 
         test.log.info("Mounting 9p mount point with options %s", mount_option)
-        cmd = "mount -t 9p -o %s autotest_tag %s" % (mount_option, mount_dir)
+        cmd = f"mount -t 9p -o {mount_option} autotest_tag {mount_dir}"
         mount_status = session.cmd_status(cmd)
 
-        if (mount_status != 0):
+        if mount_status != 0:
             test.log.error("mount failed")
-            test.fail('mount failed.')
+            test.fail("mount failed.")
 
         # Collect test parameters
         timeout = int(params.get("test_timeout", 14400))
-        control_path = os.path.join(test.virtdir, "autotest_control",
-                                    params.get("test_control_file"))
+        control_path = os.path.join(
+            test.virtdir, "autotest_control", params.get("test_control_file")
+        )
 
         outputdir = test.outputdir
 
-        utils_test.run_autotest(vm, session, control_path,
-                                timeout, outputdir, params)
+        utils_test.run_autotest(vm, session, control_path, timeout, outputdir, params)

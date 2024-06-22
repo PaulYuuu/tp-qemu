@@ -22,10 +22,10 @@ def run(test, params, env):
 
     sev_module_path = params["sev_module_path"]
     if os.path.exists(sev_module_path):
-        f = open(sev_module_path, "r")
+        f = open(sev_module_path)
         output = f.read().strip()
         f.close()
-        if output not in params.objects('module_status'):
+        if output not in params.objects("module_status"):
             test.cancel("Host sev-es support check fail.")
     else:
         test.cancel("Host sev-es support check fail.")
@@ -42,11 +42,12 @@ def run(test, params, env):
         else:
             policy_keyword = "sev-es"
         guest_check_cmd = params["sev_guest_check"].format(
-            policy_keyword=policy_keyword)
+            policy_keyword=policy_keyword
+        )
         try:
             session.cmd_output(guest_check_cmd, timeout=240)
         except Exception as e:
-            test.fail("Guest sev verify fail: %s" % str(e))
+            test.fail(f"Guest sev verify fail: {str(e)}")
         sev_guest_info = vm.monitor.query_sev()
         if sev_guest_info["policy"] != vm_policy:
             test.fail("QMP sev policy doesn't match.")

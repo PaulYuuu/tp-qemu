@@ -1,26 +1,23 @@
 import logging
-import time
 import random
+import time
 
-from virttest import utils_test
-from virttest import error_context
+from virttest import error_context, utils_test
 
 from provider.blockdev_snapshot_base import BlockDevSnapshotTest
 
-LOG_JOB = logging.getLogger('avocado.test')
+LOG_JOB = logging.getLogger("avocado.test")
 
 
 class BlockdevSnapshotRebootTest(BlockDevSnapshotTest):
-
     @error_context.context_aware
     def create_snapshot(self):
-        error_context.context("do snaoshot during guest rebooting",
-                              LOG_JOB.info)
+        error_context.context("do snaoshot during guest rebooting", LOG_JOB.info)
         bg_test = utils_test.BackgroundTest(self.vm_reset, "")
         bg_test.start()
         LOG_JOB.info("sleep random time to perform before snapshot")
         time.sleep(random.randint(0, 10))
-        super(BlockdevSnapshotRebootTest, self).create_snapshot()
+        super().create_snapshot()
         if bg_test.is_alive():
             bg_test.join()
 
@@ -43,7 +40,7 @@ def run(test, params, env):
     :param env: Dictionary with test environment.
     """
     base_image = params.get("images", "image1").split()[0]
-    params.setdefault("image_name_%s" % base_image, params["image_name"])
-    params.setdefault("image_format_%s" % base_image, params["image_format"])
+    params.setdefault(f"image_name_{base_image}", params["image_name"])
+    params.setdefault(f"image_format_{base_image}", params["image_format"])
     snapshot_reboot = BlockdevSnapshotRebootTest(test, params, env)
     snapshot_reboot.run_test()

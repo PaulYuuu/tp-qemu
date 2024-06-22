@@ -1,16 +1,17 @@
-import re
 import random
+import re
 import string
 
 from avocado.utils import process
-
-from virttest import error_context
-from virttest import qemu_monitor
-from virttest import storage
-from virttest import utils_misc
-from virttest import env_process
-from virttest import data_dir
-from virttest import qemu_qtree
+from virttest import (
+    data_dir,
+    env_process,
+    error_context,
+    qemu_monitor,
+    qemu_qtree,
+    storage,
+    utils_misc,
+)
 
 
 @error_context.context_aware
@@ -28,23 +29,24 @@ def run(test, params, env):
     :param params: Dictionary with the test parameters.
     :param env: Dictionary with test environment.
     """
+
     # Define a function for checking number of hard drivers & NICs
     def check_num(devices, info_cmd, check_str):
         f_fail = []
         expected_num = params.objects(devices).__len__()
         o = ""
         try:
-            o = vm.monitor.human_monitor_cmd("info %s " % info_cmd)
+            o = vm.monitor.human_monitor_cmd(f"info {info_cmd} ")
         except qemu_monitor.MonitorError as e:
             fail_log = str(e) + "\n"
-            fail_log += "info/query monitor command failed (%s)" % info_cmd
+            fail_log += f"info/query monitor command failed ({info_cmd})"
             f_fail.append(fail_log)
             test.log.error(fail_log)
 
-        ovmf_fd_num = o.count('%s.fd' % check_str)  # Exclude ovmf fd drive
+        ovmf_fd_num = o.count(f"{check_str}.fd")  # Exclude ovmf fd drive
         actual_num = o.count(check_str) - ovmf_fd_num
         if expected_num != actual_num:
-            fail_log = "%s number mismatch:\n" % str(devices)
+            fail_log = f"{str(devices)} number mismatch:\n"
             fail_log += "    Assigned to VM: %d\n" % expected_num
             fail_log += "    Reported by OS: %d" % actual_num
             f_fail.append(fail_log)
@@ -61,10 +63,10 @@ def run(test, params, env):
                 expected = "rtl8139"
             o = ""
             try:
-                o = vm.monitor.human_monitor_cmd("info %s" % info_cmd)
+                o = vm.monitor.human_monitor_cmd(f"info {info_cmd}")
             except qemu_monitor.MonitorError as e:
                 fail_log = str(e) + "\n"
-                fail_log += "info/query monitor command failed (%s)" % info_cmd
+                fail_log += f"info/query monitor command failed ({info_cmd})"
                 f_fail.append(fail_log)
                 test.log.error(fail_log)
 
@@ -76,9 +78,9 @@ def run(test, params, env):
                     found = True
 
             if not found:
-                fail_log = "%s model mismatch:\n" % str(device)
-                fail_log += "    Assigned to VM: %s\n" % expected
-                fail_log += "    Reported by OS: %s" % device_found
+                fail_log = f"{str(device)} model mismatch:\n"
+                fail_log += f"    Assigned to VM: {expected}\n"
+                fail_log += f"    Reported by OS: {device_found}"
                 f_fail.append(fail_log)
                 test.log.error(fail_log)
         return f_fail
@@ -89,9 +91,9 @@ def run(test, params, env):
         if verify_cmd:
             actual = session.cmd_output(verify_cmd)
             if not re.findall(expect, actual, re.I):
-                fail_log = "%s mismatch:\n" % name
-                fail_log += "    Assigned to VM: %s\n" % expect.upper()
-                fail_log += "    Reported by OS: %s" % actual
+                fail_log = f"{name} mismatch:\n"
+                fail_log += f"    Assigned to VM: {expect.upper()}\n"
+                fail_log += f"    Reported by OS: {actual}"
                 f_fail.append(fail_log)
                 test.log.error(fail_log)
         return f_fail
@@ -106,18 +108,18 @@ def run(test, params, env):
         :return: Actual number of guest cpu number.
         """
         chk_str = params["mem_chk_re_str"]
-        chk_cmd = params.get("cpu_%s_chk_cmd" % chk_type)
+        chk_cmd = params.get(f"cpu_{chk_type}_chk_cmd")
 
         if chk_cmd is None:
-            fail_log = "Unknown cpu number checking type: '%s'" % chk_type
+            fail_log = f"Unknown cpu number checking type: '{chk_type}'"
             test.log.error(fail_log)
             return -1
 
         s, output = session.cmd_status_output(chk_cmd, timeout=chk_timeout)
         num = re.findall(chk_str, output)
         if s != 0 or not num:
-            fail_log = "Failed to get guest %s number, " % chk_type
-            fail_log += "guest output: '%s'" % output
+            fail_log = f"Failed to get guest {chk_type} number, "
+            fail_log += f"guest output: '{output}'"
             test.log.error(fail_log)
             return -2
 
@@ -137,13 +139,13 @@ def run(test, params, env):
         f_fail = []
 
         if actual_n == -1:
-            fail_log = "Unknown cpu number checking type: '%s'" % chk_type
+            fail_log = f"Unknown cpu number checking type: '{chk_type}'"
             test.log.error(fail_log)
             f_fail.append(fail_log)
             return f_fail
 
         if actual_n == -2:
-            fail_log = "Failed to get guest %s number." % chk_type
+            fail_log = f"Failed to get guest {chk_type} number."
             test.log.error(fail_log)
             f_fail.append(fail_log)
             return f_fail
@@ -151,15 +153,19 @@ def run(test, params, env):
         test.log.info("CPU %s number check", chk_type.capitalize())
 
         if actual_n != expected_n:
-            fail_log = "%s output mismatch:\n" % chk_type.capitalize()
-            fail_log += "    Assigned to VM: '%s'\n" % expected_n
-            fail_log += "    Reported by OS: '%s'" % actual_n
+            fail_log = f"{chk_type.capitalize()} output mismatch:\n"
+            fail_log += f"    Assigned to VM: '{expected_n}'\n"
+            fail_log += f"    Reported by OS: '{actual_n}'"
             f_fail.append(fail_log)
             test.log.error(fail_log)
             return f_fail
 
-        test.log.debug("%s check pass. Expected: '%s', Actual: '%s'",
-                       chk_type.capitalize(), expected_n, actual_n)
+        test.log.debug(
+            "%s check pass. Expected: '%s', Actual: '%s'",
+            chk_type.capitalize(),
+            expected_n,
+            actual_n,
+        )
         return f_fail
 
     def verify_machine_type():
@@ -174,10 +180,11 @@ def run(test, params, env):
         if status != 0:
             test.error("Failed to get machine type from vm")
 
-        machine_type_cmd = "%s -M ?" % utils_misc.get_qemu_binary(params)
+        machine_type_cmd = f"{utils_misc.get_qemu_binary(params)} -M ?"
         machine_types = process.system_output(
-            machine_type_cmd, ignore_status=True).decode()
-        machine_types = machine_types.split(':')[-1]
+            machine_type_cmd, ignore_status=True
+        ).decode()
+        machine_types = machine_types.split(":")[-1]
         machine_type_map = {}
         for machine_type in machine_types.splitlines():
             if not machine_type:
@@ -186,23 +193,30 @@ def run(test, params, env):
             if len(type_pair) == 1 and len(type_pair[0]) == 2:
                 machine_type_map[type_pair[0][0]] = type_pair[0][1]
             else:
-                test.log.warn("Unexpect output from qemu-kvm -M "
-                              "?: '%s'", machine_type)
+                test.log.warn(
+                    "Unexpect output from qemu-kvm -M " "?: '%s'", machine_type
+                )
         try:
-            expect_mtype = machine_type_map[params['machine_type']].strip()
+            expect_mtype = machine_type_map[params["machine_type"]].strip()
         except KeyError:
-            test.log.warn("Can not find machine type '%s' from qemu-kvm -M ?"
-                          " output. Skip this test.", params['machine_type'])
+            test.log.warn(
+                "Can not find machine type '%s' from qemu-kvm -M ?"
+                " output. Skip this test.",
+                params["machine_type"],
+            )
             return f_fail
 
         if expect_mtype not in actual_mtype:
-            fail_log += "    Assigned to VM: '%s' \n" % expect_mtype
-            fail_log += "    Reported by OS: '%s'" % actual_mtype
+            fail_log += f"    Assigned to VM: '{expect_mtype}' \n"
+            fail_log += f"    Reported by OS: '{actual_mtype}'"
             f_fail.append(fail_log)
             test.log.error(fail_log)
         else:
-            test.log.info("MachineType check pass. Expected: %s, Actual: %s",
-                          expect_mtype, actual_mtype)
+            test.log.info(
+                "MachineType check pass. Expected: %s, Actual: %s",
+                expect_mtype,
+                actual_mtype,
+            )
         return f_fail
 
     if params.get("catch_serial_cmd") is not None:
@@ -229,13 +243,15 @@ def run(test, params, env):
 
     qtree = qemu_qtree.QtreeContainer()
     try:
-        qtree.parse_info_qtree(vm.monitor.info('qtree'))
+        qtree.parse_info_qtree(vm.monitor.info("qtree"))
     except AttributeError:  # monitor doesn't support info qtree
         qtree = None
 
     test.log.info("Starting physical resources check test")
-    test.log.info("Values assigned to VM are the values we expect "
-                  "to see reported by the Operating System")
+    test.log.info(
+        "Values assigned to VM are the values we expect "
+        "to see reported by the Operating System"
+    )
     # Define a failure counter, as we want to check all physical
     # resources to know which checks passed and which ones failed
     n_fail = []
@@ -251,25 +267,27 @@ def run(test, params, env):
     cpu_threads_num = get_cpu_number("threads", chk_timeout)
     cpu_sockets_num = get_cpu_number("sockets", chk_timeout)
 
-    if ((params.get("os_type") == 'windows') and cpu_cores_num > 0 and
-            cpu_lp_num > 0 and cpu_sockets_num > 0):
+    if (
+        (params.get("os_type") == "windows")
+        and cpu_cores_num > 0
+        and cpu_lp_num > 0
+        and cpu_sockets_num > 0
+    ):
         actual_cpu_nr = cpu_lp_num * cpu_sockets_num
         cpu_threads_num = cpu_lp_num / cpu_cores_num
 
     if vm.cpuinfo.smp != actual_cpu_nr:
         fail_log = "CPU count mismatch:\n"
-        fail_log += "    Assigned to VM: %s \n" % vm.cpuinfo.smp
-        fail_log += "    Reported by OS: %s" % actual_cpu_nr
+        fail_log += f"    Assigned to VM: {vm.cpuinfo.smp} \n"
+        fail_log += f"    Reported by OS: {actual_cpu_nr}"
         n_fail.append(fail_log)
         test.log.error(fail_log)
 
     n_fail.extend(check_cpu_number("cores", cpu_cores_num, vm.cpuinfo.cores))
 
-    n_fail.extend(check_cpu_number("threads",
-                                   cpu_threads_num, vm.cpuinfo.threads))
+    n_fail.extend(check_cpu_number("threads", cpu_threads_num, vm.cpuinfo.threads))
 
-    n_fail.extend(check_cpu_number("sockets",
-                                   cpu_sockets_num, vm.cpuinfo.sockets))
+    n_fail.extend(check_cpu_number("sockets", cpu_sockets_num, vm.cpuinfo.sockets))
 
     # Check the cpu vendor_id
     expected_vendor_id = params.get("cpu_model_vendor")
@@ -279,8 +297,8 @@ def run(test, params, env):
 
         if expected_vendor_id not in output:
             fail_log = "CPU vendor id check failed.\n"
-            fail_log += "    Assigned to VM: '%s'\n" % expected_vendor_id
-            fail_log += "    Reported by OS: '%s'" % output
+            fail_log += f"    Assigned to VM: '{expected_vendor_id}'\n"
+            fail_log += f"    Reported by OS: '{output}'"
             n_fail.append(fail_log)
             test.log.error(fail_log)
 
@@ -290,11 +308,11 @@ def run(test, params, env):
     vm_mem_limit = params.get("vm_mem_limit")
     actual_mem = vm.get_memory_size()
     if vm_mem_limit:
-        error_context.context("Skip memory checking %s" % vm_mem_limit, test.log.info)
+        error_context.context(f"Skip memory checking {vm_mem_limit}", test.log.info)
     elif actual_mem != expected_mem:
         fail_log = "Memory size mismatch:\n"
-        fail_log += "    Assigned to VM: %s\n" % expected_mem
-        fail_log += "    Reported by OS: %s\n" % actual_mem
+        fail_log += f"    Assigned to VM: {expected_mem}\n"
+        fail_log += f"    Reported by OS: {actual_mem}\n"
         n_fail.append(fail_log)
         test.log.error(fail_log)
 
@@ -312,20 +330,22 @@ def run(test, params, env):
 
     if qtree is not None:
         error_context.context("Images params check", test.log.info)
-        test.log.debug("Found devices: %s", params.objects('images'))
+        test.log.debug("Found devices: %s", params.objects("images"))
         qdisks = qemu_qtree.QtreeDisksContainer(qtree.get_nodes())
-        disk_errors = sum(qdisks.parse_info_block(
-            vm.monitor.info_block()))
+        disk_errors = sum(qdisks.parse_info_block(vm.monitor.info_block()))
         disk_errors += qdisks.generate_params()
         disk_errors += qdisks.check_disk_params(params)
         if disk_errors:
-            disk_errors = ("Images check failed with %s errors, "
-                           "check the log for details" % disk_errors)
+            disk_errors = (
+                f"Images check failed with {disk_errors} errors, "
+                "check the log for details"
+            )
             test.log.error(disk_errors)
             n_fail.append("\n".join(qdisks.errors))
     else:
-        test.log.info("Images check param skipped (qemu monitor doesn't "
-                      "support 'info qtree')")
+        test.log.info(
+            "Images check param skipped (qemu monitor doesn't " "support 'info qtree')"
+        )
 
     error_context.context("Network card MAC check", test.log.info)
     o = ""
@@ -344,20 +364,18 @@ def run(test, params, env):
         mac = vm.get_mac_address(nic_index)
         if mac.lower() not in found_mac_addresses:
             fail_log = "MAC address mismatch:\n"
-            fail_log += "    Assigned to VM (not found): %s" % mac
+            fail_log += f"    Assigned to VM (not found): {mac}"
             n_fail.append(fail_log)
             test.log.error(fail_log)
 
     error_context.context("UUID check", test.log.info)
     if vm.get_uuid():
-        f_fail = verify_device(vm.get_uuid(), "UUID",
-                               params.get("catch_uuid_cmd"))
+        f_fail = verify_device(vm.get_uuid(), "UUID", params.get("catch_uuid_cmd"))
         n_fail.extend(f_fail)
 
     error_context.context("Hard Disk serial number check", test.log.info)
     catch_serial_cmd = params.get("catch_serial_cmd")
-    f_fail = verify_device(params.get("drive_serial"), "Serial",
-                           catch_serial_cmd)
+    f_fail = verify_device(params.get("drive_serial"), "Serial", catch_serial_cmd)
     n_fail.extend(f_fail)
 
     error_context.context("Machine Type Check", test.log.info)
@@ -366,8 +384,10 @@ def run(test, params, env):
 
     if n_fail:
         session.close()
-        test.fail("Physical resources check test "
-                  "reported %s failures:\n%s" %
-                  (len(n_fail), "\n".join(n_fail)))
+        test.fail(
+            "Physical resources check test " "reported {} failures:\n{}".format(
+                len(n_fail), "\n".join(n_fail)
+            )
+        )
 
     session.close()
