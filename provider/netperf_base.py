@@ -1,7 +1,6 @@
 import logging
 import os
 
-import six
 from avocado.utils import process
 from virttest import data_dir, error_context, remote, utils_misc, utils_test
 
@@ -120,7 +119,7 @@ def format_result(result, base="17", fbase="2"):
     :param base: the length of converted string
     :param fbase: the decimal digit for float
     """
-    if isinstance(result, six.string_types):
+    if isinstance(result, str):
         value = "%" + base + "s"
     elif isinstance(result, int):
         value = "%" + base + "d"

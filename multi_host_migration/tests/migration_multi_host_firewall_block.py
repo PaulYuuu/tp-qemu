@@ -2,7 +2,6 @@ import logging
 import os
 import time
 
-import six
 from autotest.client import utils
 from autotest.client.shared import error
 from virttest import qemu_monitor, utils_misc, utils_test, virt_vm
@@ -41,12 +40,12 @@ def run(test, params, env):
                 and vm.get_spice_var("spice_seamless_migration") == "on"
             ):
                 s = vm.monitor.info("spice")
-                if isinstance(s, six.string_types):
+                if isinstance(s, str):
                     ret = "migrated: true" in s
                 else:
                     ret = s.get("migrated") == "true"
             o = vm.monitor.info("migrate")
-            if isinstance(o, six.string_types):
+            if isinstance(o, str):
                 return ret and ("status: active" not in o)
             else:
                 return ret and (o.get("status") != "active")
@@ -98,7 +97,7 @@ def run(test, params, env):
             else:
                 for _ in range(self.mig_fir_timeout):
                     state = vm.monitor.info("migrate")
-                    if isinstance(state, six.string_types):
+                    if isinstance(state, str):
                         if "failed" in state:
                             break
                     else:

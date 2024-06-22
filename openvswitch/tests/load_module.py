@@ -1,7 +1,6 @@
 import sys
 import traceback
 
-import six
 from avocado.utils import process
 from virttest import error_context, openvswitch, versionable_class
 
@@ -45,4 +44,4 @@ def run(test, params, env):
                     "Cleaning function raised exception too: \n%s",
                     "".join(traceback.format_exception(e[0], e[1], e[2])),
                 )
-                six.reraise(_e[0], _e[1], _e[2])
+                raise _e[1].with_traceback(_e[2])

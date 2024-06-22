@@ -2,7 +2,6 @@ import logging
 import os
 import time
 
-import six
 from avocado.utils import process
 from virttest import remote, utils_misc, utils_net, utils_sriov
 
@@ -20,7 +19,7 @@ def format_result(result, base, fbase):
     :param fbase: the decimal digit for float
     """
 
-    if isinstance(result, six.string_types):
+    if isinstance(result, str):
         value = "%" + base + "s"
     elif isinstance(result, int):
         value = "%" + base + "d"

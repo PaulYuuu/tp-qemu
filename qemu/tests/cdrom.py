@@ -15,7 +15,6 @@ import tempfile
 import time
 
 import aexpect
-import six
 from avocado.utils import process
 from virttest import (
     data_dir,
@@ -202,7 +201,7 @@ def run(test, params, env):
         blocks = vm.monitor.info("block")
         enable_blockdev = vm.check_capability(Flags.BLOCKDEV)
         cdfile = None
-        if isinstance(blocks, six.string_types):
+        if isinstance(blocks, str):
             tmp_re_str = rf"{qemu_cdrom_device}: .*file=(\S*) "
             file_list = re.findall(tmp_re_str, blocks)
             if file_list:
@@ -235,7 +234,7 @@ def run(test, params, env):
         enable_blockdev = vm.check_capability(Flags.BLOCKDEV)
 
         blocks = vm.monitor.info("block")
-        if isinstance(blocks, six.string_types):
+        if isinstance(blocks, str):
             for block in blocks.splitlines():
                 if qemu_cdrom_device in block:
                     if "tray-open=1" in block:
@@ -315,7 +314,7 @@ def run(test, params, env):
         """
         error_context.context("Check cdrom state of locing.")
         blocks = vm.monitor.info("block")
-        if isinstance(blocks, six.string_types):
+        if isinstance(blocks, str):
             for block in blocks.splitlines():
                 if cdrom in block:
                     if "locked=1" in block:
@@ -445,7 +444,7 @@ def run(test, params, env):
         """
         device = None
         blocks = vm.monitor.info("block")
-        if isinstance(blocks, six.string_types):
+        if isinstance(blocks, str):
             for block in blocks.strip().split("\n"):
                 if "not inserted" in block:
                     device = block.split(":")[0]
@@ -643,7 +642,7 @@ def run(test, params, env):
                         if exc_info is None:
                             raise
                     if exc_info:
-                        six.reraise(exc_info[0], exc_info[1], exc_info[2])
+                        raise exc_info[1].with_traceback(exc_info[2])
             return ret
 
     class test_singlehost(MiniSubtest):

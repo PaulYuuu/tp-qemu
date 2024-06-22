@@ -1,7 +1,6 @@
 import random
 import time
 
-import six
 from virttest import utils_test
 
 from provider.blockdev_mirror_wait import BlockdevMirrorWaitTest
@@ -22,7 +21,7 @@ class BlockdevMirrorStressTest(BlockdevMirrorWaitTest):
     def remove_files_from_system_image(self, tmo=60):
         """Remove testing files from system image"""
         tag_dir_list = [
-            (t, d[1]) for t, d in six.iteritems(self.disks_info) if d[0] == "system"
+            (t, d[1]) for t, d in self.disks_info.items() if d[0] == "system"
         ]
         if tag_dir_list:
             tag, root_dir = tag_dir_list[0]

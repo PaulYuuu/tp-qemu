@@ -31,7 +31,7 @@ def run(test, params, env):
             node_size = numa_info_guest.online_nodes_meminfo[node]["MemTotal"]
             node_size = float(normalize_data_size(f"{node_size} KB"))
             node_cpus = numa_info_guest.online_nodes_cpus[node]
-            node_cpus = set([int(v) for v in node_cpus.split()])
+            node_cpus = {int(v) for v in node_cpus.split()}
             numa_guest.append((node_size, node_cpus))
 
         # It is a known WONTFIX issue for x86 and ARM, node info of node0 and
@@ -91,9 +91,9 @@ def run(test, params, env):
 
         cpus = params.get("numa_cpus_node%d" % (nodenr))
         if cpus is not None:
-            cpus = set([int(v) for v in cpus.split(",")])
+            cpus = {int(v) for v in cpus.split(",")}
         else:
-            cpus = set([int(v) for v in range(params.get_numeric("smp"))])
+            cpus = {int(v) for v in range(params.get_numeric("smp"))}
 
         if len(numa_monitor) != 0:
             if size != numa_monitor[nodenr][0]:

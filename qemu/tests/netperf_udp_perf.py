@@ -74,7 +74,7 @@ def run(test, params, env):
     netperf_base.ssh_cmd(client, cmd)
 
     error_context.context("Prepare env of server/client/host", test.log.info)
-    prepare_list = set([server_ctl, client, host])
+    prepare_list = {server_ctl, client, host}
     tag_dict = {server_ctl: "server", client: "client", host: "host"}
     ip_dict = {server_ctl: server_ctl_ip, client: client_pub_ip, host: host_ip}
     for i in prepare_list:

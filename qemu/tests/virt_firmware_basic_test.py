@@ -3,7 +3,6 @@ import re
 import shutil
 import sys
 
-import six
 from avocado.utils import git, process
 from virttest import error_context
 
@@ -58,7 +57,7 @@ def run(test, params, env):
         except Exception as e:
             test.error(
                 "Failed to clone the virt-firmware repo,"
-                f"the error message is '{six.text_type(e)}'."
+                f"the error message is '{str(e)}'."
             )
     else:
         test.log.info("Run the test with package " "'python3-virt-firmware-tests'.")

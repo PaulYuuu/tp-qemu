@@ -1,7 +1,6 @@
 import socket
 from functools import partial
 
-import six
 from virttest import utils_disk, utils_misc
 
 from provider import backup_utils, block_dirty_bitmap, blockdev_base, job_utils
@@ -202,7 +201,7 @@ class BlockdevIncBackupPullModeDiff(blockdev_base.BlockdevBaseTest):
         # Check the files should not exist
         try:
             session = self.clone_vm.wait_for_login()
-            for tag, info in six.iteritems(disks_info):
+            for tag, info in disks_info.items():
                 utils_disk.mount(info[0], info[1], session=session)
                 file_path = f"{info[1]}/{non_existed_files[tag]}"
                 cat_cmd = f"cat {file_path}"

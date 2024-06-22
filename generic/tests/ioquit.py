@@ -1,7 +1,6 @@
 import random
 import time
 
-import six
 from avocado.utils import process
 from virttest import data_dir, error_context, qemu_storage, utils_misc
 
@@ -49,7 +48,7 @@ def run(test, params, env):
     try:
         image.check_image(params, base_dir)
     except Exception as exc:
-        if "Leaked clusters" not in six.text_type(exc):
+        if "Leaked clusters" not in str(exc):
             raise
         error_context.context("Detected cluster leaks, try to repair it", test.log.info)
         restore_cmd = params.get("image_restore_cmd") % image.image_filename

@@ -2,7 +2,6 @@ import os
 import re
 import time
 
-import six
 from virttest import qemu_migration, utils_misc
 
 from provider import cpuflags
@@ -96,7 +95,7 @@ def run(test, params, env):
             fail_msg = (
                 "Could not determine the transferred memory from" f" monitor data: {o}"
             )
-            if isinstance(o, six.string_types):
+            if isinstance(o, str):
                 if "status: active" not in o:
                     test.error(warning_msg)
                 try:

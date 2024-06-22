@@ -20,8 +20,6 @@ import threading
 import time
 
 from avocado import TestError
-from six import reraise
-from six.moves import xrange
 from virttest import utils_misc
 from virttest.qemu_capabilities import Flags
 from virttest.qemu_devices import qdevices
@@ -132,7 +130,7 @@ class _ThreadManager:
     def _initial_threads(self, action, imgs, bus=None, interval=0):
         """Initial the threads."""
         max_threads = min(len(imgs), 2 * multiprocessing.cpu_count())
-        for i in xrange(max_threads):
+        for i in range(max_threads):
             mon = self._vm.monitors[i % len(self._vm.monitors)]
             args = (
                 self._vm,
@@ -165,7 +163,8 @@ class _ThreadManager:
         """Raise the exception information of threads."""
         for thread in self._threads:
             if thread.exc_info:
-                reraise(*thread.exc_info)
+                _, exc_value, exc_traceback = thread.exc_info
+                raise exc_value.with_traceback(exc_traceback)
 
     def clean_threads(self):
         """Clean the env threads."""

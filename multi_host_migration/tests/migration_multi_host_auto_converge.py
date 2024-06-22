@@ -154,7 +154,7 @@ def run(test, params, env):
                     memory_average = list(map(float, memory_average))
                     break
             all_items = set(vars())
-            interested_items = set(["cpu_average", "memory_average"])
+            interested_items = {"cpu_average", "memory_average"}
             if not interested_items.issubset(all_items):
                 raise error.TestFail(
                     f"Failed to get '{sar_cpu_str}' '{sar_memory_str}' in "

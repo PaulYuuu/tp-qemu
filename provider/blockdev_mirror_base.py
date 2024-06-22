@@ -26,8 +26,6 @@ Note:
 
 """
 
-import six
-
 from provider import blockdev_base
 
 
@@ -50,7 +48,7 @@ class BlockdevMirrorBaseTest(blockdev_base.BlockdevBaseTest):
         opts = params.objects("backup_options")
         backup_options = params.copy_from_keys(opts)
 
-        for k, v in six.iteritems(backup_options):
+        for k, v in backup_options.items():
             if v in ("yes", "true", "on"):
                 backup_options[k] = True
             elif v in ("no", "false", "off"):
@@ -67,7 +65,7 @@ class BlockdevMirrorBaseTest(blockdev_base.BlockdevBaseTest):
     def remove_files_from_system_image(self, tmo=60):
         """Remove testing files from system image"""
         tag_dir_list = [
-            (t, d[1]) for t, d in six.iteritems(self.disks_info) if d[0] == "system"
+            (t, d[1]) for t, d in self.disks_info.items() if d[0] == "system"
         ]
         if tag_dir_list:
             tag, root_dir = tag_dir_list[0]

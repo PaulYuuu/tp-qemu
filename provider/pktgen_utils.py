@@ -4,7 +4,6 @@ import re
 import time
 
 import aexpect
-import six
 from avocado.utils import process
 from virttest import data_dir, utils_misc, utils_net
 
@@ -201,7 +200,7 @@ def format_result(result, base, fbase):
     :param base: the length of converted string
     :param fbase: the decimal digit for float
     """
-    if isinstance(result, six.string_types):
+    if isinstance(result, str):
         value = "%" + base + "s"
     elif isinstance(result, int):
         value = "%" + base + "d"

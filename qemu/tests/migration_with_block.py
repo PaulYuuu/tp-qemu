@@ -4,7 +4,6 @@ import re
 import sys
 import threading
 
-import six
 from avocado.utils import process
 from virttest import data_dir, error_context, utils_disk, utils_misc, utils_test
 from virttest.remote import scp_to_remote
@@ -345,10 +344,8 @@ def run(test, params, env):
                 test.error(f"The {stress_name} is not alive.")
             if stress_thread.exit_event.is_set():
                 stress_thread.exit_event.clear()
-                six.reraise(
-                    stress_thread.exc_info[0],
-                    stress_thread.exc_info[1],
-                    stress_thread.exc_info[2],
+                raise stress_thread.exc_info[1].with_traceback(
+                    stress_thread.exc_info[2]
                 )
         else:
             stress_maps[stress_name](stress_timeout)
@@ -393,10 +390,8 @@ def run(test, params, env):
                 stress_thread.join(stress_timeout)
                 if stress_thread.exit_event.is_set():
                     stress_thread.exit_event.clear()
-                    six.reraise(
-                        stress_thread.exc_info[0],
-                        stress_thread.exc_info[1],
-                        stress_thread.exc_info[2],
+                    raise stress_thread.exc_info[1].with_traceback(
+                        stress_thread.exc_info[2]
                     )
 
     if shutdown_vm or reboot:

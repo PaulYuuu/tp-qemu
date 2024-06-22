@@ -4,7 +4,6 @@ import sys
 import time
 
 import aexpect
-import six
 from avocado.utils import data_factory, process
 from virttest import (
     data_dir,
@@ -79,7 +78,7 @@ def run(test, params, env):
                         if exc_info is None:
                             raise
                     if exc_info:
-                        six.reraise(exc_info[0], exc_info[1], exc_info[2])
+                        raise exc_info[1].with_traceback(exc_info[2])
             return ret
 
     def control_service(session, service, init_service, action, timeout=60):

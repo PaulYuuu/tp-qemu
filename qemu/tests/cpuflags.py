@@ -39,7 +39,7 @@ def run(test, params, env):
     multi_host_migration = params.get("multi_host_migration", "no")
 
     class HgFlags:
-        def __init__(self, cpu_model, extra_flags=set([])):
+        def __init__(self, cpu_model, extra_flags=set()):
             virtual_flags = set(
                 map(cpu.Flag, params.get("guest_spec_flags", "").split())
             )
@@ -69,7 +69,7 @@ def run(test, params, env):
             self.guest_flags = self.quest_cpu_model_flags - self.host_unsupported_flags
             self.guest_flags |= extra_flags
 
-            self.host_all_unsupported_flags = set([])
+            self.host_all_unsupported_flags = set()
             self.host_all_unsupported_flags |= self.qemu_support_flags
             self.host_all_unsupported_flags -= self.host_support_flags | virtual_flags
 
@@ -307,9 +307,9 @@ def run(test, params, env):
 
         for f in flags[1:]:
             if f[0].startswith("+"):
-                real_flags |= set([get_flags_full_name(f[1:])])
+                real_flags |= {get_flags_full_name(f[1:])}
             if f[0].startswith("-"):
-                real_flags -= set([get_flags_full_name(f[1:])])
+                real_flags -= {get_flags_full_name(f[1:])}
 
         return real_flags
 
@@ -339,7 +339,7 @@ def run(test, params, env):
         cpumodels = []
         for cpumodel in get_cpu_models():
             flags = HgFlags(cpumodel)
-            if flags.host_unsupported_flags == set([]):
+            if flags.host_unsupported_flags == set():
                 cpumodels.append(cpumodel)
         return cpumodels
 
@@ -482,7 +482,7 @@ def run(test, params, env):
             extra_flags = set(map(cpu.Flag, extra_flags.split(",")))
         except ValueError:
             cpu_model = cpu_model
-            extra_flags = set([])
+            extra_flags = set()
         return (cpu_model, extra_flags)
 
     class MiniSubtest:
@@ -581,7 +581,7 @@ def run(test, params, env):
             flags = HgFlags(cpu_model)
             (self.vm, session) = start_guest_with_cpuflags(cpu_model)
             not_enable_flags = check_cpuflags(cpu_model, session) - flags.hw_flags
-            if not_enable_flags != set([]):
+            if not_enable_flags != set():
                 test.fail(
                     "Flags defined on host but not found "
                     f"on guest: {not_enable_flags}"
@@ -615,7 +615,7 @@ def run(test, params, env):
             (self.vm, session) = start_guest_with_cpuflags(cpuf_model)
 
             not_enable_flags = check_cpuflags(cpuf_model, session) - flags.hw_flags
-            if not_enable_flags != set([]):
+            if not_enable_flags != set():
                 test.log.info(
                     "Model unsupported flags: %s", str(flags.cpumodel_unsupport_flags)
                 )
@@ -677,8 +677,8 @@ def run(test, params, env):
             finally:
                 uns_re = re.compile(r"^warning:.*flag '(.+)'", re.MULTILINE)
                 nf_re = re.compile(r"^CPU feature (.+) not found", re.MULTILINE)
-                warn_flags = set([cpu.Flag(x) for x in uns_re.findall(out)])
-                not_found = set([cpu.Flag(x) for x in nf_re.findall(out)])
+                warn_flags = {cpu.Flag(x) for x in uns_re.findall(out)}
+                not_found = {cpu.Flag(x) for x in nf_re.findall(out)}
                 fwarn_flags = flags.host_all_unsupported_flags - warn_flags
                 fwarn_flags -= not_found
                 if fwarn_flags:
@@ -719,8 +719,8 @@ def run(test, params, env):
             finally:
                 uns_re = re.compile(r"^warning:.*flag '(.+)'", re.MULTILINE)
                 nf_re = re.compile(r"^CPU feature (.+) not found", re.MULTILINE)
-                warn_flags = set([cpu.Flag(x) for x in uns_re.findall(out)])
-                not_found = set([cpu.Flag(x) for x in nf_re.findall(out)])
+                warn_flags = {cpu.Flag(x) for x in uns_re.findall(out)}
+                not_found = {cpu.Flag(x) for x in nf_re.findall(out)}
                 fwarn_flags = flags.host_all_unsupported_flags - warn_flags
                 fwarn_flags -= not_found
                 if fwarn_flags:

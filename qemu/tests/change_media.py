@@ -1,6 +1,5 @@
 import re
 
-import six
 from virttest import data_dir, error_context, utils_misc, utils_test
 from virttest.qemu_capabilities import Flags
 from virttest.qemu_storage import QemuImg
@@ -28,7 +27,7 @@ def run(test, params, env):
     def check_block_locked(block_name):
         blocks_info = monitor.info("block")
 
-        if isinstance(blocks_info, six.string_types):
+        if isinstance(blocks_info, str):
             lock_str = "locked=1"
             for block in blocks_info.splitlines():
                 if block_name in block and lock_str in block:

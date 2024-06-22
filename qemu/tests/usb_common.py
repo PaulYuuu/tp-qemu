@@ -131,7 +131,7 @@ def verify_usb_device_in_guest(params, session, devs):
                 return False
         # match number of devices
         dev_list = [dev[1] for dev in devs]
-        dev_nums = dict((i, dev_list.count(i)) for i in dev_list)
+        dev_nums = {i: dev_list.count(i) for i in dev_list}
         for k, v in dev_nums.items():
             LOG_JOB.info("the number of %s is %s", k, v)
             if "Hub" in k and os_type == "linux":

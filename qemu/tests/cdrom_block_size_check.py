@@ -2,7 +2,6 @@ import os
 import re
 import time
 
-import six
 from avocado.utils import process
 from virttest import data_dir, env_process, error_context, utils_misc
 from virttest.qemu_capabilities import Flags
@@ -67,7 +66,7 @@ def run(test, params, env):
         """
         device = None
         blocks = vm.monitor.info("block")
-        if isinstance(blocks, six.string_types):
+        if isinstance(blocks, str):
             for block in blocks.strip().split("\n"):
                 if "not inserted" in block:
                     device = block.split(":")[0]

@@ -1,6 +1,5 @@
 import os
 
-import six
 from avocado import TestError
 from avocado.utils import partition as p
 from virttest import data_dir
@@ -39,7 +38,7 @@ def run(test, params, env):
         large.create(large.params)
     except TestError as err:
         for info in err_info:
-            if info in six.text_type(err):
+            if info in str(err):
                 break
         else:
             test.fail(f"CML failed with unexpected output: {err}")

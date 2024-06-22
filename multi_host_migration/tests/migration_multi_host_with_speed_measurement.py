@@ -4,7 +4,6 @@ import re
 import socket
 import time
 
-import six
 from autotest.client.shared import error, utils
 from autotest.client.shared.barrier import listen_server
 from autotest.client.shared.syncdata import SyncData
@@ -66,7 +65,7 @@ def run(test, params, env):
             fail_msg = (
                 "Could not determine the transferred memory from" f" monitor data: {o}"
             )
-            if isinstance(o, six.string_types):
+            if isinstance(o, str):
                 if "status: active" not in o:
                     raise error.TestWarn(warning_msg)
                 try:

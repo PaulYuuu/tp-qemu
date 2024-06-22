@@ -4,8 +4,6 @@ import shelve
 import shutil
 import threading
 
-import six
-
 try:
     from queue import Queue
 except ImportError:
@@ -257,7 +255,7 @@ def format_result(result, base="20", fbase="2"):
     :param base: the length of converted string
     :param fbase: the decimal digit for float
     """
-    if isinstance(result, six.string_types):
+    if isinstance(result, str):
         value = "%" + base + "s"
     elif isinstance(result, int):
         value = "%" + base + "d"

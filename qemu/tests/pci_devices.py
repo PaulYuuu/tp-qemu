@@ -9,7 +9,6 @@ import logging
 import random
 import re
 
-import six
 from virttest import env_process, error_context, qemu_qtree
 
 LOG_JOB = logging.getLogger("avocado.test")
@@ -41,7 +40,7 @@ def process_qdev(qdev):
     qdev_devices_noid = []
     for bus in qdev.get_buses({"type": ("PCI", "PCIE")}):
         for device in bus:
-            if isinstance(device, six.string_types):
+            if isinstance(device, str):
                 LOG_JOB.error("Not a device %s (bus %s)", device, bus)
                 continue
             dev_id = device.get_param("id")

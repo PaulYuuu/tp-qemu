@@ -3633,11 +3633,7 @@ class QemuGuestAgentBasicCheck(QemuGuestAgentTest):
         error_context.context("Make the user log out.", LOG_JOB.info)
         try:
             session.cmd(f"logoff {login_user_id}")
-        except (
-            aexpect.ShellProcessTerminatedError,
-            aexpect.ShellProcessTerminatedError,
-            aexpect.ShellStatusError,
-        ):
+        except (aexpect.ShellProcessTerminatedError, aexpect.ShellStatusError):
             pass
         else:
             test.fail("The user logoff failed.")

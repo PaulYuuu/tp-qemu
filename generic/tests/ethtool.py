@@ -79,9 +79,9 @@ def run(test, params, env):
             test.log.error("%s, detail: %s", err_msg, e)
             return False
 
-        curr_status = dict(
-            (k, v) for k, v in ethtool_get(session).items() if k in status.keys()
-        )
+        curr_status = {
+            k: v for k, v in ethtool_get(session).items() if k in status.keys()
+        }
         if curr_status != status:
             test.log.error(
                 "%s, got: '%s', expect: '%s'", err_msg, str(curr_status), str(status)

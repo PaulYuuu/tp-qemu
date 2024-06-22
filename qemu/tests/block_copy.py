@@ -2,7 +2,6 @@ import random
 import re
 import time
 
-import six
 from avocado.utils import process
 from virttest import (
     data_dir,
@@ -263,7 +262,7 @@ class BlockCopy:
         """
         blocks = self.vm.monitor.info("block")
         try:
-            if isinstance(blocks, six.string_types):
+            if isinstance(blocks, str):
                 # ide0-hd0: removable=1 locked=0 file=/tmp/test.img
                 image_regex = rf"{self.device}.*\s+file=(\S*)"
                 image_file = re.findall(image_regex, blocks)

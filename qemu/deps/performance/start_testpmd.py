@@ -5,7 +5,6 @@ import sys
 import time
 
 import pexpect
-from six import string_types
 
 nic1_driver = sys.argv[1]
 nic2_driver = sys.argv[2]
@@ -154,7 +153,7 @@ def to_text(data):
     """
     if isinstance(data, bytes):
         return data.decode(ENCODING)
-    elif not isinstance(data, string_types):
+    elif not isinstance(data, str):
         return str(data)
     return data
 

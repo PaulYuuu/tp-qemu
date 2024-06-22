@@ -96,8 +96,8 @@ def run(test, params, env):
         error_context.context(
             "check sn1 and base are not opening " "by qemu process", test.log.info
         )
-        if set([snapshots[0], image_file]).issubset(get_openingfiles()):
-            test.fail(f"{set([snapshots[0], image_file])} is opening by qemu")
+        if {snapshots[0], image_file}.issubset(get_openingfiles()):
+            test.fail("{snapshots[0], image_file} is opening by qemu")
         error_context.context("Reboot VM to check it works fine", test.log.info)
         session = vm.reboot(session=session, timeout=timeout)
         session.cmd(alive_check_cmd)
