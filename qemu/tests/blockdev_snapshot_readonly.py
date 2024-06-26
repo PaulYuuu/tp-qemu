@@ -24,7 +24,7 @@ class BlockdevSnapshotReadonly(BlockDevSnapshotTest):
                 self.test.fail(f"Unexpected disk format error: {str(e)}")
             self.disks_info[self.base_tag] = [disk_tag, "/mnt"]
         else:
-            self.test.fail("Read-only disk is formated")
+            self.test.fail("Read-only disk is formatted")
         finally:
             session.close()
 

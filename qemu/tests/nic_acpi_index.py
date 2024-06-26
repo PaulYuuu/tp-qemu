@@ -11,7 +11,7 @@ def run(test, params, env):
     When "acpi-index=N" is enabled, NIC name should always be "ethN"
 
     1) Boot up guest without nic,remove "biosdevname=0" and "net.ifname=0" from
-    kenrel command line, then reboot guest.
+    kernel command line, then reboot guest.
     2) Hotplug the nic with acpi-index=N
     3) Check the nic name, the guest nic name enoN == acpi-index=N
     4) Check if new interface gets ip address

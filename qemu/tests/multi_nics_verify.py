@@ -6,9 +6,9 @@ from virttest import env_process, error_context, utils_misc, utils_net
 @error_context.context_aware
 def run(test, params, env):
     """
-    Verify guest NIC numbers again whats provided in test config file.
+    Verify guest NIC numbers again what's provided in test config file.
 
-    If the guest NICs info does not match whats in the params at first,
+    If the guest NICs info does not match what's in the params at first,
     try to fix these by operating the networking config file.
     1. Boot guest with multi NICs.
     2. Check whether guest NICs info match with params setting.

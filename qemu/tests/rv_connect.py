@@ -17,7 +17,7 @@ LOG_JOB = logging.getLogger("avocado.test")
 
 def str_input(client_vm, ticket):
     """
-    sends spice_password trough vm.send_key()
+    sends spice_password through vm.send_key()
     :param client_session - vm() object
     :param ticket - use params.get("spice_password")
     """
@@ -244,7 +244,7 @@ def launch_rv(test, client_vm, guest_vm, params):
             print_rv_version(client_session, rv_binary)
 
     except (ShellStatusError, ShellProcessTerminatedError):
-        # Sometimes It fails with Status error, ingore it and continue.
+        # Sometimes It fails with Status error, ignore it and continue.
         # It's not that important to have printed versions in the log.
         LOG_JOB.debug(
             "Ignoring a Status Exception that occurs from calling "
@@ -293,7 +293,7 @@ def launch_rv(test, client_vm, guest_vm, params):
             utils_spice.wait_timeout(5)  # Wait for remote-viewer to launch
             str_input(client_vm, ticket)
 
-        utils_spice.wait_timeout(15)  # Wait for conncetion to establish
+        utils_spice.wait_timeout(15)  # Wait for connection to establish
 
     is_rv_connected = True
 
@@ -357,7 +357,7 @@ def launch_rv(test, client_vm, guest_vm, params):
 def run(test, params, env):
     """
     Simple test for Remote Desktop connection
-    Tests expectes that Remote Desktop client (spice/vnc) will be executed
+    Tests expects that Remote Desktop client (spice/vnc) will be executed
     from within a second guest so we won't be limited to Linux only clients
 
     The plan is to support remote-viewer at first place

@@ -10,7 +10,7 @@ from virttest.utils_test import BackgroundTest, VMStress
 
 def run(test, params, env):
     """
-    Check KSM can be started automaticly when ksmtuned threshold is reached
+    Check KSM can be started automatically when ksmtuned threshold is reached
 
     1. Get the memory of your host and the KSM_THRES_COEF
     2. Boot a guest with memory less than KSM_THRES_COEF threshold

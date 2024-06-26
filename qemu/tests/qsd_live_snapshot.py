@@ -1,4 +1,4 @@
-"""Live snpashot test with qsd exposed image"""
+"""Live snapshot test with qsd exposed image"""
 
 from virttest import data_dir, error_context
 

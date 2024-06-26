@@ -497,11 +497,11 @@ class HLKServer:
         ):
             raise HLKRunError("Timeout for running tests.")
 
-        resutls = self.list_tests_results(
+        results = self.list_tests_results(
             tests_id, target_key, project_name, machine_name, pool_name
         )
         err_msg = []
-        for result in resutls.splitlines():
+        for result in results.splitlines():
             if "Task error message" in result:
                 err_msg.append(result.strip())
         if err_msg:

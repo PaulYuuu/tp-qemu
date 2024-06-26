@@ -69,7 +69,7 @@ def run(test, params, env):
         disks = utils_disk.get_linux_disks(session, True)
         return len(re.findall(rf"{device_name[5:]}\d+", " ".join(disks))) == 1
 
-    # destroy all vms to avoid emulated disk marked drity before start test
+    # destroy all vms to avoid emulated disk marked dirty before start test
     for vm in env.get_all_vms():
         if vm:
             vm.destroy()

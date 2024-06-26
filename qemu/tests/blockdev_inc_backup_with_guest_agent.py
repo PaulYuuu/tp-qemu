@@ -111,7 +111,7 @@ def run(test, params, env):
         4. do full backup and add non-persistent bitmap
         5. create another file
         6. guest-fsfreeze-freeze
-        7. do inc bakcup(sync: incremental)
+        7. do inc backup(sync: incremental)
         8. guest-fsfreeze-thaw
         9. shutdown VM, rebase inc onto base
        10. start VM with inc images, check files' md5

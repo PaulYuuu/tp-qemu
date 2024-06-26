@@ -423,7 +423,7 @@ def run(test, params, env):
                 virtio_fs_disk_label = fs_target
                 error_context.context(
                     "Get Volume letter of virtio fs target, the disk"
-                    f"lable is {virtio_fs_disk_label}.",
+                    f"label is {virtio_fs_disk_label}.",
                     test.log.info,
                 )
                 vol_con = f"VolumeName='{virtio_fs_disk_label}'"
@@ -739,7 +739,7 @@ def run(test, params, env):
                         fs_dest, nfs_mount_dst_name, "file_test"
                     )
                     if get_stdev(file_in_local_guest) == get_stdev(file_in_nfs_guest):
-                        test.fail("st_dev are the same on diffrent device.")
+                        test.fail("st_dev are the same on different device.")
 
                 if git_init_cmd:
                     if os_type == "windows":

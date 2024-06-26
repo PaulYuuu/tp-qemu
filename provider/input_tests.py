@@ -213,7 +213,7 @@ def mouse_move_test(test, params, console, listener, wait_time, end_pos, absolut
     if (abs(xn - xn_guest) > tolerance) or (abs(yn - yn_guest) > tolerance):
         test.fail(
             "pointer did not move to destination position."
-            f"it move to pos ({xn_guest}, {yn_guest}) in guest, but exepected pos is"
+            f"it move to pos ({xn_guest}, {yn_guest}) in guest, but expected pos is"
             f"({xn}, {yn})"
         )
 

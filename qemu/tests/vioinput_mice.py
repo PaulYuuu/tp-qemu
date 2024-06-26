@@ -164,7 +164,7 @@ def mouse_move_test(test, params, console, listener, wait_time, end_pos, absolut
     if (abs(xn - xn_guest) > tolerance) or (abs(yn - yn_guest) > tolerance):
         test.fail(
             "pointer did not move to destination position."
-            f"it move to pos ({xn_guest}, {yn_guest}) in guest, but exepected pos is"
+            f"it move to pos ({xn_guest}, {yn_guest}) in guest, but expected pos is"
             f"({xn}, {yn})"
         )
 
@@ -209,7 +209,7 @@ def mouse_move_test(test, params, console, listener, wait_time, end_pos, absolut
 @error_context.context_aware
 def run(test, params, env):
     """
-    Input mice test, include 2 type mices.
+    Input mice test, include 2 type mice.
     virtio-mouse-pci device and virtio-table-pci device.
 
     1) Log into the guest.

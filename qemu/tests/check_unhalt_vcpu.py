@@ -8,7 +8,7 @@ def run(test, params, env):
     Check unhalt vcpu of guest.
     1) Use qemu-img create any image which can not boot.
     2) Start vm with the image created by step 1
-    3) Use ps get qemu-kvm process %cpu, if greater than 90%, report fial.
+    3) Use ps get qemu-kvm process %cpu, if greater than 90%, report fail.
     """
     vm = env.get_vm(params["main_vm"])
     vm.verify_alive()

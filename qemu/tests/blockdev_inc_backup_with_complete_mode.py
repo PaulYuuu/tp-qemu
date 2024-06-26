@@ -89,7 +89,7 @@ def run(test, params, env):
            add a 2G(actual size<2G) target disk for inc backup
         4. do full backup and add bitmap
         5. create another files (size 110M)
-        6. do inc bakcup with compeletion-mode
+        6. do inc backup with compeletion-mode
            compeletion-mode=default, the 1st inc backup job completed
            compeletion-mode=grouped, the 1st inc backup job cancelled
            The 2nd inc backup job always failed due to 'no space left' error

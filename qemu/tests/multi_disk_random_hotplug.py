@@ -380,7 +380,7 @@ def run(test, params, env):
         if "I/O error" in out:
             test.log.warn(out)
             test.error(
-                "I/O error messages occured in dmesg, " "check the log for details."
+                "I/O error messages occurred in dmesg, " "check the log for details."
             )
     except Exception as e:
         pid = vm.get_pid()

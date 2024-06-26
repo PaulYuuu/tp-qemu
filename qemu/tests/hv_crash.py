@@ -4,7 +4,7 @@ from virttest import env_process, error_context, utils_misc
 @error_context.context_aware
 def run(test, params, env):
     """
-    Test the hv_crash flag avaliability
+    Test the hv_crash flag availability
 
     1) boot the guest with hv_crash flag
     2) use nmi to make the guest crash, the qemu process should quit

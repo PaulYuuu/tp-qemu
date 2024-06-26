@@ -6,7 +6,7 @@ from virttest import data_dir, env_process
 
 def create_kernel_initrd(test, params):
     """
-    Create initramfs and kernel file with dracut modul
+    Create initramfs and kernel file with dracut module
 
     :param test:   QEMU test object.
     :param params: Dictionary with the test parameters.

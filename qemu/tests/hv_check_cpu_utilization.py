@@ -81,7 +81,7 @@ def run(test, params, env):
     2)Pin the vm to certain numa node, to keep accuracy.
     3)Stop serval Windows services & background processes on guest.
       to lower the cpu usage to minimum.
-    4)Reboot vm to apply changes, then wait for serveral minutes to make
+    4)Reboot vm to apply changes, then wait for several minutes to make
       sure the cpu is chill down.
     5)Start both checking the guest&host's cpu usage, monitoring the value.
     6)Compare the average utilization value to standard values.

@@ -13,7 +13,7 @@ def run(test, params, env):
     2. trace the system calls for qemu-img convert
        with copy-offloading and inspect whether
        there is copy_file_range
-    3. compare the sourc and target images
+    3. compare the source and target images
 
     :param test: Qemu test object
     :param params: Dictionary with the test parameters

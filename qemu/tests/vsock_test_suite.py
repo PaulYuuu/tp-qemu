@@ -38,7 +38,7 @@ def copy_compile_testsuite(test, vm, session):
         process.system(rm_cmd, shell=True, ignore_status=True)
         session.cmd_output_safe(rm_cmd, ignore_all_errors=True)
         session.close()
-        test.error("vsocke_test complile failed")
+        test.error("vsocke_test compile failed")
     return os.path.join(vsock_test_base_dir, "vsock/vsock_test")
 
 
@@ -87,7 +87,7 @@ def run(test, params, env):
         try:
             session.read_up_to_prompt(timeout=10)
         except aexpect.ExpectTimeoutError:
-            test.fail("server_cmd inside guest dosn't closed after test execution.")
+            test.fail("server_cmd inside guest doesn't closed after test execution.")
 
         # Scenario II: host = server, guest = client
         test.log.info("Host as server, guest as client...")

@@ -309,7 +309,7 @@ def run(test, params, env):
         8. copy data from nbd image exported in step 6
            into an image, e.g. fullbk
         9. cancel full backup job and stop nbd server
-        10. add aother fleecing disk for inc backup to VM via qmp commands
+        10. add another fleecing disk for inc backup to VM via qmp commands
         11. do inc backup(sync=none) with another new bitmap
             as well as disable the first bitmap
         12. export the inc backup image by internal nbd server

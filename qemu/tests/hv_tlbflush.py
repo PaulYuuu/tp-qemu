@@ -26,7 +26,7 @@ def run(test, params, env):
     5) Run stress tool and hv_tlvflush.exe again on host&guest,
        another time is acquired
     6) Compare the 2 time and calculate the improvement factor,
-       then judge the result depends on the architecure of the guest
+       then judge the result depends on the architecture of the guest
 
     param test: the test object
     param params: the test params

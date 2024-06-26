@@ -40,7 +40,7 @@ def run(test, params, env):
         Get qemu device 'device_name' support options
         """
         if device_name not in get_qemu_support_device(qemu_binary):
-            err_msg = "Oops, Your qemu version doesn't support devic '%s', "
+            err_msg = "Oops, Your qemu version doesn't support device '%s', "
             err_msg += "make sure you have inputted a correct device name"
             test.cancel(err_msg % device_name)
         device_support_option = process.system_output(

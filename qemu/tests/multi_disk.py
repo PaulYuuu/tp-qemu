@@ -75,7 +75,7 @@ def _range(buf, n=None):
 @error_context.context_aware
 def run(test, params, env):
     """
-    Test multi disk suport of guest, this case will:
+    Test multi disk support of guest, this case will:
     1) Create disks image in configuration file.
     2) Start the guest with those disks.
     3) Checks qtree vs. test params. (Optional)
@@ -83,7 +83,7 @@ def run(test, params, env):
     5) Get disk dev filenames in guest.
     6) Format those disks in guest.
     7) Copy file into / out of those disks.
-    8) Compare the original file and the copied file using md5 or fc comand.
+    8) Compare the original file and the copied file using md5 or fc command.
     9) Repeat steps 3-5 if needed.
 
     :param test: QEMU test object

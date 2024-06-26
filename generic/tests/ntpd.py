@@ -54,7 +54,7 @@ class NTPTest:
     # Server configuration
     def server_config(self):
         """
-        configuer the ntp server:
+        configure the ntp server:
         1.ZONE = American/New_York;
         2.start ntpd service;
         3.restrict the host and guest
@@ -101,7 +101,7 @@ class NTPTest:
     # Host configuration
     def host_config(self):
         """
-        configuer the host :
+        configure the host :
         1.ZONE = American/New_York;
         2.check cpuinfo;
         3.add ntp server ip;

@@ -31,7 +31,7 @@ def run(test, params, env):
     3) Load 8021q module in guest.
     4) Configure ip address of guest with 192.168.*.*
     5) Test by ping between guest and host, should fail.
-    6) Test by ping beween guests, should pass.
+    6) Test by ping between guests, should pass.
     7) Setup vlan in guests and using hard-coded ip address 192.168.*.*
     8) Test by ping between guest and host, should pass.
     9) Test by ping among guests, should pass.

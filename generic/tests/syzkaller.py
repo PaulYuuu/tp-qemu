@@ -16,7 +16,7 @@ def run(test, params, env):
     3. Prepare and compile Guest kernel
     4. Prepare syzkaller config with qemu params and guest params
     5. Start sykaller with above config and run for specified time(test_timeout)
-    6. Test fails out incase of any host issues
+    6. Test fails out in case of any host issues
     """
     start_time = time.time()
     #  Step 1: Install/Setup syzkaller in host
@@ -107,6 +107,6 @@ def run(test, params, env):
     process.run(cmd, timeout=testtimeout, ignore_status=True, shell=True)
     # Let's delete linux kernel folder from test-results as it would
     # consume lot of space and test log have all the information about
-    # it incase to retrieve it back.
+    # it in case to retrieve it back.
     if os.path.isdir(guest_kernel_build_path):
         shutil.rmtree(guest_kernel_build_path)

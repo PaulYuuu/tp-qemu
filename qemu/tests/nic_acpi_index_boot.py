@@ -9,7 +9,7 @@ def run(test, params, env):
     When "acpi-index=N" is enabled, NIC name should always be "ethN"
 
     1) Boot up guest with a single nic, add nic option "acpi-index=1"
-    2) Remove "biosdevname=0" and "net.ifname=0" from kenrel command line
+    2) Remove "biosdevname=0" and "net.ifname=0" from kernel command line
     3) Reboot guest
     4) Check the nic name, the guest nic name enoN == acpi-index=N
 

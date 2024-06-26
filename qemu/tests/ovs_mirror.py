@@ -69,11 +69,11 @@ def run(test, params, env):
         if uuid not in output:
             test.log.debug("Create OVS Mirror CMD: %s ", mirror_cmd)
             test.log.debug("Ovs Info: %s ", output)
-            test.fail("Setup mirorr port failed")
+            test.fail("Setup mirror port failed")
 
     def check_tcpdump(output, target_ip, host_ip, direction):
         """
-        Check tcpdump result file and report unexpect packet to debug log.
+        Check tcpdump result file and report unexpected packet to debug log.
 
         :parm output: string of tcpdump output.
         :parm target_p: ip of port in ovs be mirroring.
@@ -90,7 +90,7 @@ def run(test, params, env):
             rex = rf".*IP {target_ip} > {host_ip}.*ICMP echo request.*"
         for idx, _ in enumerate(output.splitlines()):
             if not re.match(rex, _):
-                test.log.debug("Unexpect packet in line %d: %s", idx, _)
+                test.log.debug("Unexpected packet in line %d: %s", idx, _)
                 return False
         return True
 
@@ -181,7 +181,7 @@ def run(test, params, env):
             if vm == refer_vm and content:
                 test.fail(f"should not packet from {refer_vm} dumped in {mirror_vm}")
             elif not check_tcpdump(content, target_ip, host_ip, direction):
-                test.fail(f"Unexpect packages from {vm} dumped in {mirror_vm}")
+                test.fail(f"Unexpected packages from {vm} dumped in {mirror_vm}")
     finally:
         for vm in vms_info:
             vms_info[vm][0].destroy(gracefully=False)

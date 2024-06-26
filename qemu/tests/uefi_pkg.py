@@ -19,7 +19,7 @@ def run(test, params, env):
        For rhel9.0 and rhel9.1: there are 4 files in total.
        40-edk2-ovmf-sb.json, 50-edk2-ovmf.json, 50-edk2-ovmf-cc.json
        and 50-edk2-ovmf-amdsev.json
-       For rhel9.2 and higher versin: there are 5 files in total.
+       For rhel9.2 and higher version: there are 5 files in total.
        30-edk2-ovmf-x64-sb-enrolled.json, 40-edk2-ovmf-x64-sb.json,
        50-edk2-ovmf-x64-nosb.json, 60-edk2-ovmf-x64-amdsev.json and
        60-edk2-ovmf-x64-inteltdx.json

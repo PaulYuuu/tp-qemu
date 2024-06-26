@@ -6,7 +6,7 @@ def run(test, params, env):
     """
     monitor_cmds_check test:
     1). bootup vm with human and qmp monitor
-    2). check commands in black_list is unavaliable in monitor
+    2). check commands in black_list is unavailable in monitor
 
     :param test: Qemu test object
     :param params: Dictionary with the test parameters
@@ -14,7 +14,7 @@ def run(test, params, env):
 
     Notes:
         Please run this test with qemu/control.kernel-version to ensure it
-        only run when requried package installed;
+        only run when required package installed;
     """
 
     def is_supported(cmd):
@@ -30,7 +30,7 @@ def run(test, params, env):
 
     black_cmds = params.get("black_cmds", "").split()
     error_context.context(
-        "Verify black commands are unavaliable in " f"'{protocol}' monitor",
+        "Verify black commands are unavailable in " f"'{protocol}' monitor",
         test.log.info,
     )
     test.log.info("Black commands: %s", black_cmds)

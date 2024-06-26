@@ -47,7 +47,7 @@ def run(test, params, env):
 
     if params.get("unittest_test_list"):
         test_list = params.get("unittest_test_list").split()
-        test.log.info("Original test list overriden by user")
+        test.log.info("Original test list overridden by user")
         test.log.info("User defined unit test list: %s", test_list)
 
     black_list = params.get("unittest_test_blacklist", "").split()

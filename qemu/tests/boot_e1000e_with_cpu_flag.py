@@ -4,7 +4,7 @@ from virttest import error_context, utils_net
 @error_context.context_aware
 def run(test, params, env):
     """
-    Boot a winodws guest add Vendor ID with name "KVMKVMKVM" to cpu model flag
+    Boot a windows guest add Vendor ID with name "KVMKVMKVM" to cpu model flag
 
     1) Boot a vm with 'e1000e + hv_vendor_id=KVMKVMKVM' on q35 machine
     2) Run the bcdedit command as administrator

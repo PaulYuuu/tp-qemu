@@ -29,7 +29,7 @@ Available methods:
 Use new block-export-add/block-export-del qmp commands to
 create/delete block exports (since 5.2):
 - The following params may be defined for block export
-  block_export_uid: The uniqu block export id
+  block_export_uid: The unique block export id
   block_export_iothread: The name of the iothread object
   block_export_writable: 'yes' or 'no', 'yes' if clients should be able
                          to write to the export
@@ -43,7 +43,7 @@ create/delete block exports (since 5.2):
 - The following params may be defined for nbd export
   nbd_export_name: The export name
   nbd_export_description: Free-form description of the export(up to 4096b)
-  nbd_export_bitmaps: bitmap names seperated by space, e.g. 'b1 b2 b3'
+  nbd_export_bitmaps: bitmap names separated by space, e.g. 'b1 b2 b3'
   nbd_allocation_exported: 'yes' or 'no', 'yes' if the allocation depth map
                            will be exported
 """

@@ -77,7 +77,7 @@ class TimedriftTest:
     def execute(self, cmd, session=None):
         """
         Execute command in guest or host, if session is not None return
-        command output in guest else return command ouput in host;
+        command output in guest else return command output in host;
 
         :param cmd: shell commands;
         :param session: ShellSession or None;
@@ -189,8 +189,8 @@ class BackwardtimeTest(TimedriftTest):
     @error_context.context_aware
     def set_time(self, nsec, session=None):
         """
-        Change host/guest time, if session is not None, backword guest time,
-        else backword host time;
+        Change host/guest time, if session is not None, backward guest time,
+        else backward host time;
 
         :param nsec: seconds to forward;
         :param session: ShellSession object;

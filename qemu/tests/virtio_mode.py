@@ -27,7 +27,7 @@ def run(test, params, env):
         try:
             qtree.parse_info_qtree(vm.monitor.info("qtree"))
         except AttributeError:
-            test.cancel("Monitor deson't supoort qtree, skip this test")
+            test.cancel("Monitor deson't support qtree, skip this test")
         disable_modern = None
         disable_legacy = None
         for node in qtree.get_nodes():
@@ -49,7 +49,7 @@ def run(test, params, env):
         """
         Verify virtio mode in windows guests. If device is in modern mode,
         device id should be larger than 1040. Else device memory range need
-        to checked futher.
+        to checked further.
 
         :param session: shell Object
         :param virtio_mode: VirtIO mode for the device

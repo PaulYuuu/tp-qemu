@@ -20,8 +20,8 @@ def run(test, params, env):
         user namespace to the actual common users' sub UID and GID range.
         5. start vm.
         6. In the guest, mount virtiofsd and create a common user.
-        7. Create a file seperately with root and the common user
-        8. Check the file's uid and gid seperately in guest and host.
+        7. Create a file separately with root and the common user
+        8. Check the file's uid and gid separately in guest and host.
         mapping: (guest)root<->(host)common user;
                  (guest)u1<->(host)subuid+$uid_of_u1
         9. repeate step 4-7,the different is mapping only one subuid/subgid

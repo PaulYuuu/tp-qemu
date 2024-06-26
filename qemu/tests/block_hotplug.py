@@ -153,7 +153,7 @@ def run(test, params, env):
 
     def check_disk_size(did, excepted_size):
         """
-        Checkt whether the disk size is equal to excepted size.
+        Check whether the disk size is equal to excepted size.
 
         :param did: the disk of id, e.g. sdb,sda for linux, 1, 2 for windows
         :param excepted_size: the excepted size

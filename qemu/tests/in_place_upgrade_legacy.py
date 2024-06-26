@@ -91,7 +91,7 @@ def run(test, params, env):
             # please specify the old_custom_internal_repo_7
             # in the cfg in advance this parameter should
             # contain the repo files, by which you can upgrade
-            # old system to the newer version before you do in place upgade
+            # old system to the newer version before you do in place upgrade
             old_custom_repo = params.get("old_custom_internal_repo_7")
             upgrade_test.yum_update_no_rhsm(test, old_custom_repo)
         elif params.get("rhsm_type") == "rhsm":
@@ -135,7 +135,7 @@ def run(test, params, env):
             # upgrade_test.run_guest_cmd(params.get("leapp_service_host"))
             # do preugprade test with rhsm
             upgrade_test.run_guest_cmd(params.get("pre_upgrade_rhsm"))
-            # do ugprade test with rhsm
+            # do upgrade test with rhsm
             upgrade_test.upgrade_process(params.get("process_upgrade_rhsm"))
         # after run upgrade, reboot the guest after finish preupgrade
         upgrade_test.session.sendline(params.get("reboot_cmd"))

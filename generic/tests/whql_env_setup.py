@@ -189,4 +189,4 @@ def run(test, params, env):
                 utils_misc.log_line(error_log, o)
 
     if failed_flag != 0:
-        test.fail(f"Have {failed_flag} setup fialed. Please check the log.")
+        test.fail(f"Have {failed_flag} setup failed. Please check the log.")

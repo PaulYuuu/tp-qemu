@@ -61,7 +61,7 @@ def env_setup(test, params, session, ip, username, shell_port, password):
 def tweak_tuned_profile(params, server_ctl, client, host):
     """
 
-    Tweak configuration with truned profile
+    Tweak configuration with turned profile
 
     """
 

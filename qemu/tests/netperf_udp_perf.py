@@ -124,7 +124,7 @@ def run(test, params, env):
             logfile.write(output)
             logfile.close()
     except process.CmdError:
-        test.cancel("test faild")
+        test.cancel("test failed")
 
 
 @error_context.context_aware

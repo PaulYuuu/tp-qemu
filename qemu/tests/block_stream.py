@@ -40,7 +40,7 @@ def run(test, params, env):
 
     1) create live snapshot image sn1
     3) Request for block-stream
-    4) Wait till the block job finishs
+    4) Wait till the block job finishes
     5) Check for backing file in sn1
     6) Check for the size of the sn1 should not exceeds image.img
     """

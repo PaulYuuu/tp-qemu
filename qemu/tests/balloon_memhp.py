@@ -17,7 +17,7 @@ def run(test, params, env):
     4) evict balloon
     5) hotplug memory to guest
     6) check balloon and guest memory
-    7) enlarge balloon to maxium value
+    7) enlarge balloon to maximum value
     8) evict balloon
     9) check balloon and guest memory
     10) uninstall balloon service and clear driver verifier(only for

@@ -20,7 +20,7 @@ def run(test, params, env):
     The limit setting its higher on the host configuration doesn't hurt,
     but OVMF just wouldn't use it.
 
-    1) boot a guest with invalid phys-bits, check the error messag
+    1) boot a guest with invalid phys-bits, check the error message
        e.g. host-phys-bits-limit=-1, host-phys-bits-limit=1
     2) boot a guest with valid phys-bits, check the phys-bits in guest
        make sure it equals to the set value or equals to the maximum
@@ -107,7 +107,7 @@ def run(test, params, env):
             host_phys_bits = int(host_phys_bits) + int(host_memory_encryption_bits)
         expected_phys_bits = min(int(host_phys_bits), int(host_phys_bits_limit))
         session.close()
-        err_str = "The phys-bits in guest, it dosen't equal to expected value."
+        err_str = "The phys-bits in guest, it doesn't equal to expected value."
         err_str += "The expected value is %s, but the actual value is %s."
         err_str %= (expected_phys_bits, guest_phys_bits)
         test.assertEqual(guest_phys_bits, expected_phys_bits, err_str)

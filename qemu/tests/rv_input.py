@@ -406,7 +406,7 @@ def run(test, params, env):
     try:
         guest_session.cmd("ps aux | grep -v grep | grep gnome-session")
     except ShellCmdError:
-        test.error("gnome-session was probably not corretly started")
+        test.error("gnome-session was probably not correctly started")
 
     guest_session.cmd("export DISPLAY=:0.0")
 

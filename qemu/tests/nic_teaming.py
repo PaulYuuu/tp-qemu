@@ -22,7 +22,7 @@ def run(test, params, env):
     """
 
     def team_port_add(ifnames, team_if):
-        """Team0 add ports and return the ip link result for debuging"""
+        """Team0 add ports and return the ip link result for debugging"""
         for port in ifnames:
             session_serial.cmd_output_safe(params["clearip_cmd"] % port)
             session_serial.cmd_output_safe(params["setdown_cmd"] % port)
@@ -61,7 +61,7 @@ def run(test, params, env):
     def check_ping(status, output):
         """ratio <5% is acceptance."""
         if status != 0:
-            test.fail(f"Ping failed, staus:{status}, output:{output}")
+            test.fail(f"Ping failed, status:{status}, output:{output}")
         # if status != 0 the ping process seams hit issue.
         ratio = utils_test.get_loss_ratio(output)
         if ratio == -1:
@@ -101,7 +101,7 @@ def run(test, params, env):
     modprobe_cmd = "modprobe team"
     session_serial.cmd_output_safe(modprobe_cmd)
     session_serial.cmd_output_safe(params["createteam_cmd"])
-    # this cmd is to create the team0 and correspoding userspace daemon
+    # this cmd is to create the team0 and corresponding userspace daemon
     if not team_if_exist():
         test.fail(f"Interface {team_if} is not created.")
     # check if team0 is created successfully

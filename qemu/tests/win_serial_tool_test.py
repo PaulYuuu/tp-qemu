@@ -81,10 +81,10 @@ def run(test, params, env):
     )
     port = VirtioPortTest(test, env, params).get_virtio_ports(vm)[1][0]
 
-    error_context.context("Tranfer data from host to guest", test.log.info)
+    error_context.context("Transfer data from host to guest", test.log.info)
     transfer_from_host_to_guest(port)
 
-    error_context.context("Tranfer data from guest to host", test.log.info)
+    error_context.context("Transfer data from guest to host", test.log.info)
     transfer_from_guest_to_host(port)
 
     # for windows guest, disable/uninstall driver to get memory leak based on

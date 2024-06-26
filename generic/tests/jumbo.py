@@ -124,7 +124,7 @@ def run(test, params, env):
                 session_serial, connection_id, mode=mode
             )
 
-        error_context.context("Chaning the MTU of host tap ...", test.log.info)
+        error_context.context("Changing the MTU of host tap ...", test.log.info)
         host_mtu_cmd = "ifconfig %s mtu %s"
         # Before change macvtap mtu, must set the base interface mtu
         if params.get("nettype") == "macvtap":

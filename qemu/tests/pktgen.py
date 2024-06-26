@@ -74,7 +74,7 @@ def run(test, params, env):
         pktgen_mac = host_nic.get_mac()
         runner = process.system
 
-    # copy pktgen_test scipt to the test server.
+    # copy pktgen_test script to the test server.
     local_path = os.path.join(data_dir.get_root_dir(), "shared/scripts/pktgen.sh")
     remote_path = "/tmp/pktgen.sh"
     remote.scp_to_remote(
@@ -89,7 +89,7 @@ def run(test, params, env):
         env["pktgen_run"] = True
         try:
             # Set a run flag in env, when other case call this case as a sub
-            # backgroud process, can set run flag to False to stop this case.
+            # background process, can set run flag to False to stop this case.
             start_time = time.time()
             stop_time = start_time + pktgen_stress_timeout
             while env["pktgen_run"] and time.time() < stop_time:
@@ -116,7 +116,7 @@ def run(test, params, env):
     if loss_ratio > int(params.get("packet_lost_ratio", 5)) or loss_ratio == -1:
         test.log.debug("Ping %s output: %s", external_host, output)
         test.fail(
-            "Guest network connction unusable, "
+            "Guest network connection unusable, "
             "packet lost ratio is '%d%%'" % loss_ratio
         )
     if server_session:

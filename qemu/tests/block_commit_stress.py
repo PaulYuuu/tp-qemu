@@ -6,7 +6,7 @@ from qemu.tests import blk_commit
 class BlockCommitStress(blk_commit.BlockCommit):
     def load_stress(self):
         """
-        load IO/CPU/Memoery stress in guest
+        load IO/CPU/Memory stress in guest
         """
         self.test.log.info("launch stress app in guest")
         args = (self.test, self.params, self.env, self.params["stress_test"])

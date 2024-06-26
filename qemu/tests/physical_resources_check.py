@@ -194,7 +194,7 @@ def run(test, params, env):
                 machine_type_map[type_pair[0][0]] = type_pair[0][1]
             else:
                 test.log.warn(
-                    "Unexpect output from qemu-kvm -M " "?: '%s'", machine_type
+                    "Unexpected output from qemu-kvm -M " "?: '%s'", machine_type
                 )
         try:
             expect_mtype = machine_type_map[params["machine_type"]].strip()
@@ -357,7 +357,7 @@ def run(test, params, env):
         n_fail.append(fail_log)
         test.log.error(fail_log)
     found_mac_addresses = re.findall(r"macaddr=(\S+)", o)
-    test.log.debug("Found MAC adresses: %s", found_mac_addresses)
+    test.log.debug("Found MAC addresses: %s", found_mac_addresses)
 
     num_nics = len(params.objects("nics"))
     for nic_index in range(num_nics):

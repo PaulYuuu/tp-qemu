@@ -7,7 +7,7 @@ def run(test, params, env):
     Boot guest after disable ept/npt:
     1) Disable ept/npt
     2) Boot up guest
-    3) Destory the guest and restore ept/npt
+    3) Destroy the guest and restore ept/npt
 
     :param test: QEMU test object
     :param params: Dictionary with the test parameters

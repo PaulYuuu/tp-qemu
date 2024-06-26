@@ -146,7 +146,7 @@ def run(test, params, env):
     1) start a default configuration xml by virsh
     2) get the cpu elements from libvirt xml by 'virsh dumpxml $domain'
     3) parse the cpu_flags and store into libvirt_cpu_flags
-    4) get the cpu flags from qemu process and stroe to qemu_cpu_flags
+    4) get the cpu flags from qemu process and store to qemu_cpu_flags
     5) Compare the cpu flags, model of xml and qemu process, should be same
     6) Boot guest with combined flags, model, guest works well without crash
 

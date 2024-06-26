@@ -62,7 +62,7 @@ def run(test, params, env):
             # please specify the old_custom_internal_repo in the cfg in advance
             # this parameter should contain the repo files,
             # by which you can upgrade old system to the newer version
-            # before you really do in place upgade
+            # before you really do in place upgrade
             old_custom_repo = params.get("old_custom_internal_repo")
             if params.get_boolean("com_install"):
                 upgrade_test.run_guest_cmd(params.get("com_ins_leapp"))
@@ -90,7 +90,7 @@ def run(test, params, env):
             upgrade_test.upgrade_process(params.get("process_upgrade_rhsm"))
         # after run upgrade, reboot the guest after finish preupgrade
         upgrade_test.session.sendline(params.get("reboot_cmd"))
-        # login in new rhel9 vm by assitant user
+        # login in new rhel9 vm by assistant user
         ipu_timeout = int(params.get("ipu_after_timeout"))
         usr = params.get("user_assistant")
         passwd = params.get("user_assistant_pw")

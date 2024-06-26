@@ -11,7 +11,7 @@ def run(test, params, env):
     1) Create images for testing using avocado
     2) Change the backing file of snapshot
     3) Check result. Case passed only if expected rebase
-    opearations are failed and no core dump is generated
+    operations are failed and no core dump is generated
 
     :param test: Qemu test object
     :param params: Dictionary with the test parameters

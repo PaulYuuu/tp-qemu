@@ -1,0 +1,4 @@
+[codespell]
+builtin = clear,code,rare
+ignore-words = codespell.ignore
+skip = ./.git

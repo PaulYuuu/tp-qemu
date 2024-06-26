@@ -61,7 +61,7 @@ def run(test, params, env):
             params.get("timerdevice_drift_threshold", 3)
         )
 
-        time_type = "system" if not is_hardware else "harware"
+        time_type = "system" if not is_hardware else "hardware"
         error_context.context(f"Check the {time_type} time on guest", test.log.info)
         host_time, guest_time = utils_test.get_time(
             session, time_command, time_filter_re, time_format

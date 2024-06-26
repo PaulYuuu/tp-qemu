@@ -25,7 +25,7 @@ def run(test, params, env):
     Test steps:
     1). wait guest boot up
     2). run dd command in guest with special params(eg. oflag, bs and so on)
-    3). check command exit stauts and output
+    3). check command exit status and output
     """
 
     def _get_file(filename, select, test=test):

@@ -13,7 +13,7 @@ def run(test, params, env):
     """
     Test tap device deleted after vm quit with error
 
-    1) Boot a with invaild params.
+    1) Boot a with invalid params.
     1) Check qemu-kvm quit with error.
     2) Check vm tap device delete from ovs bridge.
 

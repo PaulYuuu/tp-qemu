@@ -19,7 +19,7 @@ def run(test, params, env):
     """
     image_name = params.get("image_name")
     timeout = int(params.get("login_timeout", 360))
-    # Workaroud wrong config file order.
+    # Workaround wrong config file order.
     params["image_name_backing_file_snapshot"] = params.get("image_name")
     params["image_format_backing_file_snapshot"] = params.get("image_format")
     params["image_name_snapshot"] = params.get("image_name") + "-snap"

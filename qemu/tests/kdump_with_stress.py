@@ -29,7 +29,7 @@ def run(test, params, env):
         vm.copy_files_to(stress_path, stress_guest_path)
         session.cmd(params["install_cmd"])
 
-        test.log.info("Install app successed")
+        test.log.info("Install app succeeded")
 
     def start_stress(session):
         """

@@ -344,7 +344,7 @@ def pvpanic_test(test, params, vm):
         )
     session = vm.reboot(session)
 
-    # triger a crash in guest
+    # trigger a crash in guest
     vm.monitor.nmi()
 
     # check qmp event

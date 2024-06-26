@@ -19,7 +19,7 @@ def setup_test_environment(test, params, vm, session):
     :param test: test object
     :param params: parameters
     :vm: target vm
-    :session: session created by loggin the vm
+    :session: session created by login the vm
     """
     timeout = int(params.get("timeout", 360))
     if params.get("os_type") == "linux":
@@ -65,7 +65,7 @@ def trigger_crash(test, vm, params):
     Trigger system crash with certain method.
 
     :param vm: target vm
-    :parma params: test params
+    :param params: test params
     """
     crash_method = params["crash_method"]
     if crash_method == "nmi":
@@ -163,7 +163,7 @@ def run(test, params, env):
             test.error("Cannot setup crashdump, output = " + o)
 
     if params["crash_method"] != "notmyfault_app":
-        error_context.context("Setup crash evironment for test", test.log.info)
+        error_context.context("Setup crash environment for test", test.log.info)
         setup_test_environment(test, params, vm, session)
 
     error_context.context("Trigger crash", test.log.info)

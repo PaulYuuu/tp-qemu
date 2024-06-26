@@ -94,7 +94,7 @@ def run(test, params, env):
                 status, output = session.cmd_status_output(vlan_set_cmd, safe=True)
                 if status:
                     test.error(
-                        f"Error occured when set vlan tag for network interface: {ifname}, "
+                        f"Error occurred when set vlan tag for network interface: {ifname}, "
                         f"err info: {output} "
                     )
             else:
@@ -117,7 +117,7 @@ def run(test, params, env):
                 status, output = session.cmd_status_output(vlan_set_cmd % ifname)
                 if status:
                     test.error(
-                        "Error occured when set vlan tag for "
+                        "Error occurred when set vlan tag for "
                         f"network interface: {ifname}, err info: {output} "
                     )
                 # restart nic for windows guest

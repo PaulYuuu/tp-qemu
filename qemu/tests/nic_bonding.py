@@ -16,7 +16,7 @@ def run(test, params, env):
     3) Execute file transfer test between guest and host.
     4) Repeatedly put down/up interfaces by 'ip link'
     5) Execute file transfer test between guest and host.
-    6) Check md5 value after transfered.
+    6) Check md5 value after transferred.
 
     :param test: Kvm test object.
     :param params: Dictionary with the test parameters.

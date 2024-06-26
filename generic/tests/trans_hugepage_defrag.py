@@ -49,7 +49,7 @@ def run(test, params, env):
             off_action = "0"
         else:
             raise ValueError(
-                f"Uknown possible values for file {test_config.thp_path}: {possible_values}"
+                f"Unknown possible values for file {test_config.thp_path}: {possible_values}"
             )
 
         if status == "on":

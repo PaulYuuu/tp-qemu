@@ -18,7 +18,7 @@ def cmd_runner_monitor(test, vm, monitor_cmd, test_cmd, guest_path, timeout=300)
     For record the env information such as cpu utilization, meminfo while
     run guest test in guest.
     @vm: Guest Object
-    @monitor_cmd: monitor command running in backgroud
+    @monitor_cmd: monitor command running in background
     @test_cmd: test suit run command
     @guest_path: path in guest to store the test result and monitor data
     @timeout: longest time for monitor running
@@ -386,12 +386,12 @@ def result_sum(topdir, params, guest_ver, resultsdir, test):
         result_context_file.close()
         for mark in marks:
             mark_tag, mark_key = mark.split(":")
-            datas = re.findall(mark_key, result_context)
-            if isinstance(datas[0], tuple):
-                data = time_ana(datas[0])
+            data = re.findall(mark_key, result_context)
+            if isinstance(data[0], tuple):
+                data = time_ana(data[0])
             else:
                 tmp_data = 0.0
-                for data in datas:
+                for data in data:
                     if re.findall("[bmkg]", data, re.I):
                         data = utils_misc.normalize_data_size(data, unit_std)
                     tmp_data += float(data)

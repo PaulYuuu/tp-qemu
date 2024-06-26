@@ -7,7 +7,7 @@ def run(test, params, env):
     """
     cpuinfo query test:
     1). run query cmd. e.g -cpu ?cpuid
-    2). check the expected info is inclued in the cmd output.
+    2). check the expected info is included in the cmd output.
     3). raise error if defined info is missing.
     """
     qemu_binary = utils_misc.get_qemu_binary(params)

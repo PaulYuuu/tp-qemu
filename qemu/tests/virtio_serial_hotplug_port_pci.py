@@ -45,11 +45,11 @@ def run(test, params, env):
     4. Hot plug another serial port on chardev 2 with "nr=1", should fail
     5. Hot plug the serial port again with "nr=2"
     6. Transfer data between guest and host via port1 and port2
-    7. Reboot/system_reset/shudown guest after hotplug(optional)
+    7. Reboot/system_reset/shutdown guest after hotplug(optional)
     8. Transfer data between guest and host via port1 and port2
     9. Hot-unplug relative port1 and port2
     10. Hot-unplug virtio-serial-bus
-    11. Reboot/system_reset/shudown/migration guest after hot-unplug(optional)
+    11. Reboot/system_reset/shutdown/migration guest after hot-unplug(optional)
     12. Repeat step 2 to step 10 100 times
 
     :param test: kvm test object

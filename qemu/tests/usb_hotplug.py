@@ -34,7 +34,7 @@ def run(test, params, env):
 
     @error_context.context_aware
     def usb_dev_verify():
-        error_context.context("Verify usb device is pluged on guest", test.log.info)
+        error_context.context("Verify usb device is plugged on guest", test.log.info)
         time.sleep(sleep_time)
         session.cmd(udev_refresh_cmd)
         messages_add = session.cmd(query_syslog_cmd)

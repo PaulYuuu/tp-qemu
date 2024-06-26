@@ -228,7 +228,7 @@ def run(test, params, env):
         2. Check watchdog device have been initialized successfully in guest
         3. Inside guest, trigger watchdog action"
         4. Inside guest, before heartbeat expires, close this action"
-        5. Wait heartbeat timeout check the watchdog action deactive.
+        5. Wait heartbeat timeout check the watchdog action deactivate.
         """
 
         response_timeout = int(params.get("response_timeout", "240"))

@@ -53,7 +53,7 @@ def run(test, params, env):
         if not utils_misc.wait_for(
             lambda: driver_in_use.check_bg_running(vm, params), check_bg_timeout, 0, 1
         ):
-            test.fail("Backgroud test is not alive!")
+            test.fail("Background test is not alive!")
         return stress_thread
 
     vm = env.get_vm(params["main_vm"])
@@ -100,7 +100,7 @@ def run(test, params, env):
             msg = f"Should fail to hotplug device {serial_devices[0]} with error Duplicate"
             test.fail(msg)
     else:
-        msg = f"The device {serial_devices[0]} shoudn't be hotplugged successfully"
+        msg = f"The device {serial_devices[0]} shouldn't be hotplugged successfully"
         test.fail(msg)
 
     try:
@@ -115,7 +115,7 @@ def run(test, params, env):
             )
             test.fail(msg)
     else:
-        msg = f"The device {char_devices[0]} shoudn't be hotplugged successfully"
+        msg = f"The device {char_devices[0]} shouldn't be hotplugged successfully"
         test.fail(msg)
 
     thread_transfer.join()

@@ -47,7 +47,7 @@ def run(test, params, env):
         script_params = params.get("script_params", "")
         test_timeout = float(params.get("test_timeout", 600))
 
-        test.log.debug("Starting preparing resouce files...")
+        test.log.debug("Starting preparing resource files...")
         # Download the script resource from a remote server, or
         # prepare the script using rss?
         if params.get("download") == "yes":

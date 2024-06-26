@@ -54,7 +54,7 @@ def run(test, params, env):
             if not utils_misc.wait_for(
                 lambda: expected_msg in tls_server.get_output(), first=5, timeout=15
             ):
-                test.fail("TLS server can't connect client succssfully.")
+                test.fail("TLS server can't connect client successfully.")
 
         # Scenario 2
         gnutls_cmd_client = params.get("gnutls_cmd_client")
@@ -74,7 +74,7 @@ def run(test, params, env):
             if not utils_misc.wait_for(
                 lambda: expected_msg in tls_client.get_output(), first=5, timeout=15
             ):
-                test.fail("TLS client can't connect server succssfully.")
+                test.fail("TLS client can't connect server successfully.")
 
         # Scenario 3:
         guest_cmd = params.get("guest_cmd")

@@ -25,7 +25,7 @@ def run(test, params, env):
         Unplug drive then replug it.
 
         :param drive: instance of QRHDrive
-        :param vm: Vitual Machine object
+        :param vm: Virtual Machine object
         """
         error_context.context("unplug the drive", test.log.info)
         drive.unplug(vm.monitor)

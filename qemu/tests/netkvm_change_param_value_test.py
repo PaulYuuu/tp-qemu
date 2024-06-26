@@ -21,7 +21,7 @@ def run(test, params, env):
         Start test. First set netkvm driver parameter 'param_name'
         to value 'param_value'. Then read the current and compare
         to 'param_value' to check identity. Finally conduct a ping
-        test to check the nic is avaliable.
+        test to check the nic is available.
 
         param param_name: the netkvm driver parameter to modify
         param param_value: the value to set to

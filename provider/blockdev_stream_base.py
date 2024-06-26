@@ -56,7 +56,7 @@ class BlockDevStreamTest(BlockDevSnapshotTest):
         out = self.snapshot_image.info(output="json")
         info = json.loads(out)
         backing_file = info.get("backing-filename")
-        assert not backing_file, f"Unexpect backing file({backing_file}) found!"
+        assert not backing_file, f"Unexpected backing file({backing_file}) found!"
 
     def mount_data_disks(self):
         if self.base_tag != self.params.objects("images")[0]:

@@ -140,8 +140,8 @@ def run(test, params, env):
 
                 if result:
                     test.fail(
-                        "QMP output contain the unexpect result.\n"
-                        f"Unexpect result: '{o}'\n"
+                        "QMP output contain the unexpected result.\n"
+                        f"Unexpected result: '{o}'\n"
                         f"Actual result: '{qmp_o}'"
                     )
 

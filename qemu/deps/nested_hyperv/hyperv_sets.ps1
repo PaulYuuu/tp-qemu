@@ -64,7 +64,7 @@ function VMRemove([String]$vmName){
         remove-item -Path $vhdpath -force
 
         if ($?){
-            write-output "Info: Remove VM succussfully"
+            write-output "Info: Remove VM successfully"
         }
         else{
             Write-Output "Error: Remove VM failed"
@@ -269,7 +269,7 @@ function VMPowerOn([String]$vmName){
     else{
         ###############################################################
         # Update for bug 2016 and 2012R2 Gen2 vm cannot install sometimes.
-        # 2019 host verison is 17763
+        # 2019 host version is 17763
         ###############################################################
 
         [int]$BuildNumber = (Get-CimInstance Win32_OperatingSystem).BuildNumber

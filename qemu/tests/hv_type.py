@@ -27,7 +27,7 @@ def run(test, params, env):
     vm.verify_alive()
     session = vm.wait_for_login(timeout=timeout)
     # use virt-what-1.18-6.el8.x86_64 for testing
-    # as lastest virt-what package with regression issue
+    # as latest virt-what package with regression issue
     # can only show one signature.
     status = session.cmd_status(virt_what_chk_cmd)
     if status == 0:

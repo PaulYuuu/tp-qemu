@@ -85,11 +85,11 @@ class BlockdevIncreamentalBackupBitmapTest(blockdev_base.BlockdevBaseTest):
         for info in self.get_bitmaps_info():
             if self.bitmap_mode == "never":
                 keyword = "is"
-                condiction = info["count"] > 0
+                condition = info["count"] > 0
             else:
                 keyword = "is not"
-                condiction = info["count"] == 0
-            assert condiction, "bitmap '{}' {} clear in '{}' mode: \n{}".format(
+                condition = info["count"] == 0
+            assert condition, "bitmap '{}' {} clear in '{}' mode: \n{}".format(
                 info["name"],
                 keyword,
                 self.bitmap_mode,

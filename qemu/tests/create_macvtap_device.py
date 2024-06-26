@@ -23,7 +23,7 @@ def run(test, params, env):
 
     1) Verify no other macvtap share the physical network device.
     2) Create a macvtap device in host.
-    3) Check configuraton of macvtap device.
+    3) Check configuration of macvtap device.
     4) Ping out from host with the interface that create macvtap.
     5) Delete the macvtap device create in step 2.
     6) Ping out from host with the interface that create macvtap.
@@ -64,7 +64,7 @@ def run(test, params, env):
             cmd = f" ip link set {macvtap_name} address {mac} up"
             process.system(cmd, timeout=240)
 
-        error_context.context("Check configuraton of macvtap device", test.log.info)
+        error_context.context("Check configuration of macvtap device", test.log.info)
         check_cmd = f" ip -d link show {macvtap_name}"
         try:
             tap_info = process.system_output(check_cmd, timeout=240)

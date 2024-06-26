@@ -52,7 +52,7 @@ def run(test, params, env):
         if status_error:
             if result.exit_status == 0:
                 test.log.error(
-                    "Create image sucessfully with invalid size: %s", csize_set
+                    "Create image successfully with invalid size: %s", csize_set
                 )
                 cfail += 1
                 fail_log += "Succeed in creating image unexpectedly.\n"

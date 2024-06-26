@@ -10,7 +10,7 @@ def run(test, params, env):
     Time manage test:
 
     1) Generate stress in host.
-    2) Run atleast 15 vms with "driftfix=slew" option
+    2) Run at least 15 vms with "driftfix=slew" option
     3) Reboot the guest.
     4) Repeat the step 3 for all guests and check whether the guest
        responds properly(not any watchdog reported).
@@ -40,7 +40,7 @@ def run(test, params, env):
     time_filter_re = params["time_filter_re"]
     time_format = params["time_format"]
 
-    # Intialize the variables
+    # Initialize the variables
     itr = 0
     num = 2
     host_load_sessions = []

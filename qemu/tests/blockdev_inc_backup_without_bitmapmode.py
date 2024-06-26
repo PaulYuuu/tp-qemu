@@ -70,7 +70,7 @@ def run(test, params, env):
         3). add target disks for backup to VM via qmp commands
         4). do full backup and add non-persistent bitmap
         5). create another file
-        6). do inc bakcup(sync: bitmap and withoout bitmap-mode)
+        6). do inc backup(sync: bitmap and without bitmap-mode)
 
     :param test: test object
     :param params: test configuration dict

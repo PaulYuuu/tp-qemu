@@ -9,7 +9,7 @@ def run(test, params, env):
     1. boot up guest with sndbuf=1048576 or other value.
     2. Transfer file between host and guest.
     3. Run netperf between host and guest.
-    4. During netperf testing, from an external host ping the host whitch
+    4. During netperf testing, from an external host ping the host which
        booting the guest.
 
     Params:

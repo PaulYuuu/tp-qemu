@@ -84,7 +84,7 @@ def run(test, params, env):
            that space of incremental backup image is less then 110M
         4. do full backup and add non-persistent bitmap
         5. create another file (size 110M)
-        6. do inc bakcup to an image without enough space,
+        6. do inc backup to an image without enough space,
            check no enough space error
            bitmap-mode=always, count should be less than before
            bitmap-mode=on-success, count should be the same as before

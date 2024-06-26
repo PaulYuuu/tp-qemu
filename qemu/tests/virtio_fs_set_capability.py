@@ -231,7 +231,7 @@ def run(test, params, env):
             virtio_fs_disk_label = fs_target
             error_context.context(
                 "Get Volume letter of virtio fs target, the disk"
-                f"lable is {virtio_fs_disk_label}.",
+                f"label is {virtio_fs_disk_label}.",
                 test.log.info,
             )
             vol_con = f"VolumeName='{virtio_fs_disk_label}'"
@@ -245,7 +245,7 @@ def run(test, params, env):
         test.log.info("The guest file in shared dir is %s.", guest_file)
 
         try:
-            # No extended attributes (file steams) in virtio-fs for windows
+            # No extended attributes (file streams) in virtio-fs for windows
             if not is_windows:
                 if cmd_set_trusted:
                     error_context.context(

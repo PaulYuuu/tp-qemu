@@ -41,12 +41,12 @@ def run(test, params, env):
             2.7 Compare the output of 'ls -l /proc/$PID/fd/', the fds with
                 "off" should be less than the one with "on".
         Scenario 3:
-            3.1 Boot guest with ioeventfd=off and port attched to virtio_serial_pci.
+            3.1 Boot guest with ioeventfd=off and port attached to virtio_serial_pci.
             3.2 Execute info qtree in QMP monitor, info qtree should show the
                 ioeventfd = false.
             3.3 Check the ioeventfd=off via /proc/$PID/fd/.
             3.4 Transfer data via the virtserialport.
-            3.5 Boot guest with ioeventfd=on attched to one virtio_serial_pci.
+            3.5 Boot guest with ioeventfd=on attached to one virtio_serial_pci.
             3.6 Execute info qtree in QMP monitor, info qtree should show the
                 ioeventfd = true.
             3.7 Check the ioeventfd=on via /proc/$PID/fd/.

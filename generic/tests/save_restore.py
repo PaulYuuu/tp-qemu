@@ -24,7 +24,7 @@ def run(test, params, env):
         """
         Generate a guaranteed not to clash filename.
 
-        @oaram: path: Optional base path to place file
+        @param: path: Optional base path to place file
         :param file_pfxx: Optional prefix to filename
         :return: absolute path to new non-clashing filename
         """
@@ -115,7 +115,7 @@ def run(test, params, env):
         finally:
             if save_file:
                 nuke_filename(save_file)  # make sure these are cleaned up
-        # Prepare/check next loop itteration
+        # Prepare/check next loop iteration
         repeat -= 1
         # TODO: or BG test status==foo
         if (now >= time_to_stop) or (repeat <= 0):
@@ -123,16 +123,16 @@ def run(test, params, env):
         save_file = get_save_filename(path, file_pfx)
     # Check the final save/restore cycle
     check_system(test, vm, 120)  # networking needs time to recover
-    test.log.info("Save/Restore itteration(s) complete.")
+    test.log.info("Save/Restore iteration(s) complete.")
     if save_restore_bg_command and bg_command_pid:
         session = vm.wait_for_login(timeout=120)
         status = session.cmd_status("kill %d" % bg_command_pid)
         if status != 0:
             test.log.warning("Background guest command kill %d failed", bg_command_pid)
         del session
-    if repeat > 0:  # time_to_stop reached but itterations didn't complete
+    if repeat > 0:  # time_to_stop reached but iterations didn't complete
         test.fail(
             "Save/Restore save_restore_duration"
-            " exceeded by %0.4f seconds with %d itterations"
+            " exceeded by %0.4f seconds with %d iterations"
             " remaining." % (now - time_to_stop, repeat + 1)
         )

@@ -6,7 +6,7 @@ from virttest import env_process, error_context, utils_misc
 @error_context.context_aware
 def run(test, params, env):
     """
-    Test hv_time flag avaliability and effectiveness.
+    Test hv_time flag availability and effectiveness.
 
     1) boot the guest, setup the testing environment
     2) reboot the guest without hv_time flag

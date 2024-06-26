@@ -115,7 +115,7 @@ def run(test, params, env):
     Steps:
     1) boot up guest with one data disk on specified backend and pin qemu-kvm
        process to the last numa node on host
-    2) pin guest vcpu and vhost threads to cpus of last numa node repectively
+    2) pin guest vcpu and vhost threads to cpus of last numa node respectively
     3) format data disk and run fio in guest
     4) collect fio results and host info
 
@@ -151,7 +151,7 @@ def run(test, params, env):
 
     def _pin_vm_threads(node):
         """
-        pin guest vcpu and vhost threads to cpus of a numa node repectively
+        pin guest vcpu and vhost threads to cpus of a numa node respectively
 
         :param node: which numa node to pin
         """

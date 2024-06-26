@@ -56,7 +56,7 @@ def run(test, params, env):
             return True
         err_msg = "Cpu mismatch! "
         err_msg += f"after hotplug {vcpu_been_pluged} vcpus, "
-        err_msg += f"there shoule be {total_cpus_expected} vcpus exist, "
+        err_msg += f"there should be {total_cpus_expected} vcpus exist, "
         err_msg += f"in qemu {len(vm.vcpu_threads)} vcpus threads works, "
         err_msg += f"in guest {vm.get_cpu_count()} cpus works."
         test.fail(err_msg)

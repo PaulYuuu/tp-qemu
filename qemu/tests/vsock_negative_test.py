@@ -50,7 +50,7 @@ def run(test, params, env):
     3. Connect guest CID(on host) without listening port inside guest
     3. Send data from guest
     4. Receive data from host
-    5. Interrupt vsock process during transfering data on host
+    5. Interrupt vsock process during transferring data on host
 
     :param test: QEMU test object
     :param params: Dictionary with the test parameters

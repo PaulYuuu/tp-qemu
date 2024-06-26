@@ -73,7 +73,7 @@ def run(test, params, env):
 
     Scenario 4
     1) Start a HPT guest on Power8 and Power9 host
-    2) Resize hpt consectively with different params
+    2) Resize hpt consecutively with different params
     3) Check guest work well or not
 
     :param test: QEMU test object

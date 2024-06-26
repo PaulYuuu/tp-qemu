@@ -89,7 +89,7 @@ def run(test, params, env):
         :param params: parameters for test
         :param name: name of new iso image file. It could be the full path
                      of cdrom.
-        :param preapre: if True then it prepare cd images.
+        :param prepare: if True then it prepare cd images.
         :param file_size: Size of iso image in MB
 
         :return: path to new iso image file.

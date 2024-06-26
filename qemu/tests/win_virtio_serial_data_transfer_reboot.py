@@ -12,7 +12,7 @@ def run(test, params, env):
 
     1) Start guest with one virtio-serial-pci and two virtio-serial-port.
     2) Make sure vioser.sys verifier enabled in guest.
-    3) Transfering data from host to guest via virtio-serial-port in a loop.
+    3) Transferring data from host to guest via virtio-serial-port in a loop.
     4) Reboot guest.
     5) Repeat step 3.
     6) Reboot guest by system_reset qmp command.
@@ -43,7 +43,7 @@ def run(test, params, env):
             test.fail(err)
 
     def transfer_data(test, session, receive_cmd, send_cmd, data_file, n_time):
-        txt = f"Transfer data betwwen guest and host for {n_time} times"
+        txt = f"Transfer data between guest and host for {n_time} times"
         error_context.context(txt, test.log.info)
         for num in range(n_time):
             test.log.info("Data transfer repeat %s/%s.", num + 1, n_time)

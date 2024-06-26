@@ -11,7 +11,7 @@ from provider import thp_fragment_tool
 def run(test, params, env):
     """
     Transparent hugepage relocated test with quantification.
-    The pages thp deamon will scan for one round set to 4096, and the sleep
+    The pages thp daemon will scan for one round set to 4096, and the sleep
     time will be set to 10 seconds. And alloc sleep time is set to 1 minute.
     So the hugepage size should increase 16M every 10 seconds, and when system
     is busy and it failed to allocate hugepage for guest, the value will keep

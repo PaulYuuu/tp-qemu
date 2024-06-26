@@ -643,7 +643,7 @@ function setmachinestate {
             if (-Not $WntdMachine.SetMachineStatus([Microsoft.Windows.Kits.Hardware.ObjectModel.MachineStatus]::NotReady, $timeout))  { throw "Unable to change machine state, timed out." }
         }
         default {
-            throw "Provided desired machines's sate is not valid, aborting..."
+            throw "Provided desired machines's state is not valid, aborting..."
         }
     }
 }
@@ -2213,7 +2213,7 @@ function Usage {
     Write-Output ""
     Write-Output "   createprojectpackage : Creates a project's package."
     Write-Output ""
-    Write-Output "NOTE: For more infromation about every action use action's -help parameter!"
+    Write-Output "NOTE: For more information about every action use action's -help parameter!"
     Write-Output "NOTE: Windows HLK Studio should be installed on the machine running the script!"
 }
 

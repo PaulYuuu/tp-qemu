@@ -50,7 +50,7 @@ def run_autotest_control_background(test, params, env, test_control_file="contro
     3) Fork the process and let the run() run in the child
     4) Catch the exception raise by run() and exit the child with
        non-zero return code.
-    5) If no exception catched, return 0
+    5) If no exception caught, return 0
 
     :param test: QEMU test object
     :param params: Dictionary with the test parameters

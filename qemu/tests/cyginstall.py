@@ -6,7 +6,7 @@ from virttest import error_context
 @error_context.context_aware
 def run(test, params, env):
     """
-    Install cygwin env for windwos guest:
+    Install cygwin env for windows guest:
 
     1) Install cygwin in guest
     2) Verify cygwin install

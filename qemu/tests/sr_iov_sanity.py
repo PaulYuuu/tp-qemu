@@ -32,7 +32,7 @@ def ifup_down_interface(test, interface, action="up"):
         if "UP" in output.splitlines()[0]:
             process.system(f"ifdown {interface}", timeout=120, ignore_status=True)
     else:
-        msg = f"Unsupport action '{action}' on network interface."
+        msg = f"Unsupported action '{action}' on network interface."
         test.error(msg)
 
 
@@ -82,7 +82,7 @@ def run(test, params, env):
     elif device_type == "pf":
         device_num = len(pci_assignable.get_pf_vf_info())
     else:
-        msg = f"Unsupport device type '{device_type}'."
+        msg = f"Unsupported device type '{device_type}'."
         msg += " Please set device_type to 'vf' or 'pf'."
         test.error(msg)
 

@@ -54,7 +54,7 @@ def run(test, params, env):
     # Test if it is nic or block
     pci_num = int(params.get("unplug_pci_num", 1))
     pci_model = params.get("pci_model", "pci-assign")
-    # Need udpate match_string if you use a card other than 82576
+    # Need update match_string if you use a card other than 82576
     match_string = params.get("match_string", 'dev: %s, id "(.*)"')
     match_string = match_string % pci_model
 

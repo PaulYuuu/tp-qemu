@@ -6,7 +6,7 @@ def run(test, params, env):
     """
     this case will:
     1) Boot guest with virtio devices and iommu is on.
-    2) Check whether the iommu group is seperated correctly.
+    2) Check whether the iommu group is separated correctly.
 
     :param test: QEMU test object
     :param params: Dictionary with the test parameters
@@ -14,9 +14,9 @@ def run(test, params, env):
     """
 
     def verify_iommu_group():
-        """Verify whether the iommu group is seperated correctly."""
+        """Verify whether the iommu group is separated correctly."""
         error_context.context(
-            "Verify whether the iommu group is seperated correctly.", test.log.info
+            "Verify whether the iommu group is separated correctly.", test.log.info
         )
         device_id = (
             session.cmd(
@@ -38,7 +38,7 @@ def run(test, params, env):
             test.log.info("Group ID of %s: %s", id, g_id)
 
         if len(set(group_id)) != len(group_id):
-            test.fail("iommu group is not seperated correctly")
+            test.fail("iommu group is not separated correctly")
 
     vm = env.get_vm(params["main_vm"])
     vm.verify_alive()

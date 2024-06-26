@@ -18,7 +18,7 @@ def run(test, params, env):
     8) Send a migration command to the source VM and wait until it's finished.
     9) Disable the primary link again(optional).
     10) Ping guest's new ip from host(optional).
-    11) Re-enabling the primary link(optiona).
+    11) Re-enabling the primary link(optional).
 
     :param test: kvm test object.
     :param params: Dictionary with test parameters.
@@ -46,7 +46,7 @@ def run(test, params, env):
         else:
             if status:
                 test.error(
-                    "Error occured when get nic status, "
+                    "Error occurred when get nic status, "
                     f"with status={status}, output={output}"
                 )
             if "Ethernet" in output:

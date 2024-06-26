@@ -52,7 +52,7 @@ def run(test, params, env):
             cmd = f"umount {mnt_point}"
             _do_clean_up(session.cmd, cmd)
         if step_cnt >= STEP_3:
-            # remove mount ponit directory.
+            # remove mount point directory.
             cmd = f"rm -rf {mnt_point}"
             _do_clean_up(session.cmd, cmd)
         if step_cnt >= STEP_2:

@@ -17,11 +17,11 @@ def run(test, params, env):
     """
     Memory balloon with thp
 
-    1. Boot up a guest with balloon support, record memory fragement
-    2. Make fragement in guest with tmpfs
-    3. check the memory fragement with proc system, should increase
+    1. Boot up a guest with balloon support, record memory fragment
+    2. Make fragment in guest with tmpfs
+    3. check the memory fragment with proc system, should increase
     4. Do memory balloon the memory size ballooned should be a legal value
-    5. Check the memory fragement with proc system, should decrease
+    5. Check the memory fragment with proc system, should decrease
 
     :param test: QEMU test object
     :param params: Dictionary with the test parameters
@@ -40,7 +40,7 @@ def run(test, params, env):
     vm = env.get_vm(params["main_vm"])
     session = vm.wait_for_login()
     buddy_info_bf = get_buddy_info()
-    test.log.info("Making fragement on guest...")
+    test.log.info("Making fragment on guest...")
     session.cmd_output_safe(params["cmd_make_fragement"], timeout=600)
     for i in range(1, 10, 2):
         session.cmd_output_safe(f"rm -f {fragement_dir}/*{i}")

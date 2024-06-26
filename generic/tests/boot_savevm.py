@@ -10,7 +10,7 @@ def run(test, params, env):
     libvirt boot savevm test:
 
     1) Start guest booting
-    2) Record origin informations of snapshot list for floppy(optional).
+    2) Record origin information of snapshot list for floppy(optional).
     3) Periodically savevm/loadvm while guest booting
     4) Stop test when able to login, or fail after timeout seconds.
     5) Check snapshot list for floppy and compare with the origin
@@ -55,7 +55,7 @@ def run(test, params, env):
         time.sleep(savevm_delay)
         vm.pause()
         if params["save_method"] == "save_to_file":
-            vm.save_to_file(savevm_statefile)  # Re-use same filename
+            vm.save_to_file(savevm_statefile)  # Reuse same filename
             vm.restore_from_file(savevm_statefile)
         else:
             vm.savevm("1")

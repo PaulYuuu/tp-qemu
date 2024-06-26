@@ -100,7 +100,7 @@ def format_report(results):
      +--+--------------------+-------------+
 
     :return: the table messages formatted as above
-    :results: the parameter transfered into
+    :results: the parameter transferred into
               image, msg_list
     """
 

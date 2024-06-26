@@ -10,10 +10,10 @@ def run(test, params, env):
     MULTI_QUEUE chang queues number test
 
     1) Boot up VM, and login guest
-    2) Check guest pci msi support and reset it as expection
+    2) Check guest pci msi support and reset it as exception
     3) Enable the queues in guest
     4) Run bg_stress_test(pktgen, netperf or file copy) if needed
-    5) Change queues number repeatly during stress test running
+    5) Change queues number repeatedly during stress test running
     6) Ping external host (local host, if external host not available)
 
     :param test: QEMU test object.
@@ -138,7 +138,7 @@ def run(test, params, env):
             bg_test = utils_misc.InterruptedThread(ping_test, args)
             bg_test.start()
 
-        error_context.context("Change queues number repeatly", test.log.info)
+        error_context.context("Change queues number repeatedly", test.log.info)
         repeat_counts = int(params.get("repeat_counts", 10))
         for nic_index, nic in enumerate(vm.virtnet):
             if "virtio" not in nic["nic_model"]:

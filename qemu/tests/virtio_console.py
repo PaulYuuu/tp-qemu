@@ -232,7 +232,7 @@ def run(test, params, env):
             guest_worker.cmd(f"virt.poll('{port.name}', {test})", 10)
 
         # Poll (IN HUP)
-        # I store the socket informations and close the socket
+        # I store the socket information and close the socket
         port.close()
         for test in [select.POLLIN, select.POLLHUP]:
             guest_worker.cmd(f"virt.poll('{port.name}', {test})", 10)
@@ -636,7 +636,7 @@ def run(test, params, env):
             threads[0].join(5)
             if threads[0].is_alive():
                 test.log.error(
-                    "Send thread stuck, destroing the VM and "
+                    "Send thread stuck, destroying the VM and "
                     "stopping loopback test to prevent autotest "
                     "freeze."
                 )
@@ -710,7 +710,7 @@ def run(test, params, env):
                 )
                 (out, ver_out) = vm.devices.simple_unplug(portdev, vm.monitor)
                 if not ver_out:
-                    test.error(f"Error occured when unplug {dev.name}")
+                    test.error(f"Error occurred when unplug {dev.name}")
                 time.sleep(intr_time)
                 return port_property
 
@@ -727,7 +727,7 @@ def run(test, params, env):
                 (out, ver_out) = vm.devices.simple_hotplug(portdev, vm.monitor)
                 if not ver_out:
                     test.error(
-                        "Error occured when plug port {}.".format(property["name"])
+                        "Error occurred when plug port {}.".format(property["name"])
                     )
                 time.sleep(intr_time)
 
@@ -738,7 +738,7 @@ def run(test, params, env):
                 bus_property = dict(id=device.get_param("id"))
                 (out, ver_out) = vm.devices.simple_unplug(device, vm.monitor)
                 if not ver_out:
-                    test.error("Error occured when plug bus. out: %s", out)
+                    test.error("Error occurred when plug bus. out: %s", out)
                 time.sleep(intr_time)
                 return bus_property
 
@@ -747,7 +747,7 @@ def run(test, params, env):
                 bus.set_param("id", property["id"])
                 (out, ver_out) = vm.devices.simple_hotplug(bus, vm.monitor)
                 if not ver_out:
-                    test.error("Error occured when plug bus. out: %s", out)
+                    test.error("Error occurred when plug bus. out: %s", out)
                 time.sleep(intr_time)
 
             send_prop = _port_unplug(0)
@@ -783,7 +783,7 @@ def run(test, params, env):
                 ports[i].open()
                 threads[i].migrate_event.set()
             for i in _guest:
-                # 50 attemps per 0.1s
+                # 50 attempts per 0.1s
                 guest_worker.cmd(f"virt.open('{ports[i].name}', attempts=50)", 10)
 
         def _port_replug(device, port_idx):
@@ -815,27 +815,27 @@ def run(test, params, env):
             vm.devices.simple_hotplug(new_portdev, vm.monitor)
 
         def _serialport_send_replug():
-            """hepler for executing replug of the sender port"""
+            """helper for executing replug of the sender port"""
             _port_replug("virtserialport", 0)
 
         def _console_send_replug():
-            """hepler for executing replug of the sender port"""
+            """helper for executing replug of the sender port"""
             _port_replug("virtconsole", 0)
 
         def _serialport_recv_replug():
-            """hepler for executing replug of the receiver port"""
+            """helper for executing replug of the receiver port"""
             _port_replug("virtserialport", 1)
 
         def _console_recv_replug():
-            """hepler for executing replug of the receiver port"""
+            """helper for executing replug of the receiver port"""
             _port_replug("virtconsole", 1)
 
         def _serialport_random_replug():
-            """hepler for executing replug of random port"""
+            """helper for executing replug of random port"""
             _port_replug("virtserialport", random.choice((0, 1)))
 
         def _console_random_replug():
-            """hepler for executing replug of random port"""
+            """helper for executing replug of random port"""
             _port_replug("virtconsole", random.choice((0, 1)))
 
         def _s3():
@@ -984,7 +984,7 @@ def run(test, params, env):
             session = vm.wait_for_login()
             if session.cmd_status(params["check_s4_support_cmd"]):
                 test.cancel("Suspend to disk (S4) not supported.")
-            acceptable_loss = 99999999  # loss is set in S4 rutine
+            acceptable_loss = 99999999  # loss is set in S4 routine
             send_resume_ev = threading.Event()
             recv_resume_ev = threading.Event()
         else:
@@ -1061,11 +1061,11 @@ def run(test, params, env):
                 threads[1].sendidx = acceptable_loss
                 interruption()
                 count = threads[1].idx
-                test.log.debug("Transfered data: %s", count)
+                test.log.debug("Transferred data: %s", count)
                 # Be friendly to very short test_time values
                 for _ in range(10):
                     time.sleep(test_time)
-                    test.log.debug("Transfered data2: %s", threads[1].idx)
+                    test.log.debug("Transferred data2: %s", threads[1].idx)
                     if count == threads[1].idx and threads[1].is_alive():
                         test.log.warn(
                             "No data received after %ds, extending " "test_time",
@@ -1108,7 +1108,7 @@ def run(test, params, env):
         if threads[0].is_alive():
             workaround_unfinished_threads = True
             test.log.error(
-                "Send thread stuck, destroing the VM and "
+                "Send thread stuck, destroying the VM and "
                 "stopping loopback test to prevent autotest freeze."
             )
             vm.destroy()
@@ -1174,8 +1174,8 @@ def run(test, params, env):
     def test_perf():
         """
         Tests performance of the virtio_console tunnel. First it sends the data
-        from host to guest and than back. It provides informations about
-        computer utilization and statistic informations about the throughput.
+        from host to guest and than back. It provides information about
+        computer utilization and statistic information about the throughput.
 
         :param cfg: virtio_console_params - semicolon separated scenarios:
                         '$console_type@$buffer_length:$test_duration;...'
@@ -1388,7 +1388,7 @@ def run(test, params, env):
         sendlen = 2 * 2 * max(qemu_virtio_port.SOCKET_SIZE, blocklen)
         if not offline:  # TODO BUG: online migration causes more loses
             # TODO: Online migration lose n*buffer. n depends on the console
-            # troughput. FIX or analyse it's cause.
+            # throughput. FIX or analyse it's cause.
             sendlen = 1000 * sendlen
         for port in ports[1:]:
             port.open()
@@ -1509,7 +1509,7 @@ def run(test, params, env):
         if threads[0].is_alive():
             workaround_unfinished_threads = True
             test.log.error(
-                "Send thread stuck, destroing the VM and "
+                "Send thread stuck, destroying the VM and "
                 "stopping loopback test to prevent autotest freeze."
             )
             vm.destroy()

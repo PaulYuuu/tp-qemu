@@ -258,7 +258,7 @@ class BlockDevicesPlug:
             )
 
     def _create_devices(self, images, pci_bus={"aobject": "pci.0"}):
-        """Create the block devcies."""
+        """Create the block devices."""
         self._hotplugged_devs.clear()
         for img in images:
             bus_name = None

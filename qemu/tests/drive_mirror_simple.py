@@ -40,7 +40,7 @@ def run(test, params, env):
     """
     drive_mirror_simple test:
     1). launch block mirroring job w/o max speed
-    2). query job status on the device before steady status(optinal)
+    2). query job status on the device before steady status(optional)
     3). reset max job speed before steady status(optional)
     4). cancel active job on the device before steady status(optional)
 

@@ -15,7 +15,7 @@ def run(test, params, env):
     4) Add a new bridge and add bond interface to it
     5) Get ip address for bridge
     6) Boot up guest with the bridge
-    7) Checking guest netowrk via ping
+    7) Checking guest network via ping
     8) Start file transfer between guest and host
     9) Disable and enable physical interfaces during file transfer
 
@@ -91,7 +91,7 @@ def run(test, params, env):
     vm = env.get_vm(vm_name)
     session = vm.wait_for_login(timeout=timeout)
 
-    error_context.context("Checking guest netowrk via ping.", test.log.info)
+    error_context.context("Checking guest network via ping.", test.log.info)
     ping_cmd = params.get("ping_cmd")
     ping_cmd = re.sub("REMOTE_HOST", remote_host, ping_cmd)
     session.cmd(ping_cmd, timeout=ping_timeout)

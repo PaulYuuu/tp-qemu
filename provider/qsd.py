@@ -30,7 +30,7 @@ qsd_remove_image_stg1 = yes
 qsd = QsdDaemonDev("qsd1", params)
 # Start the QSD
 qsd.start_daemon()
-# QSD operation via mointor of QSD
+# QSD operation via monitor of QSD
 qsd.monitor.cmd("query-block-exports")
 # Stop the QSD
 qsd.stop_daemon()

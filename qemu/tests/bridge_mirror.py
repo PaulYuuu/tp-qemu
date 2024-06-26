@@ -134,7 +134,7 @@ def run(test, params, env):
         vm_des = vm_names[2]
 
         error_context.context(
-            f"Mirror all packets on bridge to tap device conncted to {vm_mirror}"
+            f"Mirror all packets on bridge to tap device connected to {vm_mirror}"
         )
         tap_ifname = vms_info[vm_mirror][0].virtnet[0].ifname
         mirror_bridge_to_tap(tap_ifname)

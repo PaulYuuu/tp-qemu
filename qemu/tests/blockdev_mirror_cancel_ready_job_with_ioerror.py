@@ -120,7 +120,7 @@ def run(test, params, env):
         2. hotplug 128M source node
         3. hotplug target node with eject error event set
         4. mirror from source to target
-        5. when mirror reach ready status, wirte data to source
+        5. when mirror reach ready status, write data to source
         node with qemu-io
         6. cancel mirror job
         7. check mirror job stopped with Block_job_error

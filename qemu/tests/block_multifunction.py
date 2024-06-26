@@ -18,7 +18,7 @@ def set_addr(image_name, slot, function, params, multifunction="on"):
 
     :param image_name: The image to be assigned address
     :param slot: The slot of address
-    :param function: The function of addresss
+    :param function: The function of address
     :param params: Params object
     :param multifunction: on/off
     """
@@ -128,7 +128,7 @@ def run(test, params, env):
         # Specify the address of the device, plug them into same slot
         set_addr(stg, dev_slot, i, vm.params)
         if params["drive_format"].startswith("scsi"):
-            # Create oen new scsi bus for each block device
+            # Create one new scsi bus for each block device
             vm.params[f"drive_bus_{stg}"] = i
     # To create those image files
     env_process.process_images(env_process.preprocess_image, test, vm.params)

@@ -10,7 +10,7 @@ def run(test, params, env):
     Negative test.
     Luks image creation with non_utf8_secret:
     1. It should be failed to create the image.
-    2. The error information should be corret.
+    2. The error information should be correct.
        e.g. Data from secret sec0 is not valid UTF-8
 
     :param test: Qemu test object.

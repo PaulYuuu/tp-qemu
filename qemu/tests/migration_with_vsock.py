@@ -24,7 +24,7 @@ def run(test, params, env):
     4. Connect guest CID from host
     5. Input character, e.g. 'Hello world'
     6. Check if guest receive the content correctly
-    7. Reboot guest with differnt guest CID
+    7. Reboot guest with different guest CID
     8. Migration
     9. Check guest session exited and close host session
     10. repeat step 3 to 6

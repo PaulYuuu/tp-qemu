@@ -13,7 +13,7 @@ from virttest import utils_spice
 def run(test, params, env):
     """
     Simple test for Remote Desktop connection
-    Tests expectes that Remote Desktop client (spice/vnc) will be executed
+    Tests expects that Remote Desktop client (spice/vnc) will be executed
     from within a second guest so we won't be limited to Linux only clients
 
     The plan is to support remote-viewer at first place

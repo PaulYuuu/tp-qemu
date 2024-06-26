@@ -119,7 +119,7 @@ def run(test, params, env):
 
     def guest_stress_deamon():
         """
-        This deamon will keep watch the status of stress in guest. If the stress
+        This daemon will keep watch the status of stress in guest. If the stress
         program is finished before migration this will restart it.
         """
         while True:
@@ -251,7 +251,7 @@ def run(test, params, env):
                 except:
                     raise
 
-            # Set deamon thread action to stop after migrate
+            # Set daemon thread action to stop after migrate
             params["action"] = "stop"
 
             # run some functions after migrate finish.
@@ -315,7 +315,7 @@ def run(test, params, env):
                         )
                         vm.destroy(gracefully=True)
             if deamon_thread is not None:
-                # Set deamon thread action to stop after migrate
+                # Set daemon thread action to stop after migrate
                 params["action"] = "stop"
                 deamon_thread.join()
     else:

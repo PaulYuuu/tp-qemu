@@ -5,7 +5,7 @@
 #  - The required Hyper-V vSwitche is created, e.g. Internal switch.
 #######################################################################
 
-Write-Host "Info: Start to build up enviroment for Hyper-V"
+Write-Host "Info: Start to build up environment for Hyper-V"
 
 $internalSwitchName = "Internal"
 $externalSwitchName = "External"
@@ -132,7 +132,7 @@ function InstallRolesAndFeatures(){
     else{
         # For windows 10 and 11
         $hypervFeature = Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-All
-        if (-not $hypervFeature.Enalbed){
+        if (-not $hypervFeature.Enabled){
             $feature=Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-All -NoRestart
             if (-not $feature.Online){
                 Throw "Error: Unable to enable the Hyper-V roles }"

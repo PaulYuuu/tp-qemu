@@ -11,7 +11,7 @@ def run(test, params, env):
 
     1) boot guest with '-rtc base=utc,clock=host,driftfix=slew'
     2) check current clocksource in guest
-    3) pin all vcpus to specfic host CPUs
+    3) pin all vcpus to specific host CPUs
     4) verify time jump
 
     :param test: QEMU test object.

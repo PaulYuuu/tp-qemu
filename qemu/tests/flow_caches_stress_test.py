@@ -16,7 +16,7 @@ def run(test, params, env):
     2) Boot guest with vhost=on/off.
     3) Enable multi queues support in guest (optional).
     4) After installation of netperf, run netserver in host.
-    5) Run netperf TCP_CRR protocal test in guest.
+    5) Run netperf TCP_CRR protocol test in guest.
     6) Transfer file between guest and host.
     7) Check the md5 of copied file.
 

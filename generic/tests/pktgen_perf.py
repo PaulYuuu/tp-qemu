@@ -47,7 +47,7 @@ def run(test, params, env):
 
     def _pin_vm_threads(node):
         """
-        pin guest vcpu and vhost threads to cpus of a numa node repectively
+        pin guest vcpu and vhost threads to cpus of a numa node respectively
 
         :param node: which numa node to pin
         """

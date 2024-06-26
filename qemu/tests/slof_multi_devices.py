@@ -20,7 +20,7 @@ def run(test, params, env):
       b. multiple virtio-net-pci devices attached multiple pci-bridges
          by one to one.
      2. Check if any error info from output of SLOF.
-     3. Guest could login sucessfully.
+     3. Guest could login successfully.
      4. Guest could ping external host ip.
      5. For virtio-net-pci scenario, check the number of NIC if equal to
         qemu command.
@@ -67,7 +67,7 @@ def run(test, params, env):
     if params["device_type"] == "virtio-net-pci":
         nic_num = int(str(session.cmd_output(params["nic_check_cmd"])))
         error_context.context(
-            "Found %d ehternet controllers inside guest." % nic_num, test.log.info
+            "Found %d ethernet controllers inside guest." % nic_num, test.log.info
         )
         if (pci_num * nic_num_per_pci) != nic_num:
             test.fail(
@@ -75,7 +75,7 @@ def run(test, params, env):
                 "inside guest." % (pci_num * nic_num_per_pci)
             )
         test.log.info(
-            "The number of ehternet controllers inside guest is equal to "
+            "The number of ethernet controllers inside guest is equal to "
             "qemu command line(%d * %d).",
             pci_num,
             nic_num_per_pci,

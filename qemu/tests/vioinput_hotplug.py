@@ -31,7 +31,7 @@ def run(test, params, env):
         out, ver_out = vm.devices.simple_unplug(dev, vm.monitor)
         if not ver_out:
             test.fail(f"Still get {dev} in qtree after unplug")
-        test.log.info("%s is unpluged successfully", dev)
+        test.log.info("%s is unplugged successfully", dev)
 
     def run_subtest(sub_test):
         """

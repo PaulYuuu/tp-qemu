@@ -10,7 +10,7 @@ def run_drive_mirror_cancel(test, params, env):
     Test block mirroring functionality
 
     1). boot vm then mirror $source_image to nfs/iscsi target
-    2). block nfs/iscsi serivce port via iptables rules
+    2). block nfs/iscsi service port via iptables rules
     3). cancel block job and check it not cancel immedicatly
     4). flush iptables chain then check job canceled in 10s
 

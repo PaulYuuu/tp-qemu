@@ -110,7 +110,7 @@ int create_threads(int nthreads, thread_func_t func, void *arg)
 
 
 /*
- * Join with the set of previsouly created threads.
+ * Join with the set of previously created threads.
  */
 void join_threads(void)
 {

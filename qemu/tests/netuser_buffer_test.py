@@ -32,7 +32,7 @@ def run(test, params, env):
     serial_session = vm.wait_for_serial_login(timeout=login_timeout)
 
     def mtu_test():
-        test.log.info("Set mtu value and verfied")
+        test.log.info("Set mtu value and verified")
         serial_session.cmd(params["fw_stop_cmd"], ignore_all_errors=True)
         guest_ifname = utils_net.get_linux_ifname(serial_session, vm.get_mac_address(0))
         if guest_ifname != "eth0":

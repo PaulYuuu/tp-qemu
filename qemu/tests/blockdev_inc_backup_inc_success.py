@@ -105,7 +105,7 @@ def run(test, params, env):
         3. add target disks for backup to VM via qmp commands
         4. do full backup and add non-persistent bitmap
         5. create another file
-        6. do inc bakcup(sync: incremental, bitmap-mode: on-success)
+        6. do inc backup(sync: incremental, bitmap-mode: on-success)
         7. check bitmap, count should be 0
         8. shutdown VM
         9. start VM with inc image, check md5

@@ -13,7 +13,7 @@ def run(test, params, env):
     2) Check speed and duplex in guest, to match the default settings
     3) Reboot vm with command line params: "speed=1000,duplex=full"
     4) Check speed and duplex in guest again, to match the argument above
-    5) Perform ping test between host and guest, to check nic avaliability
+    5) Perform ping test between host and guest, to check nic availability
 
     param test: the test object
     param params: the test params
@@ -24,7 +24,7 @@ def run(test, params, env):
         """
         Get the speed and duplex information by traceview.exe.
 
-        return: a tuple of (speed, duplex), whitch speed is measured by bps,
+        return: a tuple of (speed, duplex), which speed is measured by bps,
                 and duplex is a 'full' or 'half'.
         """
         error_context.context(
@@ -41,7 +41,7 @@ def run(test, params, env):
         """
         Get the speed and duplex information from powershell commands.
 
-        return: a tuple of (speed, duplex), whitch speed is measured by bps,
+        return: a tuple of (speed, duplex), which speed is measured by bps,
                 and duplex is a 'full' or 'half'.
         """
         error_context.context(
@@ -122,7 +122,7 @@ def run(test, params, env):
         check_speed_cmd = params["check_speed_cmd"] % ethname
         status, output = session.cmd_status_output(check_speed_cmd)
         if status:
-            test.fail("Failed to get speed info," f"status={status}, ouput={output}")
+            test.fail("Failed to get speed info," f"status={status}, output={output}")
         test.log.info(output)
         result = re.findall(r"(?:Speed:\s+(\d+)Mb/s)|(?:Duplex:\s+(\w+))", output)
         if len(result) < 2:
@@ -186,7 +186,7 @@ def run(test, params, env):
     guest_ip = vm.get_address()
     status, output = utils_test.ping(guest_ip, 10, timeout=15)
     if status:
-        test.fail(f"Fail to perfrom ping test, status={status}, output={output}")
+        test.fail(f"Fail to perform ping test, status={status}, output={output}")
     lost_ratio = utils_test.get_loss_ratio(output)
     if lost_ratio > 0:
         test.fail(f"Ping loss ratio is {lost_ratio}")

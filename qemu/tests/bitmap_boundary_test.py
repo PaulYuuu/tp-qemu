@@ -62,7 +62,7 @@ def run(test, params, env):
         output = data_img.info(output="json")
         info = json.loads(output)
         bitmap_len = len(info["format-specific"]["data"]["bitmaps"])
-        msg = f"bitmap losts after destory VM, {bitmap_len} != {bitmap_count}"
+        msg = f"bitmap losts after destroy VM, {bitmap_len} != {bitmap_count}"
         assert bitmap_len == bitmap_count, msg
 
     source_image = params.get("source_image")

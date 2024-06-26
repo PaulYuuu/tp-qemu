@@ -73,7 +73,7 @@ def run(test, params, env):
     dst_file = tmp_dir + f"dst-{utils_misc.generate_random_string(8)}"
 
     try:
-        # Before transfer, run tcpdump to try to catche data
+        # Before transfer, run tcpdump to try to catch data
         error_msg = "In guest3, try to capture the packets(guest1 <-> guest2)"
         error_context.context(error_msg, test.log.info)
         if params.get("os_type") == "linux":

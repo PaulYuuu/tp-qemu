@@ -1,6 +1,6 @@
 """
 Module specified for block stream parallel test cases, i.e.
-running block-stream and some other tests in paralell, and wait
+running block-stream and some other tests in parallel, and wait
 till all block jobs done.
 """
 

@@ -11,7 +11,7 @@ def run(test, params, env):
     drive_mirror_stress test:
     1). guest installation
     2). start mirror during guest installation
-    3). after installation complete, reboot guest verfiy guest reboot correctly.
+    3). after installation complete, reboot guest verify guest reboot correctly.
 
     :param test: QEMU test object
     :param params: Dictionary with the test parameters

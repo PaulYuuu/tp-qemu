@@ -80,7 +80,7 @@ def run(test, params, env):
 
     thread_id = vm.monitor.qom_get(thread_context_device_id, "thread-id")
     if not thread_id:
-        test.fail("No thread-id setted.")
+        test.fail("No thread-id set.")
 
     error_context.context("Check the CPU affinity", test.log.info)
     qemu_cpu_affinity = thread_context_device.get_param("cpu-affinity", "0")

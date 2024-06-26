@@ -40,7 +40,7 @@ def run(test, params, env):
 
     Scenarios:
     S1) Fill all vms with the same value (all pages should be merged into 1)
-    S2) Random fill (all pages should be splitted)
+    S2) Random fill (all pages should be split)
     S3) Fill last 96B (change only last 96B of each page; some pages will be
                       merged; there was a bug with data corruption)
     Every worker has unique random key so we are able to verify the filled
@@ -307,9 +307,9 @@ def run(test, params, env):
 
     def split_parallel():
         """
-        Parallel page spliting
+        Parallel page splitting
         """
-        test.log.info("Phase 1: parallel page spliting")
+        test.log.info("Phase 1: parallel page splitting")
         # We have to wait until allocator is finished (it waits 5 seconds to
         # clean the socket
 
@@ -363,7 +363,7 @@ def run(test, params, env):
         test.log.debug(utils_test.get_memory_info([vm]))
         test.log.info("Phase 2a: PASS")
 
-        test.log.info("Phase 2b: Simultaneous spliting")
+        test.log.info("Phase 2b: Simultaneous splitting")
         # Actual splitting
         for i in range(0, max_alloc):
             cmd = "mem.static_random_fill()"
@@ -409,7 +409,7 @@ def run(test, params, env):
             )[1]
         test.log.info("Phase 2e: PASS")
 
-        test.log.info("Phase 2f: Simultaneous spliting last 96B")
+        test.log.info("Phase 2f: Simultaneous splitting last 96B")
         for i in range(0, max_alloc):
             cmd = "mem.static_random_fill(96)"
             data = _execute_allocator(

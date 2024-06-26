@@ -58,7 +58,7 @@ def run(test, params, env):
             return re.search(sgabios_info, get_output(vm.serial_console))
 
         if not utils_misc.wait_for(info_check, timeout, 1):
-            err_msg = "Cound not get sgabios message. The output"
+            err_msg = "Could not get sgabios message. The output"
             err_msg += f" is {get_output(vm.serial_console)}"
             test.fail(err_msg)
 

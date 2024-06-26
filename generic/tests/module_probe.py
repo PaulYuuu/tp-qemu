@@ -8,7 +8,7 @@ def run(test, params, env):
 
     This tests the kernel pre-installed kernel modules
     """
-    # Destory all vms for unload/load module kvm_intel/kvm_amd
+    # Destroy all vms for unload/load module kvm_intel/kvm_amd
     for vm in env.get_all_vms():
         if vm:
             vm.destroy()

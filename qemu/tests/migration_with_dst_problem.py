@@ -157,7 +157,7 @@ def run(test, params, env):
         Find disk on vm which ends with disk_serial
 
         :param vm: VM where to find a disk.
-        :param disk_serial: sufix of disk id.
+        :param disk_serial: suffix of disk id.
 
         :return: string Disk path
         """
@@ -223,7 +223,7 @@ def run(test, params, env):
             """
             Set iscsi server with some variant.
 
-            @oaram vm_ds: VM where should be iscsi server started.
+            @param vm_ds: VM where should be iscsi server started.
             :param disk_path: path where should be disk placed.
             :param disk_size: size of new disk.
             """

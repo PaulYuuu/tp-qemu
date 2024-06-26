@@ -94,7 +94,7 @@ def block_dirty_bitmap_add(vm, bitmap_params):
 @fail_on
 def debug_block_dirty_bitmap_sha256(vm, device, bitmap):
     """
-    Get sha256 vaule of bitmap in the device
+    Get sha256 value of bitmap in the device
 
     :param device: device name
     :param bitmap: bitmap name

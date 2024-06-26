@@ -156,7 +156,7 @@ def run(test, params, env):
     Uefishell test:
     1. Boot up guest from uefishell.iso, to enter uefishell
     2. Execute uefishell command
-    3. Justify if the response of the commmand correct
+    3. Justify if the response of the command correct
     4. Execute post action out of uefishell
     5. Clean test environment
 

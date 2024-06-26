@@ -22,7 +22,7 @@ def run(test, params, env):
         """
         Read random numbers on the host side
         :param host_read_cmd: host read random numbers command line
-        :return: reture host_read_process
+        :return: return host_read_process
         """
         host_read_process = process.SubProcess(host_read_cmd, shell=True)
         host_read_process.start()

@@ -49,7 +49,7 @@ def run(test, params, env):
                 addr = 0 if pcie else slot
                 set_addr(stg, addr, i, params)
                 if params["drive_format"].startswith("scsi"):
-                    # Create oen new scsi bus for each block device
+                    # Create one new scsi bus for each block device
                     params[f"drive_bus_{stg}"] = scsi_bus
                     scsi_bus += 1
             env_process.process_images(env_process.preprocess_image, test, params)

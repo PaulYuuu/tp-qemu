@@ -72,9 +72,9 @@ def run(test, params, env):
             session_msi.close()
             change_status = re.search(r"Enable\-", status, re.M | re.I)
             if change_status.group() != "Enable-":
-                test.fail("virtio device's statuts is not correct")
+                test.fail("virtio device's status is not correct")
         elif enable_status.group() != "Enable+":
-            test.fail("virtio device's statuts is not correct")
+            test.fail("virtio device's status is not correct")
     else:
         driver = params.get("driver_name")
         driver_verifier = params.get("driver_verifier", driver)

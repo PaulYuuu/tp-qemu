@@ -84,7 +84,7 @@ def kill_host_serial_pid(params, vm):
 
 def run_bg_test(test, params, vm, sender="both"):
     """
-    Run serial data transfer backgroud test.
+    Run serial data transfer background test.
 
     :return: return the background case thread if it's successful;
              else raise error.
@@ -104,7 +104,7 @@ def run_bg_test(test, params, vm, sender="both"):
     if not utils_misc.wait_for(
         lambda: driver_in_use.check_bg_running(vm, params), check_bg_timeout, 0, 1
     ):
-        test.fail("Backgroud test is not alive!")
+        test.fail("Background test is not alive!")
     return stress_thread
 
 

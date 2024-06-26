@@ -140,7 +140,7 @@ def run(test, params, env):
         5. create another file
         6. disable bitmaps
         7. Migrate VM from src to dst, wait till it is finished
-        8. add inc backup disks and do inc bakcup(sync: incremental) on dst
+        8. add inc backup disks and do inc backup(sync: incremental) on dst
         9. shutdown VM on dst
        10. rebase inc images(inc-backup) onto base images(full-backup)
        11. start VM with inc images on dst, check files' md5

@@ -18,8 +18,8 @@ def run(test, params, env):
 
     model_list = params.get("cpu_model")
     if not model_list:
-        if cpu_vendor == "unknow":
-            test.error("unknow cpu vendor")
+        if cpu_vendor == "unknown":
+            test.error("unknown cpu vendor")
         else:
             model_list = params.get(f"cpu_model_{cpu_vendor}", host_model[-1])
 

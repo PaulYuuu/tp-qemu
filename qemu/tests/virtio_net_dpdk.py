@@ -34,7 +34,7 @@ def run(test, params, env):
     Virtio with qemu vhost backend with dpdk
 
     1) Boot up VM and reboot VM with 1G hugepages and iommu enabled
-    2) Install dpdk realted packages
+    2) Install dpdk related packages
     3) Bind two nics to vfio-pci on VM
     4) Install and start Moongen on external host
     5) Start testpmd on VM, collect and analyze the results
@@ -46,7 +46,7 @@ def run(test, params, env):
 
     def _pin_vm_threads(node):
         """
-        pin guest vcpu and vhost threads to cpus of a numa node repectively
+        pin guest vcpu and vhost threads to cpus of a numa node respectively
 
         :param node: which numa node to pin
         """
@@ -56,7 +56,7 @@ def run(test, params, env):
             utils_test.qemu.pin_vm_threads(vm, node)
 
     def install_dpdk():
-        """Install dpdk realted packages"""
+        """Install dpdk related packages"""
 
         cmd = "yum install -y {}".format(params.get("env_pkg"))
         session.cmd(cmd, timeout=360, ignore_all_errors=True)

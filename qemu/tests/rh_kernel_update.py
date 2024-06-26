@@ -110,7 +110,7 @@ def run(test, params, env):
 
     def get_guest_pkgs(session, pkg, qformat=""):
         """
-        Query requries packages in guest which name like 'pkg'.
+        Query requires packages in guest which name like 'pkg'.
 
         :parm session: session object to guest.
         :parm pkg: package name without version and arch info.

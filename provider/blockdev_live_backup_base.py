@@ -1,5 +1,5 @@
 """
-Module for providing a framwork for live backup test cases.
+Module for providing a framework for live backup test cases.
 Note:
 1. 'do_test' should be implemented in test cases
 2. 'full_backup_options[_tag]' should be defined

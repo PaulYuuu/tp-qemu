@@ -68,7 +68,7 @@ def run(test, params, env):
     disable_firewall = params.get("disable_firewall")
     session.cmd(disable_firewall, ignore_all_errors=True)
 
-    # Setup nested enviroment
+    # Setup nested environment
     guest_user = params["username"]
     guest_passwd = params["password"]
     step_time = params.get_numeric("step_time", 60)

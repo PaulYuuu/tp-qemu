@@ -38,5 +38,5 @@ def run(test, params, env):
 
     if expect_avl_clk not in avl_clksrc:
         test.fail(
-            f"Available clocksources are {avl_clksrc}, the exected are {expect_avl_clk}."
+            f"Available clocksources are {avl_clksrc}, the executed are {expect_avl_clk}."
         )

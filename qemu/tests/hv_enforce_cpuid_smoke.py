@@ -7,7 +7,7 @@ from provider import qemu_img_utils
 def run(test, params, env):
     """
     Add 'hv-enforce-cpuid' option to see
-        whether guest use features we didn't advertize to it.
+        whether guest use features we didn't advertise to it.
     1. Boot the guest with random set of hv flags along
         with 'hv-enforce-cpuid' option.
     2. login

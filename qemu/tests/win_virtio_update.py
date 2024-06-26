@@ -12,7 +12,7 @@ def run(test, params, env):
     Update virtio driver:
     1) Boot up guest with default devices and virtio_win iso
     2) Install virtio driver
-    3) Check dirver info
+    3) Check driver info
 
     :param test: QEMU test object
     :param params: Dictionary with the test parameters

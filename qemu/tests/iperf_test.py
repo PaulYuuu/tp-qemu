@@ -17,7 +17,7 @@ def run(test, params, env):
     3) Select guest or host to start iperf server/client
     4) Execute iperf tests, analyze the result
     5) Finish test and cleanup host environment
-    6) Add rss test for virtio-net dirver
+    6) Add rss test for virtio-net driver
 
     :param test: QEMU test object.
     :param params: Dictionary with the test parameters.

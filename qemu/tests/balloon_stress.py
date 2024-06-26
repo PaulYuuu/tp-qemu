@@ -13,7 +13,7 @@ def run(test, params, env):
     Qemu balloon device stress test:
     1) boot guest with balloon device
     2) enable driver verifier in guest (Windows only)
-    3) run stress in background repeatly
+    3) run stress in background repeatedly
     4) balloon memory in monitor in loop
 
     :param test: QEMU test object

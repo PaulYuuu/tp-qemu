@@ -90,7 +90,7 @@ def run(test, params, env):
             throughout = float(re.search(regex, output, re.M).groups()[0])
             return throughout * 1000
         except Exception:
-            test.error("Invaild output format of netperf client!")
+            test.error("Invalid output format of netperf client!")
         finally:
             netperf_client.stop()
 
@@ -100,12 +100,12 @@ def run(test, params, env):
         """
         return data[1] <= data[2] + data[3]
 
-    def report_test_results(datas):
+    def report_test_results(data):
         """
         Report failed test scenarios.
         """
         error_context.context("Analyze guest throughout", test.log.info)
-        fails = [_ for _ in datas if not is_test_pass(_)]
+        fails = [_ for _ in data if not is_test_pass(_)]
         if fails:
             msg = "OVS Qos test failed, "
             for tap, throughout, rate, burst in fails:

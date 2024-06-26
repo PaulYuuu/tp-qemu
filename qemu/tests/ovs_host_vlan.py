@@ -106,7 +106,7 @@ def netperf_setup(test, params, env):
                 err += f" Command output:\n{output}"
                 test.error(err)
         elif params.get("os_type") == "windows":
-            # TODO, not suppoted by now
+            # TODO, not supported by now
             s_link = params.get("netperf_server_link_win", "netserver-2.6.0.exe")
             src_link = os.path.join(data_dir.get_deps_dir("netperf"), s_link)
             netperf_path = params["netperf_path"]

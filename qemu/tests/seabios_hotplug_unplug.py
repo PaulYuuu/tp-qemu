@@ -91,7 +91,7 @@ def run(test, params, env):
     if sgabios_info:
         error_context.context("Check the SGABIOS info", test.log.info)
         if not utils_misc.wait_for(sga_info_check, timeout, 1):
-            err_msg = "Cound not get sgabios message. Output: %s"
+            err_msg = "Could not get sgabios message. Output: %s"
             test.fail(err_msg % get_output(vm.serial_console))
 
     error_context.context("Check boot menu before hotplug", test.log.info)

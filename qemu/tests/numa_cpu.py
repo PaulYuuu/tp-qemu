@@ -132,7 +132,7 @@ def run(test, params, env):
 
     def numa_cpu_setted(numa_cpu_options):
         """
-        Get the new setted cpu id list for each node according to the set options,
+        Get the new set cpu id list for each node according to the set options,
         sort with nodeid.
         """
         numa_cpu_setted = []
@@ -231,7 +231,7 @@ def run(test, params, env):
         if specified_cpus != numa_cpu_cli:
             test.fail(
                 f"cpu ids for each node with 'info hotpluggable-cpus' is: {specified_cpus},"
-                f"but the seting in qemu cli is: {numa_cpu_cli}"
+                f"but the setting in qemu cli is: {numa_cpu_cli}"
             )
 
     if qemu_preconfig:
@@ -277,7 +277,7 @@ def run(test, params, env):
     numa_cpu_monitor = [sorted(list(item[1])) for item in vm.monitor.info_numa()]
     if numa_cpu_monitor != expected_cpus:
         test.fail(
-            f"cpu ids for each node with 'info numa' after setted is: {numa_cpu_monitor}, "
+            f"cpu ids for each node with 'info numa' after set is: {numa_cpu_monitor}, "
             f"but expected result is: {expected_cpus}"
         )
 

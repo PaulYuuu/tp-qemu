@@ -35,7 +35,7 @@ def run(test, params, env):
         Creates 'new' floppy with one file on it
 
         :param params: parameters for test
-        :param preapre: if True then it prepare cd images.
+        :param prepare: if True then it prepare cd images.
 
         :return: path to new floppy file.
         """
@@ -115,7 +115,7 @@ def run(test, params, env):
             else:
                 time.sleep(20)
 
-            error_context.context("Formating floppy disk before using it")
+            error_context.context("Formatting floppy disk before using it")
             format_cmd = params["format_floppy_cmd"]
             self.session.cmd(format_cmd, timeout=120)
             test.log.info("Floppy disk formatted successfully")

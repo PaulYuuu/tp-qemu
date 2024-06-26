@@ -142,7 +142,7 @@ def run(test, params, env):
     def greeting_suite(monitor):
         """
         Check the greeting message format, as described in the QMP
-        specfication section '2.2 Server Greeting'.
+        specification section '2.2 Server Greeting'.
 
         { "QMP": { "version": json-object, "capabilities": json-array } }
         """
@@ -260,7 +260,7 @@ def run(test, params, env):
         """
         for cmd in (
             {},
-            {"execut": "qmp_capabilities"},
+            {"execute": "qmp_capabilities"},
             {"executee": "qmp_capabilities"},
             {"foo": "bar"},
         ):
@@ -297,7 +297,7 @@ def run(test, params, env):
 
     def input_object_suite(monitor):
         """
-        Check the input object format, as described in the QMP specfication
+        Check the input object format, as described in the QMP specification
         section '2.3 Issuing Commands'.
 
         { "execute": json-string, "arguments": json-object, "id": json-value }

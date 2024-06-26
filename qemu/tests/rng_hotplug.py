@@ -50,7 +50,7 @@ def run(test, params, env):
             msg = f"Still get {dev} in qtree after unplug"
             raise exceptions.TestFail(msg)
         time.sleep(15)
-        test.log.info("%s is unpluged successfully", dev)
+        test.log.info("%s is unplugged successfully", dev)
 
     def restart_rngd(vm):
         if params.get("restart_rngd"):

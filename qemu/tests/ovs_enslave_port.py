@@ -40,7 +40,7 @@ def run(test, params, env):
             )
     else:
         test.fail(
-            f"Add port cmd successfully excuted. However, port {ports[0]} "
+            f"Add port cmd successfully executed. However, port {ports[0]} "
             "should not be enslaved to another bridge."
         )
     finally:

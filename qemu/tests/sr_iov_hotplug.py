@@ -15,7 +15,7 @@ def run(test, params, env):
     1) Set up sr-iov test environment in host.
     2) Start VM.
     3) Disable the primary link(s) of guest.
-    4) PCI add one/multi sr-io  deivce with (or without) repeat
+    4) PCI add one/multi sr-io  device with (or without) repeat
     5) Compare output of monitor command 'info pci'.
     6) Compare output of guest command [reference_cmd].
     7) Verify whether pci_model is shown in [pci_find_cmd].
@@ -385,7 +385,7 @@ def run(test, params, env):
                 utils_test.run_virt_sub_test(test, params, env, sub_type)
                 if "guest_suspend" == sub_type:
                     # Hotpluged device have been released after guest suspend,
-                    # so do not need unpluged step.
+                    # so do not need unplugged step.
                     break
             for pci_num in range(pci_num_range):
                 msg = "start hot-deleting %sth pci device," % (pci_num + 1)

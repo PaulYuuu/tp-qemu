@@ -38,7 +38,7 @@ class BlockdevIncbkConvertWithBitmapsTest(BlockdevLiveBackupBaseTest):
 
     def convert_data_image_with_bitmaps(self):
         # TODO: bitmap option is not supported by qemu_storage.convert,
-        # so run qemu-img command explictly to convert an qcow2 image to
+        # so run qemu-img command explicitly to convert an qcow2 image to
         # the target local qcow2 image
         cmd = f"{get_qemu_img_binary(self.params)} convert -f {self._src_image.image_format} -O {self._target_image.image_format} --bitmaps {self._src_image.image_filename} {self._target_image.image_filename}"
         process.system(cmd, ignore_status=False, shell=True)

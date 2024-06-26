@@ -43,7 +43,7 @@ def run(test, params, env):
             properties = default_value
 
         error_context.context(
-            f"Boot up guest with properites: {str(options)} value as: {properties}",
+            f"Boot up guest with properties: {str(options)} value as: {properties}",
             test.log.info,
         )
         vm_name = params["main_vm"]
@@ -68,9 +68,9 @@ def run(test, params, env):
                 msg = f"'{option}' value get '{option_value}', "
                 msg += f"expect value '{convert_dict[properties[index]]}'"
                 test.log.debug(msg)
-                test.fail(f"Properity bit for {option} is wrong.")
+                test.fail(f"Property bit for {option} is wrong.")
 
-            test.log.info("Properity bit in qtree is right for %s.", option)
+            test.log.info("Property bit in qtree is right for %s.", option)
             if params.get("check_in_guest", "yes") == "yes":
                 if params.get("machine_type").startswith("s390"):
                     id_pattern = (
@@ -101,7 +101,7 @@ def run(test, params, env):
                     msg = f"bit string in guest: {bitstr}"
                     msg += f"expect bit string: {properties[index]}"
                     test.log.debug(msg)
-                    test.fail(f"Properity bit for {option} is wrong" " inside guest.")
-            test.log.info("Properity bit in qtree is right for %s" " in guest.", option)
+                    test.fail(f"Property bit for {option} is wrong" " inside guest.")
+            test.log.info("Property bit in qtree is right for %s" " in guest.", option)
         session.close()
         vm.destroy()

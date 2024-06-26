@@ -22,7 +22,7 @@ t1=`tail -n 1 /tmp/t1`
 t2=`tail -n 1 /tmp/t2`
 
 if expr $t2 \> $t1;then
-  echo "Find unexpect result $t1 $t2"
+  echo "Find unexpected result $t1 $t2"
   exit 1
 fi
 

@@ -16,7 +16,7 @@ def run(test, params, env):
     """
     Test Step:
         1. Boot up guest using the openvswitch bridge
-        2. Setup related service in test enviroment(http, ftp etc.)(optional)
+        2. Setup related service in test environment(http, ftp etc.)(optional)
         3. Access the service in guest
         4. Setup access control rules in ovs to disable the access
         5. Access the service in guest
@@ -401,7 +401,7 @@ def run(test, params, env):
         test.fail(f"Can not find the rules from ovs-ofctl: {acl_rules}")
 
     error_context.context(
-        "Try to acess target to exam the disable rules", test.log.info
+        "Try to access target to exam the disable rules", test.log.info
     )
     access_service(access_sys, access_targets, True, host_ip)
     error_context.context("Enable the access in ovs", test.log.info)
@@ -411,7 +411,9 @@ def run(test, params, env):
     if not acl_rules_check(acl_rules, acl_cmd):
         test.fail(f"Can not find the rules from ovs-ofctl: {acl_rules}")
 
-    error_context.context("Try to acess target to exam the enable rules", test.log.info)
+    error_context.context(
+        "Try to access target to exam the enable rules", test.log.info
+    )
     access_service(access_sys, access_targets, False, host_ip)
     error_context.context("Delete the access rules in ovs", test.log.info)
     acl_cmd = get_acl_cmd(acl_protocol, if_port, "", acl_extra_options)
@@ -420,7 +422,7 @@ def run(test, params, env):
     if acl_rules_check(acl_rules, acl_cmd):
         test.fail(f"Still can find the rules from ovs-ofctl: {acl_rules}")
     error_context.context(
-        "Try to acess target to exam after delete the rules", test.log.info
+        "Try to access target to exam after delete the rules", test.log.info
     )
     access_service(access_sys, access_targets, False, host_ip)
 

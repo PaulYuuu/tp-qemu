@@ -72,7 +72,7 @@ def run(test, params, env):
         if utils_misc.wait_for(
             lambda: not is_yonit_benchmark_launched(), test_timeout, 60, 10
         ):
-            test.error("Yonit bitmap benchmark exits unexpectly")
+            test.error("Yonit bitmap benchmark exits unexpectedly")
         else:
             if session.is_responsive():
                 test.log.info("Guest stays good until test timeout")

@@ -67,7 +67,7 @@ class VirtIoChannel:
 
     def write(self, message, arg=""):
         if not isinstance(message, int):
-            raise TypeError("1nd arg must be a known message type.")
+            raise TypeError("1st arg must be a known message type.")
         if not isinstance(arg, str):
             raise TypeError("2nd arg must be a string.")
         stream = self._pack_message(message, arg)

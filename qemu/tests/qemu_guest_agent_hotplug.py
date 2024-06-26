@@ -20,7 +20,7 @@ def run(test, params, env):
         if out is True:
             test.log.debug("Unplug %s successfully", dev)
         else:
-            test.fail(f"Error occurred while unpluging {dev}")
+            test.fail(f"Error occurred while unplugging {dev}")
 
     vm = env.get_vm(params["main_vm"])
     vm.verify_alive()

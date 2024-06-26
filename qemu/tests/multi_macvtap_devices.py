@@ -51,7 +51,7 @@ def run(test, params, env):
 
     1) Create and up multi macvtap devices in setting mode.
     2) change the limitations of fd to 10240 in host.
-    3) Boot multi guest with macvtap and at least one guest use fd whick bigger
+    3) Boot multi guest with macvtap and at least one guest use fd which bigger
        than 1024.
     4) Ping from guests to an external host for 100 counts.
     5) Shutdown all guests.

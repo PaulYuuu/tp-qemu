@@ -49,9 +49,9 @@ def run(test, params, env):
         )
         if s_clone != 0:
             test.error(
-                "Clonning of '{}' failed with: {}".format(params["cm_repo"], o_clone)
+                "Cloning of '{}' failed with: {}".format(params["cm_repo"], o_clone)
             )
-        test.log.info("Clonning of '{}' succeeded".format(params["cm_repo"]))
+        test.log.info("Cloning of '{}' succeeded".format(params["cm_repo"]))
 
     def _get_installed_qemu_info(session=None):
         """
@@ -157,7 +157,7 @@ def run(test, params, env):
 
     def verify_installed_qemu(host_qemu, guest_qemu):
         """
-        Verify installated version of qemu-kvm matches expected one by its NVR
+        Verify installed version of qemu-kvm matches expected one by its NVR
         """
         expected_nvr = host_qemu["nvr"]
         installed_nvr = guest_qemu["nvr"]

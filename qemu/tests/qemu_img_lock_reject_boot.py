@@ -21,9 +21,9 @@ def run(test, params, env):
     """
 
     def _create_os_snapshot():
-        """Crate one external snapshot based on the os image."""
+        """Create one external snapshot based on the os image."""
         test.log.info("Create a qcow2 snapshot based on the os image.")
-        # workaround to asign syetem disk's image_name to image_name_image1
+        # workaround to assign syetem disk's image_name to image_name_image1
         params["image_name_image1"] = params["image_name"]
         gen = generate_base_snapshot_pair(params["image_chain"])
         _, snapshot = next(gen)

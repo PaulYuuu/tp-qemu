@@ -1,5 +1,5 @@
 """
-Module for providing a framwork for block-mirror test cases.
+Module for providing a framework for block-mirror test cases.
 
 The test strategy for block-mirror test cases:
   1. prepare data disks to create files, take md5sum

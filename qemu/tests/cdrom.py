@@ -119,7 +119,7 @@ def run(test, params, env):
 
         :param params: parameters for test
         :param name: name of new iso image file
-        :param preapre: if True then it prepare cd images.
+        :param prepare: if True then it prepare cd images.
         :param file_size: Size of iso image in MB
 
         :return: path to new iso image file.
@@ -677,7 +677,7 @@ def run(test, params, env):
             if params.get("not_insert_at_start") == "yes":
                 error_context.context("Locked without media present", test.log.info)
                 # XXX: The device got from monitor might not match with the guest
-                # defice if there are multiple cdrom devices.
+                # device if there are multiple cdrom devices.
                 qemu_cdrom_device = get_empty_cdrom_device(vm)
                 guest_cdrom_device = get_testing_cdrom_device(
                     vm, self.session, cdrom_dev_list, serial_num

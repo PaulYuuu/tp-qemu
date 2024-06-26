@@ -135,7 +135,7 @@ def run(test, params, env):
         6. do full backup (stg1->base) via qsd monitor
         7. create new files and save it md5sum in data disks
         8. do incremental backup(stg1->inc) via qsd monitor
-        9. destroy VM, stop qsd deamon, rebase inc to base
+        9. destroy VM, stop qsd daemon, rebase inc to base
         10. export inc in step8 via qsd+nbd.
         11. start guest with the exported qsd image
         12. verify files in data disks not change

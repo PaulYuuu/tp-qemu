@@ -26,7 +26,7 @@ def run(test, params, env):
 
     def qemu_img_check():
         """
-        Check guest disk image, and backup image when error occured
+        Check guest disk image, and backup image when error occurred
         """
         params["backup_image_on_check_error"] = "yes"
         base_dir = data_dir.get_data_dir()

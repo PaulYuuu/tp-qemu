@@ -154,7 +154,7 @@ def run(test, params, env):
 
     def get_nfs_devname(params, session):
         """
-        Get the possbile name of nfs storage dev name in guest.
+        Get the possible name of nfs storage dev name in guest.
 
         :param params: Test params dictionary.
         :param session: An SSH session object.

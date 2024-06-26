@@ -96,7 +96,7 @@ def run(test, params, env):
         7. create another file
         8. merge source image's bitmap to its snapshot's bitmap
         9. pause vm
-       10. do inc bakcup(sync: incremental)
+       10. do inc backup(sync: incremental)
        11. restart VM with inc image, check md5
 
     :param test: test object

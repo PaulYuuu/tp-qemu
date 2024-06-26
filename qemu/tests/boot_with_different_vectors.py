@@ -60,7 +60,7 @@ def run(test, params, env):
                         test.fail("Guest don't support msi when vectors=0")
                     test.log.info("Guest works well when vectors=0")
                 elif vectors != 0 and status:
-                    msg = "Could not get ouptut,"
+                    msg = "Could not get output,"
                     msg += " when vectors = %d" % vectors
                     test.fail("msg")
                 elif vectors == 1 and output:

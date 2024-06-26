@@ -177,7 +177,7 @@ class _EventListener:
         pass
 
     def _parse_platform_event(self, content):
-        """Parse events of the certian platform."""
+        """Parse events of the certain platform."""
         raise NotImplementedError()
 
 

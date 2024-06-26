@@ -1,6 +1,6 @@
 """
 Module specified for parallel test cases, i.e.
-running block-mirror and some other tests in paralell, and wait
+running block-mirror and some other tests in parallel, and wait
 till all mirror jobs done.
 Please refer to blockdev_mirror_base for detailed test strategy.
 """

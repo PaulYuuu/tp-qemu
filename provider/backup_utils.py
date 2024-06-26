@@ -235,7 +235,7 @@ def blockdev_create(vm, **options):
 def blockdev_snapshot(vm, source, target, **extra_options):
     cmd, arguments = blockdev_snapshot_qmp_cmd(source, target, **extra_options)
     out = vm.monitor.cmd(cmd, arguments)
-    assert out == {}, f"blockdev-snapshot-sync faild: {out}"
+    assert out == {}, f"blockdev-snapshot-sync failed: {out}"
 
 
 @fail_on

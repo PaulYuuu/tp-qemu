@@ -12,7 +12,7 @@ class BlockStreamStress(blk_stream.BlockStream):
     @error_context.context_aware
     def load_stress(self):
         """
-        load IO/CPU/Memoery stress in guest;
+        load IO/CPU/Memory stress in guest;
         """
         error_context.context("launch stress app in guest", LOG_JOB.info)
         args = (self.test, self.params, self.env, self.params["stress_test"])

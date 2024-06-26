@@ -58,7 +58,7 @@ class BallooningTestPause(BallooningTest):
     @error_context.context_aware
     def balloon_memory(self, new_mem):
         """
-        Baloon guest memory to new_mem
+        Balloon guest memory to new_mem
 
         :param new_mem: New desired memory.
         :type new_mem: int

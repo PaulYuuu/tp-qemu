@@ -64,5 +64,5 @@ def run(test, params, env):
     # wait till boot finishes
     vm.wait_for_login(timeout=int(params.get("login_timeout", 360))).close()
 
-    error_context.context("check bitmap exsitence after shutdown", test.log.info)
+    error_context.context("check bitmap existence after shutdown", test.log.info)
     check_bitmap_existence_as_expected(bitmaps, "existence_after_shutdown")

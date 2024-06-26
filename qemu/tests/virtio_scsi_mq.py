@@ -80,7 +80,7 @@ def run(test, params, env):
         try:
             qtree.parse_info_qtree(vm.monitor.info("qtree"))
         except AttributeError:
-            test.cancel("Monitor deson't supoort qtree skip this test")
+            test.cancel("Monitor deson't support qtree skip this test")
         error_msg = "Number of queues mismatch: expect %s report from monitor: %s(%s)"
         scsi_bus_addr = ""
         qtree_num_queues_full = ""
@@ -238,7 +238,7 @@ def run(test, params, env):
     status_cmd = "systemctl status irqbalance"
 
     error_context.context(
-        "Boot up guest with block devcie with num_queues" " is {} and smp is {}".format(
+        "Boot up guest with block device with num_queues" " is {} and smp is {}".format(
             num_queues, params["smp"]
         ),
         test.log.info,

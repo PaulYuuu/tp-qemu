@@ -56,7 +56,7 @@ def run(test, params, env):
         """
         backing_file = vm.monitor.get_backingfile(device_id)
         if backing_file != expect_backingfile:
-            test.fail(f"Unexpect backingfile({backing_file})")
+            test.fail(f"Unexpected backingfile({backing_file})")
 
     def get_openingfiles():
         """

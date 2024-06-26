@@ -47,7 +47,7 @@ def run(test, params, env):
         # Send INTERROGATE signal to balloon service
         interrogate_balloon_service(session)
 
-        # Check ballloon serivce status again
+        # Check ballloon service status again
         output = balloon_test.operate_balloon_service(session, "status")
         if not re.search("running", output.lower(), re.M):
             test.fail(

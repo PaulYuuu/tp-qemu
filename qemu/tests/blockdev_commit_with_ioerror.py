@@ -96,7 +96,7 @@ def run(test, params, env):
     1). create small space(100M)
     2). start vm with 2G data disk and dd 500M file on it
     3). create snapshot node on small space
-    4). dd 500M file in guest to casue vm paused with io-error
+    4). dd 500M file in guest to cause vm paused with io-error
     5). do commit from snapshot to base
     6). continue vm, wait dd finished
     7). check files' md5 value in step1 and step6

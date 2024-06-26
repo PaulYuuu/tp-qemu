@@ -107,7 +107,7 @@ def run(test, params, env):
         Get guest system cpuflags.
 
         :param vm_session: session to checked vm.
-        :return: [corespond flags]
+        :return: [correspond flags]
         """
         flags_re = re.compile(r"^flags\s*:(.*)$", re.MULTILINE)
         out = vm_session.cmd_output("cat /proc/cpuinfo")
@@ -120,7 +120,7 @@ def run(test, params, env):
         Get cpu flags correspond with cpumodel parameters.
 
         :param cpumodel: Cpumodel parameter sended to <qemu-kvm-cmd>.
-        :return: [corespond flags]
+        :return: [correspond flags]
         """
         cmd = qemu_binary + " -cpu ?dump"
         output = process.run(cmd).stdout
@@ -184,7 +184,7 @@ def run(test, params, env):
         Get cpu flags correspond with cpumodel parameters.
 
         :param cpumodel: Cpumodel parameter sended to <qemu-kvm-cmd>.
-        :return: [corespond flags]
+        :return: [correspond flags]
         """
         p = ParseCpuFlags()
         cpus = p.parse_file(cpuflags_def)
@@ -227,7 +227,7 @@ def run(test, params, env):
         Get cpu flags correspond with cpumodel parameters.
 
         :param cpumodel: Cpumodel parameter sended to <qemu-kvm-cmd>.
-        :return: [corespond flags]
+        :return: [correspond flags]
         """
         p = ParseCpuFlags()
         p.parse_file(cpuflags_def)
@@ -631,7 +631,7 @@ def run(test, params, env):
             Flags = check_cpuflags_work(
                 self.vm, install_path, flags.all_possible_guest_flags
             )
-            test.log.info("Woking CPU flags: %s", str(Flags[0]))
+            test.log.info("Working CPU flags: %s", str(Flags[0]))
             test.log.info("Not working CPU flags: %s", str(Flags[1]))
             test.log.warning(
                 "Flags works even if not defined on guest cpu " "flags: %s",
@@ -938,7 +938,7 @@ def run(test, params, env):
                         Flags = check_cpuflags_work(
                             vm, install_path, flags.all_possible_guest_flags
                         )
-                        test.log.info("Woking CPU flags: %s", str(Flags[0]))
+                        test.log.info("Working CPU flags: %s", str(Flags[0]))
                         test.log.info("Not working CPU flags: %s", str(Flags[1]))
                         test.log.warning(
                             "Flags works even if not defined on" " guest cpu flags: %s",
@@ -979,7 +979,7 @@ def run(test, params, env):
                         Flags = check_cpuflags_work(
                             vm, install_path, flags.all_possible_guest_flags
                         )
-                        test.log.info("Woking CPU flags: %s", str(Flags[0]))
+                        test.log.info("Working CPU flags: %s", str(Flags[0]))
                         test.log.info("Not working CPU flags: %s", str(Flags[1]))
                         test.log.warning(
                             "Flags works even if not defined on" " guest cpu flags: %s",
@@ -1074,7 +1074,7 @@ def run(test, params, env):
                         Flags = check_cpuflags_work(
                             vm, install_path, flags.all_possible_guest_flags
                         )
-                        test.log.info("Woking CPU flags: %s", str(Flags[0]))
+                        test.log.info("Working CPU flags: %s", str(Flags[0]))
                         test.log.info("Not working CPU flags: %s", str(Flags[1]))
                         test.log.warning(
                             "Flags works even if not defined on" " guest cpu flags: %s",
@@ -1086,7 +1086,7 @@ def run(test, params, env):
                                 disable_cpu(session, vcpu, True)
                             else:
                                 test.log.warning(
-                                    "There is no enouth cpu"
+                                    "There is no enough cpu"
                                     " in Guest. It is trying to"
                                     "remove cpu:%s from guest with"
                                     " smp:%s.",
@@ -1118,7 +1118,7 @@ def run(test, params, env):
                         Flags = check_cpuflags_work(
                             vm, install_path, flags.all_possible_guest_flags
                         )
-                        test.log.info("Woking CPU flags: %s", str(Flags[0]))
+                        test.log.info("Working CPU flags: %s", str(Flags[0]))
                         test.log.info("Not working CPU flags: %s", str(Flags[1]))
                         test.log.warning(
                             "Flags works even if not defined on" " guest cpu flags: %s",

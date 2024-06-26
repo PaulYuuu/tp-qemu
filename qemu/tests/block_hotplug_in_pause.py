@@ -158,7 +158,7 @@ def run(test, params, env):
         for dev in reversed(device_list):
             out = dev.unplug(vm.monitor)
             if out:
-                test.fail(f"Failed to unplug device '{dev}'.Ouptut:\n{out}")
+                test.fail(f"Failed to unplug device '{dev}'.Output:\n{out}")
 
         if verify_del_event:
             verify_deleted_event(device_list)

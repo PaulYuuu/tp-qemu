@@ -639,10 +639,10 @@ class QemuGuestAgentBasicCheck(QemuGuestAgentTest):
         old_password = params.get("password", "")
         new_password = params.get("new_password", "123456")
         ga_username = params.get("ga_username", "root")
-        crypted = params.get("crypted", "") == "yes"
+        encrypted = params.get("encrypted", "") == "yes"
         error_context.context("Change guest's password.")
         try:
-            self.gagent.set_user_password(new_password, crypted, ga_username)
+            self.gagent.set_user_password(new_password, encrypted, ga_username)
             error_context.context(
                 "Check if the guest could be login by new password", LOG_JOB.info
             )
@@ -706,7 +706,7 @@ class QemuGuestAgentBasicCheck(QemuGuestAgentTest):
 
         if cpu_num_qga != cpu_num_guest:
             test.fail(
-                "CPU number doen't match.\n"
+                "CPU number doesn't match.\n"
                 f"number from guest os is {cpu_num_guest},number from guest-agent is {cpu_num_qga}."
             )
 
@@ -755,7 +755,7 @@ class QemuGuestAgentBasicCheck(QemuGuestAgentTest):
         6) Verify memory are decreased in guest
         7) Online the memory blocks which are offline before
         8) Verify memory are the same as before
-        9) Offline a memroy block which can't be offline
+        9) Offline a memory block which can't be offline
 
         :param test: kvm test object
         :param params: Dictionary with the test parameters
@@ -1362,7 +1362,7 @@ class QemuGuestAgentBasicCheck(QemuGuestAgentTest):
                         disk_alias = session.cmd_output(cmd_get_disk_alias).strip()
                         if disk_info_qga["alias"] != disk_alias:
                             test.fail(
-                                f"Disk {diskname} alias is defferent "
+                                f"Disk {diskname} alias is different "
                                 "between guest and qga."
                             )
                     break
@@ -2130,7 +2130,7 @@ class QemuGuestAgentBasicCheck(QemuGuestAgentTest):
                 self.gagent.guest_file_seek(ret_handle, 0, 0)
             except guest_agent.VAgentCmdError as detail:
                 if re.search(f"handle '{ret_handle}' has not been found", str(detail)):
-                    msg = "As resouce is not sufficient, "
+                    msg = "As resource is not sufficient, "
                     msg += "file is closed, so open the file again to "
                     msg += "continue the following tests."
                     LOG_JOB.info(msg)
@@ -2513,7 +2513,7 @@ class QemuGuestAgentBasicCheck(QemuGuestAgentTest):
 
     @error_context.context_aware
     def _action_after_fsfreeze(self, *args):
-        error_context.context("Verfiy FS is frozen in guest.", LOG_JOB.info)
+        error_context.context("Verify FS is frozen in guest.", LOG_JOB.info)
 
         if not self._open_session_list:
             self.test.error("Could not find any opened session")
@@ -2568,10 +2568,10 @@ class QemuGuestAgentBasicCheck(QemuGuestAgentTest):
                             it's the parameter for guest-fsfreeze-freeze-list.
                             if omitted, every mounted filesystem is frozen
         :param check_mountpoints: an array of mountpoints, to check if they are
-                                  frozen/thaw, used to the following two sceanrio.
+                                  frozen/thaw, used to the following two scenario.
                                   a.fsfreeze_list is true and mountpoints is none.
                                   b.fsfreeze_list is true and mountpoints has
-                                    invalid value and valide value(only linux guest)
+                                    invalid value and valid value(only linux guest)
         """
         write_cmd = self.params.get("gagent_fs_test_cmd", "")
         write_cmd_timeout = int(self.params.get("write_cmd_timeout", 60))
@@ -3772,7 +3772,7 @@ class QemuGuestAgentBasicCheck(QemuGuestAgentTest):
                 if abs(driver_date_guest - int(driver_date / 1000000000)) > 86400:
                     test.fail(
                         "The difference of driver_date between guest and qga "
-                        "shoudn't differ by more than 86400 seconds"
+                        "shouldn't differ by more than 86400 seconds"
                     )
             else:
                 _result_check(driver_date, driver_date_guest)
@@ -3783,7 +3783,7 @@ class QemuGuestAgentBasicCheck(QemuGuestAgentTest):
             ).group(1)
             _result_check(driver_version, driver_ver_guest)
 
-            # check vender id and device id
+            # check vendor id and device id
             pattern_dev = r"deviceid.*VEN_([A-Za-z0-9]+)&DEV_([A-Za-z0-9]+)&"
             id_dev = re.search(pattern_dev, driver_info_guest, re.I)
             vender_id_guest = int(id_dev.group(1), 16)
@@ -3803,7 +3803,7 @@ class QemuGuestAgentBasicCheck(QemuGuestAgentTest):
         5) Check all active users number.
         6) Check every user info.
         7) Check every user's domain(windows only)
-        8) Get the earlier loggin time for the same user.
+        8) Get the earlier login time for the same user.
         9) Check the login time for every user.
         :param test: kvm test object
         :param params: Dictionary with the test parameters
@@ -3925,7 +3925,7 @@ class QemuGuestAgentBasicCheck(QemuGuestAgentTest):
                 user_name = user_name_qga
 
             # get this user's info in vm, maybe the same user
-            #  loggin many times.
+            #  login many times.
             cmd_get_user = params["cmd_get_user"] % user_name
             records = session.cmd_output(cmd_get_user).strip().splitlines()
             error_context.context(

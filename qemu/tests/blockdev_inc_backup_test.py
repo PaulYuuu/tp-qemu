@@ -81,7 +81,7 @@ class BlockdevIncreamentalBackupTest(blockdev_base.BlockdevBaseTest):
                 )
             except qemu_monitor.QMPCmdError as e:
                 if self.params["error_msg"] not in str(e):
-                    self.test.fail(f"Unexpect error: {str(e)}")
+                    self.test.fail(f"Unexpected error: {str(e)}")
             else:
                 self.test.fail("expect incremental backup job(s) failed")
         else:

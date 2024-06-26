@@ -7,9 +7,9 @@ from virttest import error_context
 def run(test, params, env):
     """
     KVM Windows version collect:
-    This case is used to collect windows guest informations using in test.
-    1) Get os version related informations
-    2) Get driver related informations
+    This case is used to collect windows guest information using in test.
+    1) Get os version related information
+    2) Get driver related information
 
     :param test: QEMU test object
     :param params: Dictionary with the test parameters

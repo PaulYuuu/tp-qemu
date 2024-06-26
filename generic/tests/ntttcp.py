@@ -125,7 +125,7 @@ def run(test, params, env):
 
     def sender():
         """Send side"""
-        test.log.info("Sarting sender process ...")
+        test.log.info("Starting sender process ...")
         session = vm_sender.wait_for_serial_login(timeout=login_timeout)
         install_ntttcp(session)
         ntttcp_sender_cmd = params.get("ntttcp_sender_cmd")
@@ -174,7 +174,7 @@ def run(test, params, env):
             sender()
             bg.join(suppress_exception=True)
         else:
-            test.error("Can't start backgroud receiver thread")
+            test.error("Can't start background receiver thread")
     finally:
         for i in glob.glob(f"{results_path}.receiver"):
             f = open(f"{results_path}.RHS", "w")

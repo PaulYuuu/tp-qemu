@@ -82,7 +82,7 @@ def run(test, params, env):
         vm1 = env.get_vm(params["main_vm"])
         session = vm1.wait_for_login(timeout=login_timeout)
 
-        error_context.context("Check smbios info on guest " "is setted as expected")
+        error_context.context("Check smbios info on guest " "is set as expected")
 
         for sm_type in smbios_type.split():
             if sm_type == "Bios":

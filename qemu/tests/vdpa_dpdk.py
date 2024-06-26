@@ -114,7 +114,7 @@ def run(test, params, env):
         )
         host = {
             "host": dsthost,
-            "username": params_host.get("unsername"),
+            "username": params_host.get("username"),
             "password": params_host.get("password"),
             "cpu": dst_ses.cmd_output(("nproc").strip()),
             "pci": params_host.get("dsthost_pci"),

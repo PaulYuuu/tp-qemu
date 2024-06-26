@@ -20,7 +20,7 @@ def run(test, params, env):
     1) Boot guest with additional disk
     2) Format the additional disk
     3) Install and register Iometer
-    4) Perpare icf to Iometer.exe
+    4) Prepare icf to Iometer.exe
     5) Run Iometer.exe with icf
     6) Copy result to host
 

@@ -90,7 +90,7 @@ def run(test, params, env):
             )
             img_utils.save_random_file_to_vm(vm, guest_file, 2048 * 100, sync_bin)
             session = vm.wait_for_login(timeout=timeout)
-            test.log.debug("Get md5 value fo the temporary file")
+            test.log.debug("Get md5 value for the temporary file")
             hashes[guest_file] = img_utils.check_md5sum(guest_file, md5sum_bin, session)
             session.close()
             vm.destroy()

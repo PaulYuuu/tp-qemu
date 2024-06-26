@@ -9,7 +9,7 @@ from provider import win_driver_utils, win_dump_utils
 @error_context.context_aware
 def check_bg_running(vm, params):
     """
-    Check the backgroud test status in guest.
+    Check the background test status in guest.
 
     :param vm: VM Object
     :param params: Dictionary with the test parameters
@@ -44,7 +44,7 @@ def run(test, params, env):
 
     def run_bg_test_simu(bg_stress_test):
         """
-        Run backgroud test simultaneously with main_test.
+        Run background test simultaneously with main_test.
         background test: e.g. rng_bat/balloon_test/netperf ...
         main test: e.g reboot/shutdown/stop/cont/driver_load ...
 
@@ -84,7 +84,7 @@ def run(test, params, env):
         if not utils_misc.wait_for(
             lambda: check_bg_running(vm, params), check_bg_timeout, 0, 1
         ):
-            test.fail(f"Backgroud test {bg_stress_test} is not alive!")
+            test.fail(f"Background test {bg_stress_test} is not alive!")
         if params.get("set_bg_stress_flag", "no") == "yes":
             test.log.info("Wait %s test start", bg_stress_test)
             if not utils_misc.wait_for(

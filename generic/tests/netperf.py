@@ -657,7 +657,7 @@ def launch_client(
 
     def count_interrupt(name):
         """
-        Get a list of interrut number for each queue
+        Get a list of interrupt number for each queue
 
         @param name: the name of interrupt, such as "virtio0-input"
         """
@@ -789,7 +789,7 @@ def launch_client(
         nresult = i - 1
         if nresult < int(sessions):
             test.error(
-                f"We couldn't expect this parallism, expect {sessions} get {nresult}"
+                f"We couldn't expect this parallelism, expect {sessions} get {nresult}"
             )
 
         niteration = nresult // sessions

@@ -11,7 +11,7 @@ class BlkdevIncWithIgnore(BlockdevLiveBackupBaseTest):
 
     def __init__(self, test, params, env):
         super().__init__(test, params, env)
-        # TODO: Workaound lvm setup till VT enhances emulated image creation
+        # TODO: Workaround lvm setup till VT enhances emulated image creation
         self.lv_size = params["lv_size"]
         params["lv_size"] = params["emulated_image_size"]
         self._lvm = EmulatedLVM(params, get_data_dir())

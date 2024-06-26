@@ -47,7 +47,7 @@ class SparseRange(list):
         :param start: slice start
         :param stop: slice stop
         :param step: slice step
-        :return: kernel-like sparce array string from existing values
+        :return: kernel-like sparse array string from existing values
         """
 
         def append_section(out, sect_start, sect_stop):
@@ -752,7 +752,7 @@ def run(test, params, env):
 
         stats = []
         # test_time is 1s stabilization, 1s first meass., 9s second and the
-        # rest of cgroup_test_time as 3rd meassurement.
+        # rest of cgroup_test_time as 3rd measurement.
         test_time = max(1, int(params.get("cgroup_test_time", 60)) - 11)
         err = []
         try:
@@ -837,7 +837,7 @@ def run(test, params, env):
         """
 
         def _get_stat(f_stats, _stats=None):
-            """Reads CPU times from f_stats[] files and sumarize them."""
+            """Reads CPU times from f_stats[] files and summarize them."""
             if _stats is None:
                 _stats = []
                 for i in range(len(f_stats)):
@@ -1043,7 +1043,7 @@ def run(test, params, env):
     @error_context.context_aware
     def cpuset_cpus():
         """
-        Pins main_thread and each vcpu acoordingly to scenario setup
+        Pins main_thread and each vcpu accordingly to scenario setup
         and measures physical CPU utilisation.
         When nothing is set the test uses smp vcpus. When cgroup_cpuset is
         specified it forces smp to fit cpuset prescription. Last but not least
@@ -1051,7 +1051,7 @@ def run(test, params, env):
         @warning: Default verification method assumes 100% utilisation on each
                   used CPU. You can force cgroup_verify results.
         :param cfg: cgroup_use_half_smp - force smp = no_host_cpus / 2
-        :param cfg: cgroup_test_time - scenerio duration '1'
+        :param cfg: cgroup_test_time - scenario duration '1'
         :param cfg: cgroup_limit - allowed threshold '0.05' (5%)
         :params cfg: cgroup_cpuset - list of lists defining cpu pinning.
                      [[1st_scenario],[2nd_scenario], ...]
@@ -1069,7 +1069,7 @@ def run(test, params, env):
 
         def _generate_cpusets(vm_cpus, cpus):
             """
-            Generates 5 cpusets scenerios
+            Generates 5 cpusets scenarios
             :param vm_cpus: number of virtual CPUs
             :param cpus: Physical CPU layout
             """
@@ -1102,7 +1102,7 @@ def run(test, params, env):
             :param cpus: Physical CPU layout
             """
             verify = []
-            # For every scenerio
+            # For every scenario
             for cpuset in cpusets:
                 verify.append([0 for _ in range(len(cpus))])
                 # For every vcpu (skip main_thread, it doesn't consume much)
@@ -1196,7 +1196,7 @@ def run(test, params, env):
             )
 
         if not cpusets:
-            test.log.info("Generating cpusets scenerios")
+            test.log.info("Generating cpusets scenarios")
             cpusets = _generate_cpusets(vm_cpus, cpus)
 
         if verify:  # Verify exists, check if it's correct
@@ -1283,7 +1283,7 @@ def run(test, params, env):
                 astring.tabular_output(matrix, header),
             )
             if err:
-                err = f"Scenerios {err} FAILED"
+                err = f"Scenarios {err} FAILED"
                 test.log.error(err)
             else:
                 test.log.info("All utilisations match prescriptions.")
@@ -1476,7 +1476,7 @@ def run(test, params, env):
                 dd_res += re.findall(r"(\d+)\+(\d+) records out", out)
                 dd_res = [int(_[0]) + int(_[1]) for _ in dd_res]
                 if dd_res[1] <= dd_res[0] or dd_res[3] <= dd_res[2]:
-                    err = f"dd stoped sending bytes: {dd_res[0]}..{dd_res[1]}, {dd_res[2]}..{dd_res[3]}"
+                    err = f"dd stopped sending bytes: {dd_res[0]}..{dd_res[1]}, {dd_res[2]}..{dd_res[3]}"
             if err:
                 test.log.error(err)
             else:
@@ -1517,7 +1517,7 @@ def run(test, params, env):
             """
             Wrapper for setting permissions to first cgroup
             :param self.permissions: is defined as a list of dictionaries:
-               {'property': control property, 'value': permition value,
+               {'property': control property, 'value': permission value,
                 'check_value': check value (from devices.list property),
                 'read_results': excepced read results T/F,
                 'write_results': expected write results T/F}
@@ -1836,7 +1836,7 @@ def run(test, params, env):
                 time.sleep(1)
                 _ = cgroup.get_property("freezer.state", 0)
                 if "FROZEN" not in _:
-                    err = f"Coundn't freze the VM: state {_}"
+                    err = f"Couldn't freeze the VM: state {_}"
                     break
                 stat_ = _get_stat(pid)
                 time.sleep(tsttime)
@@ -1896,7 +1896,7 @@ def run(test, params, env):
         """
         Tests the memory.limit_in_bytes or memory.memsw.limit_in_bytes cgroup
         capability. It tries to allocate bigger block than allowed limit.
-        memory.limit_in_bytes: Qemu process should be swaped out and the
+        memory.limit_in_bytes: Qemu process should be swapped out and the
                                block created.
         memory.memsw.limit_in_bytes: Qemu should be killed with err 137.
         :param memsw: Whether to run memsw or rss mem only test
@@ -2170,7 +2170,7 @@ def run(test, params, env):
                 dd_res += re.findall(r"(\d+)\+(\d+) records out", out)
                 dd_res = [int(_[0]) + int(_[1]) for _ in dd_res]
                 if dd_res[1] <= dd_res[0] or dd_res[3] <= dd_res[2]:
-                    err = f"dd stoped sending bytes: {dd_res[0]}..{dd_res[1]}, {dd_res[2]}..{dd_res[3]}"
+                    err = f"dd stopped sending bytes: {dd_res[0]}..{dd_res[1]}, {dd_res[2]}..{dd_res[3]}"
 
             if err:
                 test.log.error(err)

@@ -12,7 +12,7 @@ def run(test, params, env):
     or not
 
     1) Test the vcpus' TSC of host by C the program
-    2) Copy the C code to the guest, complie and run it to get the vcpus' TSC
+    2) Copy the C code to the guest, compile and run it to get the vcpus' TSC
        of guest
     3) Sleep sometimes and get the TSC of host and guest again
     4) Compute the TSC frequency of host and guest

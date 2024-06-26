@@ -169,7 +169,7 @@ def check_guest_vsock_conn_exit(test, session, close_session=False):
         session.read_up_to_prompt(timeout=120)
     except aexpect.ExpectTimeoutError:
         test.fail(
-            "vsock listening prcoess inside guest"
+            "vsock listening process inside guest"
             " does not exit after close host nc-vsock connection."
         )
     finally:

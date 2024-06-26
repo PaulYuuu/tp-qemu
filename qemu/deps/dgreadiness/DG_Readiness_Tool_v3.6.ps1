@@ -591,7 +591,7 @@ function ExecuteCommandAndLog($_cmd)
     }
     catch
     {
-        Log "Exception while exectuing $_cmd"
+        Log "Exception while executing $_cmd"
         Log $_.Exception.Message
     }
 }
@@ -1142,7 +1142,7 @@ if($Enable)
     if(!$_isRedstone)
     {
         LogAndConsole "OS Not Redstone, enabling IsolatedUserMode separately"
-        #Enable/Disable IOMMU seperately
+        #Enable/Disable IOMMU separately
         ExecuteCommandAndLog 'DISM.EXE /Online /Enable-Feature:IsolatedUserMode /NoRestart'
     }
     $CmdOutput =  DISM.EXE /Online /Enable-Feature:Microsoft-Hyper-V-Hypervisor /All /NoRestart | Out-String
@@ -1211,7 +1211,7 @@ if($Disable)
         if(!$_isRedstone)
         {
             LogAndConsole "OS Not Redstone, disabling IsolatedUserMode separately"
-            #Enable/Disable IOMMU seperately
+            #Enable/Disable IOMMU separately
             ExecuteCommandAndLog 'DISM.EXE /Online /disable-Feature /FeatureName:IsolatedUserMode /NoRestart'
         }
         $CmdOutput =  DISM.EXE /Online /disable-Feature /FeatureName:Microsoft-Hyper-V-Hypervisor /NoRestart | Out-String

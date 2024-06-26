@@ -217,10 +217,10 @@ class BlockCopy:
         error_context.context("reset guest via system_reset", self.test.log.info)
         self.vm.monitor.clear_event("RESET")
         self.vm.monitor.cmd("system_reset")
-        reseted = utils_misc.wait_for(
+        reset = utils_misc.wait_for(
             lambda: self.vm.monitor.get_event("RESET"), timeout=timeout
         )
-        if not reseted:
+        if not reset:
             self.test.fail(
                 "No RESET event received after" f"execute system_reset {timeout}s"
             )

@@ -30,7 +30,7 @@ def key_tap_test(test, params, vm):
 
     def key_check(key):
         """
-        Check received key event match exepected key event.
+        Check received key event match expected key event.
         :param key: tested key name.
         """
         events_queue = listener.events
@@ -47,7 +47,7 @@ def key_tap_test(test, params, vm):
             key_event_lst.append((events["keyCode"], events["type"]))
 
         if len(key_event_lst) < 2 * key_num:
-            test.fail(f"Reveived key events {key_event_lst} were not enough")
+            test.fail(f"Received key events {key_event_lst} were not enough")
 
         key_down_lst = list()
         for k, v in key_event_lst[:-key_num]:

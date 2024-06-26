@@ -132,7 +132,7 @@ def check_if_vm_vcpu_topology_match(session, os_type, cpuinfo, test, devices=Non
     )
 
     if not is_matched:
-        LOG_JOB.debug("CPU infomation of guest:\n%s", out)
+        LOG_JOB.debug("CPU information of guest:\n%s", out)
 
     return is_matched
 

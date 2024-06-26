@@ -193,7 +193,7 @@ class BallooningTest(MemoryBaseTest):
     @error_context.context_aware
     def balloon_memory(self, new_mem):
         """
-        Baloon memory to new_mem and verifies on both qemu monitor and
+        Balloon memory to new_mem and verifies on both qemu monitor and
         guest OS if change worked.
 
         :param new_mem: New desired memory.
@@ -303,7 +303,7 @@ class BallooningTest(MemoryBaseTest):
         min_size = int(float(utils_misc.normalize_data_size(min_size)))
         balloon_buffer = int(self.params.get("balloon_buffer", 300))
         if self.params.get("os_type") == "windows":
-            self.test.log.info("Get windows miminum balloon value:")
+            self.test.log.info("Get windows minimum balloon value:")
             self.vm.balloon(1)
             balloon_timeout = self.params.get("balloon_timeout", 900)
             self.wait_for_balloon_complete(balloon_timeout)
@@ -328,7 +328,7 @@ class BallooningTest(MemoryBaseTest):
         """
         Run a loop of ballooning test
 
-        :param expect_mem: memory will be setted in test
+        :param expect_mem: memory will be set in test
         :type expect_mem: int
         :param tag: test tag to get related params
         :type tag: string

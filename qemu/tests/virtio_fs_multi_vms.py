@@ -184,7 +184,7 @@ def run(test, params, env):
                 virtio_fs_disk_label = fs_target
                 error_context.context(
                     f"{vm}: Get Volume letter of virtio fs"
-                    f" target, the disk lable is {virtio_fs_disk_label}.",
+                    f" target, the disk label is {virtio_fs_disk_label}.",
                     test.log.info,
                 )
                 vol_con = f"VolumeName='{virtio_fs_disk_label}'"

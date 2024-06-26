@@ -91,7 +91,7 @@ def run(test, params, env):
             session.cmd(config_cmd)
 
     error_context.context("Start heavyload in guest", test.log.info)
-    # genery heavyload command automaticly
+    # genery heavyload command automatically
     if params.get("autostress") == "yes":
         free_mem = utils_misc.get_free_mem(session, "windows")
         free_disk = utils_misc.get_free_disk(session, "C:")

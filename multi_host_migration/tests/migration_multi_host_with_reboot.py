@@ -57,11 +57,11 @@ def run(test, params, env):
                     while time.time() < end_time:
                         vm.monitor.clear_event("RESET")
                         vm.monitor.cmd(reboot_method)
-                        reseted = utils_misc.wait_for(
+                        reset = utils_misc.wait_for(
                             lambda: vm.monitor.get_event("RESET"),
                             timeout=self.login_timeout,
                         )
-                        if not reseted:
+                        if not reset:
                             raise error.TestFail(
                                 "Not found RESET event after " "execute 'system_reset'"
                             )

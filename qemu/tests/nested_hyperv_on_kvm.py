@@ -31,7 +31,7 @@ def run(test, params, env):
 
         download.get_file(download_url, image_path, hash_expected=md5value)
 
-        test.log.info("Covert fedora image to vhdx")
+        test.log.info("Convert fedora image to vhdx")
         cmd_covert = "qemu-img convert -O vhdx " + image_path + " " + vhdx_path
 
         status, output = process.getstatusoutput(cmd_covert, timeout)
@@ -83,9 +83,9 @@ def run(test, params, env):
         rf"powershell {nested_dest}\hyperv_env.ps1", timeout=1200
     )
     if status != 0:
-        test.error("Setup Hyper-v enviroment error: %s", output)
+        test.error("Setup Hyper-v environment error: %s", output)
     else:
-        test.log.info("Setup Hyper-v enviroment pass: %s", output)
+        test.log.info("Setup Hyper-v environment pass: %s", output)
 
     if need_reboot:
         test.log.info(

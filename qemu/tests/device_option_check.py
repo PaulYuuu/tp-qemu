@@ -8,7 +8,7 @@ def run(test, params, env):
     """
     Qemu device options value check test:
 
-    1) Boot up guest with setted option value
+    1) Boot up guest with set option value
     2) Check the value is correct inside guest
 
     :param test: QEMU test object

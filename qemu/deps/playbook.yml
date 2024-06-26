@@ -15,7 +15,7 @@
 
   tasks:
 
-    - name: Configure swith
+    - name: Configure switch
       shell:
         cmd: /usr/bin/bash '{{setup_bridge_sh}}'
         creates: /etc/sysconfig/network-scripts/ifcfg-switch
